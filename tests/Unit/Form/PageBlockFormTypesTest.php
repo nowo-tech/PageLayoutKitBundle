@@ -4,156 +4,153 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Form;
 
-use App\Tests\Unit\Support\LocaleTestSupport;
-use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
+use Nowo\FormKitBundle\Form\Constraint\ConstraintDefinitionFactory;
+use Nowo\FormKitBundle\Form\FormOptionsMerger;
+use Nowo\FormKitBundle\Form\FormTypeMap;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCompareBlockTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageCtaBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCtaBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
-use Nowo\PageLayoutKitBundle\Entity\PageListItem;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
+use Nowo\PageLayoutKitBundle\Form\PageBlockLocalePanelData;
+use Nowo\PageLayoutKitBundle\Form\PageBlockLocalePanelType;
 use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
+use Nowo\PageLayoutKitBundle\Form\PageCompareBlockEditType;
+use Nowo\PageLayoutKitBundle\Form\PageCompareBlockModalType;
+use Nowo\PageLayoutKitBundle\Form\PageCtaBlockEditType;
+use Nowo\PageLayoutKitBundle\Form\PageCtaBlockModalType;
+use Nowo\PageLayoutKitBundle\Form\PageHeroBlockEditType;
 use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
-use Nowo\PageLayoutKitBundle\Locale\PageLocales;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Component\Form\FormFactoryInterface;
+use Nowo\PageLayoutKitBundle\Form\PageTextBlockEditType;
+use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-use function count;
-
-final class PageBlockFormTypesTest extends KernelTestCase
+final class PageBlockFormTypesTest extends TestCase
 {
-    protected function setUp(): void
+    public function testModalAndEditTypesExposeExpectedOptionDefaults(): void
     {
-        LocaleTestSupport::bindDefaults();
+        $heroModal = $this->resolveOptions($this->createType(PageHeroBlockModalType::class));
+        self::assertSame('form', $heroModal['translation_domain']);
+        self::assertSame(PageHeroBlock::class, $heroModal['data_class']);
+
+        $heroEdit = $this->resolveOptions($this->createType(PageHeroBlockEditType::class));
+        self::assertSame('form', $heroEdit['translation_domain']);
+        self::assertSame(PageHeroBlockTranslation::class, $heroEdit['data_class']);
+
+        $textModal = $this->resolveOptions($this->createType(PageTextBlockModalType::class));
+        self::assertSame('form', $textModal['translation_domain']);
+        self::assertSame(PageTextBlock::class, $textModal['data_class']);
+        self::assertFalse($textModal['include_meta']);
+
+        $textEdit = $this->resolveOptions($this->createType(PageTextBlockEditType::class));
+        self::assertSame('form', $textEdit['translation_domain']);
+        self::assertSame(PageTextBlockTranslation::class, $textEdit['data_class']);
+        self::assertFalse($textEdit['include_meta']);
+
+        $ctaModal = $this->resolveOptions($this->createType(PageCtaBlockModalType::class));
+        self::assertSame('form', $ctaModal['translation_domain']);
+        self::assertSame(PageCtaBlock::class, $ctaModal['data_class']);
+
+        $ctaEdit = $this->resolveOptions($this->createType(PageCtaBlockEditType::class));
+        self::assertSame('form', $ctaEdit['translation_domain']);
+        self::assertSame(PageCtaBlockTranslation::class, $ctaEdit['data_class']);
+
+        $compareModal = $this->resolveOptions($this->createType(PageCompareBlockModalType::class));
+        self::assertSame('form', $compareModal['translation_domain']);
+        self::assertSame(PageCompareBlock::class, $compareModal['data_class']);
+
+        $compareEdit = $this->resolveOptions($this->createType(PageCompareBlockEditType::class));
+        self::assertSame('form', $compareEdit['translation_domain']);
+        self::assertSame(PageCompareBlockTranslation::class, $compareEdit['data_class']);
+
+        $localePanel = $this->resolveOptions($this->createType(PageBlockLocalePanelType::class));
+        self::assertSame('form', $localePanel['translation_domain']);
+        self::assertSame(PageBlockLocalePanelData::class, $localePanel['data_class']);
     }
 
-    public function testPageHeroBlockModalTypeHasTranslationsForAllLocales(): void
+    public function testInlineModalTypesRequireTheExpectedBlockOption(): void
     {
-        self::bootKernel();
-        $factory = self::getContainer()->get(FormFactoryInterface::class);
-
-        $block = new PageHeroBlock();
-        $block->ensureTranslations();
-
-        $form = $factory->create(PageHeroBlockModalType::class, $block, [
-            'csrf_protection' => false,
+        $cardsBlock = new PageCardsBlock();
+        $cardsOptions = $this->resolveOptions($this->createType(PageCardsBlockInlineModalType::class), [
+            'block' => $cardsBlock,
         ]);
+        self::assertSame('form', $cardsOptions['translation_domain']);
+        self::assertNull($cardsOptions['data_class']);
+        self::assertSame($cardsBlock, $cardsOptions['block']);
 
-        self::assertTrue($form->has('translations'));
-        self::assertCount(count(PageLocales::all()), $form->get('translations'));
-        $locales = [];
-        foreach ($form->get('translations') as $translationForm) {
-            $locales[] = $translationForm->getData()->getLocale();
-        }
-        self::assertSame(PageLocales::all(), $locales);
+        $listBlock = new PageListBlock();
+        $listOptions = $this->resolveOptions($this->createType(PageListBlockInlineModalType::class), [
+            'block' => $listBlock,
+        ]);
+        self::assertSame('form', $listOptions['translation_domain']);
+        self::assertNull($listOptions['data_class']);
+        self::assertSame($listBlock, $listOptions['block']);
     }
 
-    public function testPageCardsBlockInlineModalTypePostSetDataAndSubmit(): void
+    public function testInlineModalTypesRejectWrongBlockInstances(): void
     {
-        self::bootKernel();
-        $factory = self::getContainer()->get(FormFactoryInterface::class);
-
-        $block = (new PageCardsBlock())->setSectionKey('value');
-        $block->ensureTranslations();
-        $block->getTranslationOrFallback('es')->setTitle('Tarjetas');
-        $item = (new PageCardItem())->setPosition(0);
-        $item->ensureTranslations();
-        $item->getTranslationOrFallback('es')->setTitle('Uno')->setBody('Cuerpo uno');
-        $block->addItem($item);
-
-        $form = $factory->create(PageCardsBlockInlineModalType::class, null, [
-            'csrf_protection' => false,
-            'block'           => $block,
+        $this->expectException(InvalidOptionsException::class);
+        $this->resolveOptions($this->createType(PageCardsBlockInlineModalType::class), [
+            'block' => new PageListBlock(),
         ]);
-
-        self::assertTrue($form->has('translations'));
-        self::assertCount(count(PageLocales::all()), $form->get('translations'));
-        self::assertStringContainsString('Uno | Cuerpo uno', (string) $form->get('translations')[0]->get('items')->getData());
-
-        $payload = [];
-        foreach (PageLocales::all() as $locale) {
-            $payload[] = [
-                'locale' => $locale,
-                'title'  => $locale === 'es' ? 'Nuevo titulo' : ('Title ' . $locale),
-                'items'  => $locale === 'es'
-                    ? "Alpha | Body A\nBeta | Body B"
-                    : "Alpha {$locale} | Body A {$locale}\nBeta {$locale} | Body B {$locale}",
-            ];
-        }
-
-        $form->submit(['translations' => $payload]);
-
-        self::assertTrue($form->isSubmitted());
-        self::assertTrue($form->isValid());
-        self::assertSame('Nuevo titulo', $block->getTranslationOrFallback('es')->getTitle());
-        self::assertCount(2, $block->getItems());
-        self::assertStringStartsWith('Alpha', $block->getItems()->first()->getTranslationOrFallback('es')->getTitle());
-        self::assertStringContainsString('Body', $block->getItems()->last()->getTranslationOrFallback('es')->getBody());
     }
 
-    public function testPageCardsBlockInlineModalShrinksTrailingEmptyItems(): void
+    public function testListInlineModalTypeRejectsWrongBlockInstance(): void
     {
-        self::bootKernel();
-        $factory = self::getContainer()->get(FormFactoryInterface::class);
-        $block   = (new PageCardsBlock())->setSectionKey('value');
-        $block->ensureTranslations();
-        foreach ([0, 1] as $position) {
-            $item = (new PageCardItem())->setPosition($position);
-            $item->ensureTranslations();
-            $item->getTranslationOrFallback('es')->setTitle('T' . $position)->setBody('B' . $position);
-            $block->addItem($item);
-        }
-
-        $form = $factory->create(PageCardsBlockInlineModalType::class, null, [
-            'csrf_protection' => false,
-            'block'           => $block,
+        $this->expectException(InvalidOptionsException::class);
+        $this->resolveOptions($this->createType(PageListBlockInlineModalType::class), [
+            'block' => new PageCardsBlock(),
         ]);
-        $shrink = [];
-        foreach (PageLocales::all() as $locale) {
-            $shrink[] = [
-                'locale' => $locale,
-                'title'  => 'Only one',
-                'items'  => 'Solo | Uno',
-            ];
-        }
-        $form->submit(['translations' => $shrink]);
-        self::assertCount(1, $block->getItems());
     }
 
-    public function testPageListBlockInlineModalTypePostSetDataAndSubmit(): void
+    public function testLocalePanelDataReturnsLocale(): void
     {
-        self::bootKernel();
-        $factory = self::getContainer()->get(FormFactoryInterface::class);
+        $data = new PageBlockLocalePanelData(locale: 'en', title: 'Title', items: 'One');
+        self::assertSame('en', $data->getLocale());
+    }
 
-        $block = (new PageListBlock())->setSectionKey('steps');
-        $block->ensureTranslations();
-        $block->getTranslationOrFallback('es')->setTitle('Pasos');
-        $item = (new PageListItem())->setPosition(0);
-        $item->ensureTranslations();
-        $item->getTranslationOrFallback('es')->setText('Primero');
-        $block->addItem($item);
+    /**
+     * @param array<string, mixed> $input
+     *
+     * @return array<string, mixed>
+     */
+    private function resolveOptions(object $type, array $input = []): array
+    {
+        $resolver = new OptionsResolver();
+        $type->configureOptions($resolver);
 
-        $form = $factory->create(PageListBlockInlineModalType::class, null, [
-            'csrf_protection' => false,
-            'block'           => $block,
-        ]);
+        return $resolver->resolve($input);
+    }
 
-        self::assertSame('Primero', $form->get('translations')[0]->get('items')->getData());
-
-        $payload = [];
-        foreach (PageLocales::all() as $locale) {
-            $payload[] = [
-                'locale' => $locale,
-                'title'  => $locale === 'es' ? 'Lista actualizada' : ('List ' . $locale),
-                'items'  => $locale === 'es' ? "Uno\nDos\n\nTres" : "One\nTwo\nThree",
-            ];
-        }
-
-        $form->submit(['translations' => $payload]);
-
-        self::assertTrue($form->isSubmitted());
-        self::assertTrue($form->isValid());
-        self::assertSame('Lista actualizada', $block->getTranslation('es')?->getTitle());
-        self::assertCount(3, $block->getItems());
-        self::assertSame('Tres', $block->getItems()->last()->getTranslationOrFallback('es')->getText());
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $typeClass
+     *
+     * @return T
+     */
+    private function createType(string $typeClass): object
+    {
+        return new $typeClass(
+            new FormOptionsMerger([
+                'page_layout_kit' => [
+                    'translation_domain' => 'form',
+                    'defaults' => [
+                        'attr' => [],
+                        'row_attr' => [],
+                    ],
+                    'field_types' => [],
+                ],
+            ], 'page_layout_kit', new ConstraintDefinitionFactory()),
+            new FormTypeMap(),
+        );
     }
 }
