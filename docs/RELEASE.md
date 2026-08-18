@@ -23,3 +23,7 @@ git tag -a v1.0.1 -m "Release 1.0.1"
 git push origin main
 git push origin v1.0.1
 ```
+
+## 12.4 Security checklist
+
+Before tagging a release, confirm dependency audit is clean, no secrets are committed, and `docs/SECURITY.md` / `.github/SECURITY.md` remain accurate.

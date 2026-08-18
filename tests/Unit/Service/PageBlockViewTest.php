@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PageBlockViewTest extends TestCase
 {
-    public function testTemplateAndModalFlags(): void
+    public function testTemplateNameUsesBundleNamespaceAndModalFlag(): void
     {
         $view = new PageBlockView(
             layoutId: 7,
@@ -28,6 +28,6 @@ final class PageBlockViewTest extends TestCase
         self::assertNull($view->sectionKey);
         self::assertSame(['title' => 'Hello'], $view->data);
         self::assertTrue($view->isModalEditable());
-        self::assertSame('pages/blocks/hero.html.twig', $view->templateName());
+        self::assertSame('@NowoPageLayoutKitBundle/blocks/hero.html.twig', $view->templateName());
     }
 }

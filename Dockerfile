@@ -1,4 +1,4 @@
-FROM php:8.2-cli-alpine
+FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache git unzip autoconf g++ make linux-headers bash libzip-dev zip \
     && docker-php-ext-install -j$(nproc) zip \

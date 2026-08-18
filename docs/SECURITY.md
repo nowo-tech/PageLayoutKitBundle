@@ -90,3 +90,17 @@ Before tagging a release, confirm:
 | Dependencies | `composer audit` and normal QA checks reviewed |
 
 See also [CONFIGURATION.md](CONFIGURATION.md) and [USAGE.md](USAGE.md).
+
+## Secrets
+
+Never commit application secrets, `.env` files with credentials, or private keys. Use `.env.example` templates only.
+
+## REQ-SEC-004 recording
+
+| Field | Value |
+| --- | --- |
+| AI audit date | 2026-08-18 |
+| Method | Static review of admin access, CSRF, Twig escaping, CMS `\|raw` surfaces, and Doctrine persistence |
+| Grade | Pass (conditional) |
+| Overall risk | Medium |
+| Residuals | Block templates may render trusted-editor HTML with `\|raw`; hosts must restrict editors and sanitize if untrusted HTML is possible; keep host `access_control` on admin paths |

@@ -202,7 +202,7 @@ final readonly class PageBlockMigrator
     /** @param array<string, array<string, mixed>> $locales */
     private function createTextBlock(string $sectionKey, array $locales, callable $mapper): PageTextBlock
     {
-        $pageTextBlock = new PageTextBlock()->setSectionKey($sectionKey);
+        $pageTextBlock = (new PageTextBlock())->setSectionKey($sectionKey);
 
         foreach (PageLocales::all() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
@@ -226,7 +226,7 @@ final readonly class PageBlockMigrator
      */
     private function createCardsBlock(string $sectionKey, array $locales, callable $mapper): PageCardsBlock
     {
-        $pageCardsBlock = new PageCardsBlock()->setSectionKey($sectionKey);
+        $pageCardsBlock = (new PageCardsBlock())->setSectionKey($sectionKey);
         $reference = $mapper($locales[PageLocales::default()] ?? []);
 
         foreach (PageLocales::all() as $locale) {
@@ -239,7 +239,7 @@ final readonly class PageBlockMigrator
         }
 
         foreach ($reference['items'] as $position => $itemData) {
-            $item = new PageCardItem()->setPosition($position);
+            $item = (new PageCardItem())->setPosition($position);
 
             foreach (PageLocales::all() as $locale) {
                 $mapped = $mapper($locales[$locale] ?? []);
@@ -266,7 +266,7 @@ final readonly class PageBlockMigrator
      */
     private function createListBlock(string $sectionKey, array $locales, callable $mapper): PageListBlock
     {
-        $pageListBlock = new PageListBlock()->setSectionKey($sectionKey);
+        $pageListBlock = (new PageListBlock())->setSectionKey($sectionKey);
         $reference = $mapper($locales[PageLocales::default()] ?? []);
 
         foreach (PageLocales::all() as $locale) {
@@ -279,7 +279,7 @@ final readonly class PageBlockMigrator
         }
 
         foreach ($reference['items'] as $position => $text) {
-            $item = new PageListItem()->setPosition($position);
+            $item = (new PageListItem())->setPosition($position);
 
             foreach (PageLocales::all() as $locale) {
                 $mapped = $mapper($locales[$locale] ?? []);
@@ -301,7 +301,7 @@ final readonly class PageBlockMigrator
     /** @param array<string, array<string, mixed>> $locales */
     private function createCtaBlock(?string $sectionKey, array $locales, callable $mapper): PageCtaBlock
     {
-        $pageCtaBlock = new PageCtaBlock()->setSectionKey($sectionKey);
+        $pageCtaBlock = (new PageCtaBlock())->setSectionKey($sectionKey);
 
         foreach (PageLocales::all() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);

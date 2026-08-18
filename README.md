@@ -1,12 +1,12 @@
 # Page Layout Kit Bundle
 
-[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%2B%20%7C%208.x-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%2B%20%7C%208.x-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** Give it a star on GitHub! It helps us maintain and improve the project.
 
 **Reusable Symfony page compositor** for ordered, typed content blocks (`hero`, `text`, `cards`, `list`, `cta`, `compare`) with a secured admin reorder UI, inline CMS modals, Doctrine persistence, and Twig-based public rendering.
 
-> Compatible with **Symfony 7.4+ and 8.x** on **PHP 8.2+**
+> Compatible with **Symfony 7.4+ and 8.x** on **PHP 8.4+**
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 

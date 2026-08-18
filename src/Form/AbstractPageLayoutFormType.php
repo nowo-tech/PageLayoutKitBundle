@@ -7,6 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Form;
 use Nowo\FormKitBundle\Attribute\FormKitConfig;
 use Nowo\FormKitBundle\Form\FormKitAbstractType;
 use Override;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -43,6 +44,20 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
             unset($options['config'], $options['theme'], $options['min_height']);
         }
         $this->addNamedField($name, $type, $options);
+    }
+
+    /**
+     * @param class-string $entryType
+     * @param array<string, mixed> $options
+     */
+    protected function addTranslationsCollectionField(string $entryType, array $options = []): void
+    {
+        $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
+            'entry_type' => $entryType,
+            'allow_add' => false,
+            'allow_delete' => false,
+            ...$options,
+        ]);
     }
 
     /** @param array<string, mixed> $options */

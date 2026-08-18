@@ -56,7 +56,7 @@ trait TranslatableBlockTrait
         foreach (PageLocales::all() as $locale) {
             if (null === $this->getTranslation($locale)) {
                 $class = $this->translationClass();
-                $this->addTranslation(new $class()->setLocale($locale));
+                $this->addTranslation((new $class())->setLocale($locale));
             }
         }
 

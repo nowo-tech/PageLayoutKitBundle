@@ -20,7 +20,7 @@ final readonly class TablePrefixListener
         }
 
         $metadata = $event->getClassMetadata();
-        if (!str_starts_with($metadata->getName(), 'Nowo\PageLayoutKitBundle\Entity\')) {
+        if (!str_starts_with($metadata->getName(), 'Nowo\\PageLayoutKitBundle\\Entity\\')) {
             return;
         }
 
