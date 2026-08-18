@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Form;
 
+use App\Tests\Unit\Support\LocaleTestSupport;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
@@ -13,9 +14,10 @@ use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
-use App\Tests\Unit\Support\LocaleTestSupport;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
+
+use function count;
 
 final class PageBlockFormTypesTest extends KernelTestCase
 {
@@ -60,7 +62,7 @@ final class PageBlockFormTypesTest extends KernelTestCase
 
         $form = $factory->create(PageCardsBlockInlineModalType::class, null, [
             'csrf_protection' => false,
-            'block' => $block,
+            'block'           => $block,
         ]);
 
         self::assertTrue($form->has('translations'));
@@ -71,8 +73,8 @@ final class PageBlockFormTypesTest extends KernelTestCase
         foreach (PageLocales::all() as $locale) {
             $payload[] = [
                 'locale' => $locale,
-                'title' => 'es' === $locale ? 'Nuevo titulo' : ('Title ' . $locale),
-                'items' => 'es' === $locale
+                'title'  => $locale === 'es' ? 'Nuevo titulo' : ('Title ' . $locale),
+                'items'  => $locale === 'es'
                     ? "Alpha | Body A\nBeta | Body B"
                     : "Alpha {$locale} | Body A {$locale}\nBeta {$locale} | Body B {$locale}",
             ];
@@ -92,7 +94,7 @@ final class PageBlockFormTypesTest extends KernelTestCase
     {
         self::bootKernel();
         $factory = self::getContainer()->get(FormFactoryInterface::class);
-        $block = (new PageCardsBlock())->setSectionKey('value');
+        $block   = (new PageCardsBlock())->setSectionKey('value');
         $block->ensureTranslations();
         foreach ([0, 1] as $position) {
             $item = (new PageCardItem())->setPosition($position);
@@ -103,14 +105,14 @@ final class PageBlockFormTypesTest extends KernelTestCase
 
         $form = $factory->create(PageCardsBlockInlineModalType::class, null, [
             'csrf_protection' => false,
-            'block' => $block,
+            'block'           => $block,
         ]);
         $shrink = [];
         foreach (PageLocales::all() as $locale) {
             $shrink[] = [
                 'locale' => $locale,
-                'title' => 'Only one',
-                'items' => 'Solo | Uno',
+                'title'  => 'Only one',
+                'items'  => 'Solo | Uno',
             ];
         }
         $form->submit(['translations' => $shrink]);
@@ -132,7 +134,7 @@ final class PageBlockFormTypesTest extends KernelTestCase
 
         $form = $factory->create(PageListBlockInlineModalType::class, null, [
             'csrf_protection' => false,
-            'block' => $block,
+            'block'           => $block,
         ]);
 
         self::assertSame('Primero', $form->get('translations')[0]->get('items')->getData());
@@ -141,8 +143,8 @@ final class PageBlockFormTypesTest extends KernelTestCase
         foreach (PageLocales::all() as $locale) {
             $payload[] = [
                 'locale' => $locale,
-                'title' => 'es' === $locale ? 'Lista actualizada' : ('List ' . $locale),
-                'items' => 'es' === $locale ? "Uno\nDos\n\nTres" : "One\nTwo\nThree",
+                'title'  => $locale === 'es' ? 'Lista actualizada' : ('List ' . $locale),
+                'items'  => $locale === 'es' ? "Uno\nDos\n\nTres" : "One\nTwo\nThree",
             ];
         }
 

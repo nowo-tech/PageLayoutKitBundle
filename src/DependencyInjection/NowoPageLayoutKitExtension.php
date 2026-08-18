@@ -50,10 +50,10 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $container->prependExtensionConfig('nowo_form_kit', [
             'profiles' => [
                 'page_layout_kit' => [
-                    'alias' => 'page_layout_kit',
+                    'alias'              => 'page_layout_kit',
                     'translation_domain' => 'NowoPageLayoutKitBundle',
-                    'defaults' => [
-                        'attr' => ['class' => 'nowo-ui-input form-control'],
+                    'defaults'           => [
+                        'attr'     => ['class' => 'nowo-ui-input form-control'],
                         'row_attr' => ['class' => 'mb-2'],
                     ],
                 ],
@@ -64,7 +64,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new BundleConfiguration();
-        $config = $this->processConfiguration($configuration, $configs);
+        $config        = $this->processConfiguration($configuration, $configs);
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yaml');
@@ -126,7 +126,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
             return;
         }
 
-        $id = 'nowo_page_layout_kit.access_checker.default';
+        $id         = 'nowo_page_layout_kit.access_checker.default';
         $definition = new Definition(ConfigurablePageLayoutKitAccessChecker::class);
         $definition->setArgument('$accessRoles', $security['access_roles']);
         $definition->setArgument('$authorizationChecker', new Reference('security.authorization_checker'));

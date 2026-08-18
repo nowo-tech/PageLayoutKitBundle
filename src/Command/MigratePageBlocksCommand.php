@@ -36,8 +36,8 @@ final class MigratePageBlocksCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
-        $force = (bool) $input->getOption('force');
-        $ifEmpty = (bool) $input->getOption('if-empty');
+        $force        = (bool) $input->getOption('force');
+        $ifEmpty      = (bool) $input->getOption('if-empty');
 
         if ($ifEmpty && !$force && !$this->pageBlockMigrator->isEmpty()) {
             $symfonyStyle->note('Page blocks layout already exists.');

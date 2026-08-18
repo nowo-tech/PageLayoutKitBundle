@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
-use Nowo\PageLayoutKitBundle\Repository\PageCardItemTranslationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
+use Nowo\PageLayoutKitBundle\Repository\PageCardItemTranslationRepository;
 
 #[ORM\Entity(repositoryClass: PageCardItemTranslationRepository::class)]
 #[ORM\Table(name: 'content_page_card_item_translation')]
@@ -40,7 +40,7 @@ class PageCardItemTranslation implements LocaleAwareTranslationInterface
     {
         return [
             'title' => $this->title,
-            'body' => $this->body,
+            'body'  => $this->body,
         ];
     }
 

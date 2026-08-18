@@ -12,6 +12,10 @@ use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Service\ResetInterface;
 
+use function is_array;
+use function is_string;
+use function sprintf;
+
 /**
  * Resolves ordered page blocks for configured page keys, with optional legacy JSON fallback.
  */
@@ -46,16 +50,16 @@ final class PageBlockProvider implements ResetInterface
 
         $entries = $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey);
 
-        if ([] === $entries) {
+        if ($entries === []) {
             return $this->layoutCache[$cacheKey] = $this->legacyLayout($pageKey, $locale);
         }
 
         $dataByKey = $this->pageBlockSqlRepository->loadDataForEntries($entries, $locale);
-        $views = [];
+        $views     = [];
 
         foreach ($entries as $entry) {
             $dataKey = $entry->getBlockType()->value . ':' . $entry->getBlockId();
-            $data = $dataByKey[$dataKey] ?? null;
+            $data    = $dataByKey[$dataKey] ?? null;
 
             if (!is_array($data)) {
                 continue;
@@ -63,7 +67,7 @@ final class PageBlockProvider implements ResetInterface
 
             $sectionKey = $data['sectionKey'] ?? null;
 
-            if (!is_string($sectionKey) || '' === $sectionKey) {
+            if (!is_string($sectionKey) || $sectionKey === '') {
                 $sectionKey = null;
             }
 
@@ -86,16 +90,16 @@ final class PageBlockProvider implements ResetInterface
         $locale ??= $this->currentLocale();
 
         foreach ($this->getLayout($pageKey, $locale) as $pageBlockView) {
-            if (PageBlockType::Hero === $pageBlockView->type) {
+            if ($pageBlockView->type === PageBlockType::Hero) {
                 return [
-                    'title' => (string) ($pageBlockView->data['pageTitle'] ?? ''),
+                    'title'       => (string) ($pageBlockView->data['pageTitle'] ?? ''),
                     'description' => (string) ($pageBlockView->data['pageDescription'] ?? ''),
                 ];
             }
 
-            if (PageBlockType::Text === $pageBlockView->type && 'contact_header' === $pageBlockView->sectionKey) {
+            if ($pageBlockView->type === PageBlockType::Text && $pageBlockView->sectionKey === 'contact_header') {
                 return [
-                    'title' => (string) ($pageBlockView->data['pageTitle'] ?? $pageBlockView->data['title'] ?? ''),
+                    'title'       => (string) ($pageBlockView->data['pageTitle'] ?? $pageBlockView->data['title'] ?? ''),
                     'description' => (string) ($pageBlockView->data['pageDescription'] ?? $pageBlockView->data['body'] ?? ''),
                 ];
             }
@@ -104,14 +108,14 @@ final class PageBlockProvider implements ResetInterface
         $legacy = $this->legacyContent($pageKey, $locale);
 
         return [
-            'title' => (string) ($legacy['page_title'] ?? ''),
+            'title'       => (string) ($legacy['page_title'] ?? ''),
             'description' => (string) ($legacy['page_description'] ?? ''),
         ];
     }
 
     public function hasLayout(string $pageKey): bool
     {
-        return [] !== $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey);
+        return $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey) !== [];
     }
 
     /** @return list<PageBlockView> */
@@ -119,11 +123,11 @@ final class PageBlockProvider implements ResetInterface
     {
         $content = $this->legacyContent($pageKey, $locale);
 
-        if ('home' === $pageKey) {
+        if ($pageKey === 'home') {
             return $this->legacyHomeLayout($content);
         }
 
-        if ('contact' === $pageKey) {
+        if ($pageKey === 'contact') {
             return $this->legacyContactLayout($content);
         }
 
@@ -137,17 +141,17 @@ final class PageBlockProvider implements ResetInterface
     {
         return [
             new PageBlockView(0, 'home', PageBlockType::Hero, 0, null, [
-                'pageTitle' => $content['page_title'] ?? '',
+                'pageTitle'       => $content['page_title'] ?? '',
                 'pageDescription' => $content['page_description'] ?? '',
-                'eyebrow' => $content['hero_eyebrow'] ?? '',
-                'title' => $content['hero_title'] ?? '',
-                'subtitle' => $content['hero_subtitle'] ?? '',
-                'ctaPrimary' => $content['hero_cta_primary'] ?? '',
-                'ctaSecondary' => $content['hero_cta_secondary'] ?? '',
+                'eyebrow'         => $content['hero_eyebrow'] ?? '',
+                'title'           => $content['hero_title'] ?? '',
+                'subtitle'        => $content['hero_subtitle'] ?? '',
+                'ctaPrimary'      => $content['hero_cta_primary'] ?? '',
+                'ctaSecondary'    => $content['hero_cta_secondary'] ?? '',
             ]),
             new PageBlockView(0, 'home', PageBlockType::Text, 0, 'problem', [
                 'title' => $content['problem_title'] ?? '',
-                'body' => $content['problem_text'] ?? '',
+                'body'  => $content['problem_text'] ?? '',
             ]),
             new PageBlockView(0, 'home', PageBlockType::Cards, 0, 'value', [
                 'title' => $content['value_title'] ?? '',
@@ -166,11 +170,11 @@ final class PageBlockProvider implements ResetInterface
             ]),
             new PageBlockView(0, 'home', PageBlockType::Text, 0, 'services', [
                 'title' => $content['services_title'] ?? '',
-                'body' => $content['services_text'] ?? '',
+                'body'  => $content['services_text'] ?? '',
             ]),
             new PageBlockView(0, 'home', PageBlockType::Text, 0, 'profile', [
                 'title' => $content['profile_title'] ?? '',
-                'body' => $content['profile_text'] ?? '',
+                'body'  => $content['profile_text'] ?? '',
             ]),
             new PageBlockView(0, 'home', PageBlockType::List, 0, 'process', [
                 'title' => $content['process_title'] ?? '',
@@ -181,7 +185,7 @@ final class PageBlockProvider implements ResetInterface
             ]),
             new PageBlockView(0, 'home', PageBlockType::Cta, 0, null, [
                 'title' => $content['cta_title'] ?? '',
-                'body' => $content['cta_text'] ?? '',
+                'body'  => $content['cta_text'] ?? '',
             ]),
         ];
     }
@@ -193,14 +197,14 @@ final class PageBlockProvider implements ResetInterface
     {
         return [
             new PageBlockView(0, 'contact', PageBlockType::Text, 0, 'contact_header', [
-                'pageTitle' => $content['page_title'] ?? '',
+                'pageTitle'       => $content['page_title'] ?? '',
                 'pageDescription' => $content['page_description'] ?? '',
-                'title' => $content['h1'] ?? '',
-                'body' => $content['intro'] ?? '',
+                'title'           => $content['h1'] ?? '',
+                'body'            => $content['intro'] ?? '',
             ]),
             new PageBlockView(0, 'contact', PageBlockType::Text, 0, 'expect', [
                 'title' => $content['expect_title'] ?? '',
-                'body' => $content['expect_text'] ?? '',
+                'body'  => $content['expect_text'] ?? '',
             ]),
             new PageBlockView(0, 'contact', PageBlockType::List, 0, 'expect', [
                 'title' => '',
@@ -211,13 +215,13 @@ final class PageBlockProvider implements ResetInterface
             ]),
             new PageBlockView(0, 'contact', PageBlockType::Compare, 0, null, [
                 'beforeLabel' => $content['before_label'] ?? '',
-                'beforeText' => $content['before_text'] ?? '',
-                'afterLabel' => $content['after_label'] ?? '',
-                'afterText' => $content['after_text'] ?? '',
+                'beforeText'  => $content['before_text'] ?? '',
+                'afterLabel'  => $content['after_label'] ?? '',
+                'afterText'   => $content['after_text'] ?? '',
             ]),
             new PageBlockView(0, 'contact', PageBlockType::Cta, 0, 'contact_form', [
                 'title' => $content['form_submit'] ?? '',
-                'body' => $content['form_note'] ?? '',
+                'body'  => $content['form_note'] ?? '',
             ]),
         ];
     }
@@ -232,7 +236,7 @@ final class PageBlockProvider implements ResetInterface
         for ($i = 1; $i <= $count; ++$i) {
             $items[] = [
                 'title' => $content[sprintf('%s_%d_title', $prefix, $i)] ?? '',
-                'body' => $content[sprintf('%s_%d_text', $prefix, $i)] ?? '',
+                'body'  => $content[sprintf('%s_%d_text', $prefix, $i)] ?? '',
             ];
         }
 

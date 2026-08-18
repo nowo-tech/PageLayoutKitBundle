@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Repository;
 
-use Nowo\PageLayoutKitBundle\Entity\PageCardsBlockTranslation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageCardsBlockTranslation;
 
 /**
  * Doctrine repository for cards page block translations.

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
-use Nowo\PageLayoutKitBundle\Repository\PageHeroBlockTranslationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
+use Nowo\PageLayoutKitBundle\Repository\PageHeroBlockTranslationRepository;
 
 #[ORM\Entity(repositoryClass: PageHeroBlockTranslationRepository::class)]
 #[ORM\Table(name: 'content_page_hero_block_translation')]
@@ -54,13 +54,13 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
     public function toArray(): array
     {
         return [
-            'pageTitle' => $this->pageTitle,
+            'pageTitle'       => $this->pageTitle,
             'pageDescription' => $this->pageDescription,
-            'eyebrow' => $this->eyebrow,
-            'title' => $this->title,
-            'subtitle' => $this->subtitle,
-            'ctaPrimary' => $this->ctaPrimary,
-            'ctaSecondary' => $this->ctaSecondary,
+            'eyebrow'         => $this->eyebrow,
+            'title'           => $this->title,
+            'subtitle'        => $this->subtitle,
+            'ctaPrimary'      => $this->ctaPrimary,
+            'ctaSecondary'    => $this->ctaSecondary,
         ];
     }
 

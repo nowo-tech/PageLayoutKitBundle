@@ -28,11 +28,11 @@ final class PageLayoutKitExtension extends AbstractExtension implements GlobalsI
     public function getGlobals(): array
     {
         return [
-            'nowo_page_layout_kit_layout' => $this->layoutTemplate,
-            'nowo_page_layout_kit_css_framework' => $this->cssFramework,
-            'nowo_page_layout_kit_pages' => $this->pages,
+            'nowo_page_layout_kit_layout'         => $this->layoutTemplate,
+            'nowo_page_layout_kit_css_framework'  => $this->cssFramework,
+            'nowo_page_layout_kit_pages'          => $this->pages,
             'nowo_page_layout_kit_default_locale' => $this->defaultLocale,
-            'nowo_page_layout_kit_can_edit' => $this->accessChecker->canAccess(),
+            'nowo_page_layout_kit_can_edit'       => $this->accessChecker->canAccess(),
         ];
     }
 }

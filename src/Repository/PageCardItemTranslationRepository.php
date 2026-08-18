@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Repository;
 
-use Nowo\PageLayoutKitBundle\Entity\PageCardItemTranslation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageCardItemTranslation;
 
 /**
  * Doctrine repository for card item translations.

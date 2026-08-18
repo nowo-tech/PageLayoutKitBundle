@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
-use Nowo\PageLayoutKitBundle\Repository\PageCtaBlockTranslationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
+use Nowo\PageLayoutKitBundle\Repository\PageCtaBlockTranslationRepository;
 
 #[ORM\Entity(repositoryClass: PageCtaBlockTranslationRepository::class)]
 #[ORM\Table(name: 'content_page_cta_block_translation')]
@@ -40,7 +40,7 @@ class PageCtaBlockTranslation implements LocaleAwareTranslationInterface
     {
         return [
             'title' => $this->title,
-            'body' => $this->body,
+            'body'  => $this->body,
         ];
     }
 

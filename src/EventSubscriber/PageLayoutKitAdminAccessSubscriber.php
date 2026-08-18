@@ -10,6 +10,8 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
+use function is_string;
+
 /**
  * Enforces page layout admin access by route name prefix.
  */
@@ -30,7 +32,7 @@ final readonly class PageLayoutKitAdminAccessSubscriber implements EventSubscrib
     public function onKernelController(ControllerEvent $event): void
     {
         $route = $event->getRequest()->attributes->get('_route');
-        if (!\is_string($route)) {
+        if (!is_string($route)) {
             return;
         }
 

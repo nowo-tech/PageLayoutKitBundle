@@ -36,11 +36,11 @@ final readonly class PageBlockRegistry
     public function get(PageBlockType $pageBlockType, int $id): PageHeroBlock|PageTextBlock|PageCardsBlock|PageListBlock|PageCtaBlock|PageCompareBlock|null
     {
         return match ($pageBlockType) {
-            PageBlockType::Hero => $this->pageHeroBlockRepository->findWithTranslations($id),
-            PageBlockType::Text => $this->pageTextBlockRepository->findWithTranslations($id),
-            PageBlockType::Cards => $this->pageCardsBlockRepository->findWithItemsAndTranslations($id),
-            PageBlockType::List => $this->pageListBlockRepository->findWithItemsAndTranslations($id),
-            PageBlockType::Cta => $this->pageCtaBlockRepository->findWithTranslations($id),
+            PageBlockType::Hero    => $this->pageHeroBlockRepository->findWithTranslations($id),
+            PageBlockType::Text    => $this->pageTextBlockRepository->findWithTranslations($id),
+            PageBlockType::Cards   => $this->pageCardsBlockRepository->findWithItemsAndTranslations($id),
+            PageBlockType::List    => $this->pageListBlockRepository->findWithItemsAndTranslations($id),
+            PageBlockType::Cta     => $this->pageCtaBlockRepository->findWithTranslations($id),
             PageBlockType::Compare => $this->pageCompareBlockRepository->findWithTranslations($id),
         };
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository\Concerns;
 
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
 
 /**
  * Helpers for native SQL queries documented with leading comments.
@@ -55,10 +56,8 @@ trait RunsDocumentedSql
 
     private function assertDocumentedSql(string $sql): void
     {
-        if (1 !== preg_match('/^\s*--[^\n]+\n\s*--[^\n]+/s', $sql)) {
-            throw new \InvalidArgumentException(
-                'Native SQL must start with two MySQL -- comments (purpose, then return shape).',
-            );
+        if (preg_match('/^\s*--[^\n]+\n\s*--[^\n]+/s', $sql) !== 1) {
+            throw new InvalidArgumentException('Native SQL must start with two MySQL -- comments (purpose, then return shape).');
         }
     }
 

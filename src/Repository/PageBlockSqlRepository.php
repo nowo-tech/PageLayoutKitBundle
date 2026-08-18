@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Repository;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\Concerns\RunsDocumentedSql;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Batch SQL loader for page blocks to avoid per-block ORM N+1 queries.
@@ -39,13 +39,13 @@ final readonly class PageBlockSqlRepository
         $data = [];
 
         foreach ($idsByType as $type => $ids) {
-            $ids = array_values(array_unique(array_map(intval(...), $ids)));
+            $ids    = array_values(array_unique(array_map(intval(...), $ids)));
             $loaded = match ($type) {
-                PageBlockType::Hero->value => $this->loadHeroBlocks($ids, $locale),
-                PageBlockType::Text->value => $this->loadTextBlocks($ids, $locale),
-                PageBlockType::Cards->value => $this->loadCardsBlocks($ids, $locale),
-                PageBlockType::List->value => $this->loadListBlocks($ids, $locale),
-                PageBlockType::Cta->value => $this->loadCtaBlocks($ids, $locale),
+                PageBlockType::Hero->value    => $this->loadHeroBlocks($ids, $locale),
+                PageBlockType::Text->value    => $this->loadTextBlocks($ids, $locale),
+                PageBlockType::Cards->value   => $this->loadCardsBlocks($ids, $locale),
+                PageBlockType::List->value    => $this->loadListBlocks($ids, $locale),
+                PageBlockType::Cta->value     => $this->loadCtaBlocks($ids, $locale),
                 PageBlockType::Compare->value => $this->loadCompareBlocks($ids, $locale),
             };
 
@@ -69,12 +69,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadHeroBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('heroId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -108,12 +108,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadTextBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('textId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -145,12 +145,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadCardsBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('cardsId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -169,7 +169,7 @@ final readonly class PageBlockSqlRepository
             WHERE b.id IN ({$inClause})
             SQL;
 
-        $blocks = $this->indexByBlockId($this->fetchAllDocumentedSql($sql, $params));
+        $blocks       = $this->indexByBlockId($this->fetchAllDocumentedSql($sql, $params));
         $itemsByBlock = $this->loadCardItems($ids, $locale);
 
         foreach (array_keys($blocks) as $blockId) {
@@ -186,12 +186,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadListBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('listId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -210,7 +210,7 @@ final readonly class PageBlockSqlRepository
             WHERE b.id IN ({$inClause})
             SQL;
 
-        $blocks = $this->indexByBlockId($this->fetchAllDocumentedSql($sql, $params));
+        $blocks       = $this->indexByBlockId($this->fetchAllDocumentedSql($sql, $params));
         $itemsByBlock = $this->loadListItems($ids, $locale);
 
         foreach (array_keys($blocks) as $blockId) {
@@ -227,12 +227,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadCtaBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('ctaId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -262,12 +262,12 @@ final readonly class PageBlockSqlRepository
      */
     private function loadCompareBlocks(array $ids, string $locale): array
     {
-        if ([] === $ids) {
+        if ($ids === []) {
             return [];
         }
 
         [$inClause, $params] = $this->namedInClause('compareId', $ids, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -299,7 +299,7 @@ final readonly class PageBlockSqlRepository
     private function loadCardItems(array $blockIds, string $locale): array
     {
         [$inClause, $params] = $this->namedInClause('cardBlockId', $blockIds, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -323,10 +323,10 @@ final readonly class PageBlockSqlRepository
         $grouped = [];
 
         foreach ($this->fetchAllDocumentedSql($sql, $params) as $row) {
-            $blockId = (int) $row['block_id'];
+            $blockId             = (int) $row['block_id'];
             $grouped[$blockId][] = [
                 'title' => (string) $row['title'],
-                'body' => (string) $row['body'],
+                'body'  => (string) $row['body'],
             ];
         }
 
@@ -341,7 +341,7 @@ final readonly class PageBlockSqlRepository
     private function loadListItems(array $blockIds, string $locale): array
     {
         [$inClause, $params] = $this->namedInClause('listBlockId', $blockIds, [
-            'locale' => $locale,
+            'locale'   => $locale,
             'fallback' => PageLocales::default(),
         ]);
 
@@ -364,7 +364,7 @@ final readonly class PageBlockSqlRepository
         $grouped = [];
 
         foreach ($this->fetchAllDocumentedSql($sql, $params) as $row) {
-            $blockId = (int) $row['block_id'];
+            $blockId             = (int) $row['block_id'];
             $grouped[$blockId][] = [
                 'text' => (string) $row['text'],
             ];
@@ -382,12 +382,12 @@ final readonly class PageBlockSqlRepository
     private function namedInClause(string $prefix, array $ids, array $baseParams): array
     {
         $placeholders = [];
-        $params = $baseParams;
+        $params       = $baseParams;
 
         foreach ($ids as $index => $id) {
-            $key = $prefix . $index;
+            $key            = $prefix . $index;
             $placeholders[] = ':' . $key;
-            $params[$key] = $id;
+            $params[$key]   = $id;
         }
 
         return [implode(', ', $placeholders), $params];

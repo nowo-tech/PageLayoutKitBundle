@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Form;
 
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlockTranslation;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Override;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -19,14 +18,14 @@ final class PageCompareBlockEditType extends AbstractPageLayoutFormType
             $this->addHiddenLocaleField();
             $this->addTextField('beforeLabel');
             $this->addCkeditor5Field('beforeText', [
-                'config' => 'simple',
-                'theme' => 'auto',
+                'config'     => 'simple',
+                'theme'      => 'auto',
                 'min_height' => '160px',
             ]);
             $this->addTextField('afterLabel');
             $this->addCkeditor5Field('afterText', [
-                'config' => 'simple',
-                'theme' => 'auto',
+                'config'     => 'simple',
+                'theme'      => 'auto',
                 'min_height' => '160px',
             ]);
         });

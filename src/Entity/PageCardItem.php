@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
-use Nowo\PageLayoutKitBundle\Repository\PageCardItemRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
+use Nowo\PageLayoutKitBundle\Repository\PageCardItemRepository;
 
 #[ORM\Entity(repositoryClass: PageCardItemRepository::class)]
 #[ORM\Table(name: 'content_page_card_item')]

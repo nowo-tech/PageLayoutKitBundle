@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Repository;
 
-use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 
 /**
  * Doctrine repository for text page block translations.

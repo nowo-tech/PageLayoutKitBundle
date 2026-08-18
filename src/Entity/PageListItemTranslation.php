@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
-use Nowo\PageLayoutKitBundle\Repository\PageListItemTranslationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
+use Nowo\PageLayoutKitBundle\Repository\PageListItemTranslationRepository;
 
 #[ORM\Entity(repositoryClass: PageListItemTranslationRepository::class)]
 #[ORM\Table(name: 'content_page_list_item_translation')]

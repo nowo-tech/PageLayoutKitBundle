@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
-use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
-use Nowo\PageLayoutKitBundle\Repository\PageListItemRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
+use Nowo\PageLayoutKitBundle\Repository\PageListItemRepository;
 
 #[ORM\Entity(repositoryClass: PageListItemRepository::class)]
 #[ORM\Table(name: 'content_page_list_item')]

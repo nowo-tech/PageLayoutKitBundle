@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
 use Nowo\PageLayoutKitBundle\Model\LocaleAwareTranslationInterface;
 use Nowo\PageLayoutKitBundle\Repository\PageCardsBlockTranslationRepository;
-use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PageCardsBlockTranslationRepository::class)]
 #[ORM\Table(name: 'content_page_cards_block_translation')]

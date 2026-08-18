@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Form;
 
 use Nowo\PageLayoutKitBundle\Entity\PageCtaBlockTranslation;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Override;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -19,8 +18,8 @@ final class PageCtaBlockEditType extends AbstractPageLayoutFormType
             $this->addHiddenLocaleField();
             $this->addTextField('title');
             $this->addCkeditor5Field('body', [
-                'config' => 'simple',
-                'theme' => 'auto',
+                'config'     => 'simple',
+                'theme'      => 'auto',
                 'min_height' => '160px',
             ]);
         });

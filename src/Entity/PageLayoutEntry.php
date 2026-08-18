@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
-use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PageLayoutEntryRepository::class)]
 #[ORM\Table(name: 'content_page_layout_entry')]

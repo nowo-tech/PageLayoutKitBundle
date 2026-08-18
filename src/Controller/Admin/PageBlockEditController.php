@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCtaBlock;
@@ -18,7 +19,6 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,18 +40,18 @@ final class PageBlockEditController extends AbstractController
     public function editModal(string $type, int $id, Request $request): Response
     {
         $pageBlockType = PageBlockType::from($type);
-        $block = $this->pageBlockRegistry->get($pageBlockType, $id);
+        $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
-        if (null === $block) {
+        if ($block === null) {
             throw $this->createNotFoundException('Bloque no encontrado.');
         }
 
         $this->ensureBlockTranslations($block);
         $locale = $request->getLocale();
-        $form = $this->createBlockForm($pageBlockType, $block);
+        $form   = $this->createBlockForm($pageBlockType, $block);
 
         return $this->render('@NowoPageLayoutKitBundle/admin/_modal_form.html.twig', [
-            'form' => $form,
+            'form'   => $form,
             'locale' => $locale,
         ]);
     }
@@ -60,20 +60,20 @@ final class PageBlockEditController extends AbstractController
     public function update(string $type, int $id, Request $request): Response
     {
         $pageBlockType = PageBlockType::from($type);
-        $block = $this->pageBlockRegistry->get($pageBlockType, $id);
+        $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
-        if (null === $block) {
+        if ($block === null) {
             throw $this->createNotFoundException('Bloque no encontrado.');
         }
 
         $this->ensureBlockTranslations($block);
         $locale = $request->getLocale();
-        $form = $this->createBlockForm($pageBlockType, $block);
+        $form   = $this->createBlockForm($pageBlockType, $block);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->render('@NowoPageLayoutKitBundle/admin/_modal_form.html.twig', [
-                'form' => $form,
+                'form'   => $form,
                 'locale' => $locale,
             ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
         }
@@ -90,16 +90,16 @@ final class PageBlockEditController extends AbstractController
     public function edit(string $type, int $id): Response
     {
         $pageBlockType = PageBlockType::from($type);
-        $block = $this->pageBlockRegistry->get($pageBlockType, $id);
+        $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
-        if (null === $block) {
+        if ($block === null) {
             throw $this->createNotFoundException('Bloque no encontrado.');
         }
 
         return $this->render('@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig', [
             'page_title' => 'Editar bloque',
             'block_type' => $pageBlockType,
-            'block_id' => $id,
+            'block_id'   => $id,
         ]);
     }
 
@@ -112,7 +112,7 @@ final class PageBlockEditController extends AbstractController
     ): FormInterface {
         $action = $this->generateUrl('admin_page_blocks_update', [
             'type' => $pageBlockType->value,
-            'id' => $block->getId(),
+            'id'   => $block->getId(),
         ]);
 
         return match ($pageBlockType) {
@@ -121,9 +121,9 @@ final class PageBlockEditController extends AbstractController
                 'method' => 'POST',
             ]),
             PageBlockType::Text => $this->createForm(PageTextBlockModalType::class, $block, [
-                'action' => $action,
-                'method' => 'POST',
-                'include_meta' => $block instanceof PageTextBlock && 'contact_header' === $block->getSectionKey(),
+                'action'       => $action,
+                'method'       => 'POST',
+                'include_meta' => $block instanceof PageTextBlock && $block->getSectionKey() === 'contact_header',
             ]),
             PageBlockType::Cta => $this->createForm(PageCtaBlockModalType::class, $block, [
                 'action' => $action,
@@ -134,12 +134,12 @@ final class PageBlockEditController extends AbstractController
                 'method' => 'POST',
             ]),
             PageBlockType::Cards => $this->createForm(PageCardsBlockInlineModalType::class, null, [
-                'block' => $block,
+                'block'  => $block,
                 'action' => $action,
                 'method' => 'POST',
             ]),
             PageBlockType::List => $this->createForm(PageListBlockInlineModalType::class, null, [
-                'block' => $block,
+                'block'  => $block,
                 'action' => $action,
                 'method' => 'POST',
             ]),

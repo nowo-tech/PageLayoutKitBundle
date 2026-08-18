@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Entity;
 
+use App\Tests\Unit\Support\LocaleTestSupport;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItemTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
@@ -22,7 +23,6 @@ use Nowo\PageLayoutKitBundle\Entity\PageListItemTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
-use App\Tests\Unit\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 
 final class PageBlockEntitiesTest extends TestCase
@@ -34,7 +34,7 @@ final class PageBlockEntitiesTest extends TestCase
 
     public function testHeroTextAndCompareBlocks(): void
     {
-        $hero = new PageHeroBlock();
+        $hero   = new PageHeroBlock();
         $heroTr = (new PageHeroBlockTranslation())
             ->setLocale('es')
             ->setPageTitle('SEO')
@@ -117,13 +117,13 @@ final class PageBlockEntitiesTest extends TestCase
     public function testTranslatableBlockTraitFallbacks(): void
     {
         // No translations at all → getTranslationOrFallback returns an empty translation object
-        $block = new PageTextBlock();
+        $block    = new PageTextBlock();
         $fallback = $block->getTranslationOrFallback('es');
         self::assertInstanceOf(PageTextBlockTranslation::class, $fallback);
         self::assertSame('', $fallback->getTitle());
 
         // Has 'en' translation but not 'es' or default ('es') → falls back to first
-        $enTr = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
+        $enTr   = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
         $block2 = new PageTextBlock();
         $block2->addTranslation($enTr);
         // getTranslation('fr') → tries 'fr', tries default 'es', falls back to first 'en'

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Form;
 
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Override;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -30,7 +29,7 @@ final class PageTextBlockEditType extends AbstractPageLayoutFormType
             $this->addTextField('title');
             $this->addCkeditor5Field('body', [
                 'config' => 'simple',
-                'theme' => 'auto',
+                'theme'  => 'auto',
             ]);
         });
     }
@@ -41,7 +40,7 @@ final class PageTextBlockEditType extends AbstractPageLayoutFormType
         parent::configureOptions($resolver);
 
         $resolver->setDefaults([
-            'data_class' => PageTextBlockTranslation::class,
+            'data_class'   => PageTextBlockTranslation::class,
             'include_meta' => false,
         ]);
     }

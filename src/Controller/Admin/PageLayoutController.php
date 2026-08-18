@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Controller\Admin;
 
-use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
-use Nowo\PageLayoutKitBundle\Controller\RequiresValidFormTrait;
-use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
+use Nowo\PageLayoutKitBundle\Controller\RequiresValidFormTrait;
+use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+
+use function in_array;
+use function sprintf;
 
 /**
  * Admin UI for ordering enabled page layout entries (home/contact).
@@ -32,7 +36,7 @@ final class PageLayoutController extends AbstractController
     {
         /** @var list<string> $pages */
         $pages = $this->getParameter('nowo_page_layout_kit.pages');
-        if (!\in_array($pageKey, $pages, true)) {
+        if (!in_array($pageKey, $pages, true)) {
             throw $this->createNotFoundException(sprintf('Unknown page key "%s".', $pageKey));
         }
 
@@ -46,12 +50,12 @@ final class PageLayoutController extends AbstractController
 
         return $this->render('@NowoPageLayoutKitBundle/admin/layout/index.html.twig', [
             'page_title' => sprintf('Layout: %s', $pageKey),
-            'page_key' => $pageKey,
-            'entries' => $entries,
+            'page_key'   => $pageKey,
+            'entries'    => $entries,
         ]);
     }
 
-    /** @param list<\Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry> $entries */
+    /** @param list<PageLayoutEntry> $entries */
     private function reorder(Request $request, array $entries, string $pageKey): void
     {
         $form = $this->csrfOnlyFormFactory->createNamed(
@@ -72,6 +76,6 @@ final class PageLayoutController extends AbstractController
         }
 
         $this->entityManager->flush();
-        $this->addFlash('success', 'Order updated.');;
+        $this->addFlash('success', 'Order updated.');
     }
 }

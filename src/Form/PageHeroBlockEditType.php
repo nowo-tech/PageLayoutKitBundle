@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Form;
 
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Override;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;

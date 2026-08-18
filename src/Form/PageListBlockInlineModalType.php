@@ -6,7 +6,6 @@ namespace Nowo\PageLayoutKitBundle\Form;
 
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageListItem;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Override;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
@@ -14,6 +13,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function count;
 
 /** @extends AbstractPageLayoutFormType<null> */
 final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
@@ -25,11 +26,11 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
 
         $this->withBuilder($builder, function (): void {
             $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
-                'entry_type' => PageBlockLocalePanelType::class,
-                'allow_add' => false,
+                'entry_type'   => PageBlockLocalePanelType::class,
+                'allow_add'    => false,
                 'allow_delete' => false,
-                'label' => false,
-                'mapped' => false,
+                'label'        => false,
+                'mapped'       => false,
             ]);
         });
 
@@ -55,9 +56,9 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
 
         $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $formEvent) use ($block): void {
             /** @var list<PageBlockLocalePanelData> $panels */
-            $panels = $formEvent->getForm()->get('translations')->getData() ?? [];
+            $panels        = $formEvent->getForm()->get('translations')->getData() ?? [];
             $existingItems = $block->getItems()->toArray();
-            $maxParsed = 0;
+            $maxParsed     = 0;
 
             foreach ($panels as $panel) {
                 if (!$panel instanceof PageBlockLocalePanelData) {
@@ -65,21 +66,21 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
                 }
 
                 $locale = $panel->locale;
-                if ('' === $locale) {
+                if ($locale === '') {
                     continue;
                 }
 
                 $blockTranslation = $block->getTranslation($locale) ?? $block->ensureTranslations()->getTranslation($locale);
-                if (null === $blockTranslation) {
+                if ($blockTranslation === null) {
                     continue;
                 }
 
                 $blockTranslation->setTitle($panel->title);
 
-                $rawItems = trim($panel->items);
-                $parsedItems = '' === $rawItems
+                $rawItems    = trim($panel->items);
+                $parsedItems = $rawItems === ''
                     ? []
-                    : array_values(array_filter(array_map(trim(...), explode("\n", $rawItems)), static fn (string $line): bool => '' !== $line));
+                    : array_values(array_filter(array_map(trim(...), explode("\n", $rawItems)), static fn (string $line): bool => $line !== ''));
 
                 $maxParsed = max($maxParsed, count($parsedItems));
 
@@ -107,14 +108,14 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
             }
 
             $existingItems = $block->getItems()->toArray();
-            $counter = count($existingItems);
+            $counter       = count($existingItems);
 
             for ($index = $counter - 1; $index >= $maxParsed; --$index) {
-                $item = $existingItems[$index];
+                $item     = $existingItems[$index];
                 $allEmpty = true;
 
                 foreach (PageLocales::all() as $locale) {
-                    if ('' !== trim($item->getTranslationOrFallback($locale)->getText())) {
+                    if (trim($item->getTranslationOrFallback($locale)->getText()) !== '') {
                         $allEmpty = false;
                         break;
                     }

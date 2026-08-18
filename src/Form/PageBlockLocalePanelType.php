@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Form;
 
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
 use Override;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -19,7 +18,7 @@ final class PageBlockLocalePanelType extends AbstractPageLayoutFormType
             $this->addTextField('title');
             $this->addTextareaField('items', [
                 'required' => false,
-                'attr' => ['rows' => 10],
+                'attr'     => ['rows' => 10],
             ]);
         });
     }

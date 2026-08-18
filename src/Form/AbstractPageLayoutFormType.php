@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function array_key_exists;
+
 /**
  * Page layout kit product forms — FormKit profile page_layout_kit.
  *
@@ -35,7 +37,7 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
     protected function addCkeditor5Field(string $name, array $options = []): void
     {
         $ckeditor = 'Nowo\\Ckeditor5EditorBundle\\Form\\Ckeditor5EditorType';
-        $type = class_exists($ckeditor) ? 'ckeditor5' : 'textarea';
+        $type     = class_exists($ckeditor) ? 'ckeditor5' : 'textarea';
         if ($type === 'textarea') {
             $options['attr'] = array_merge(['rows' => 8], $options['attr'] ?? []);
             unset($options['config'], $options['theme'], $options['min_height']);
@@ -48,14 +50,14 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
     {
         $this->addNamedField('locale', 'hidden', [
             'label' => false,
-            'help' => false,
+            'help'  => false,
             ...$options,
         ]);
     }
 
     /**
      * @param FormBuilderInterface<TData> $builder
-     * @param array<string, mixed>        $options
+     * @param array<string, mixed> $options
      */
     protected function addWithDefaults(
         FormBuilderInterface $builder,
@@ -63,16 +65,16 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
         string $type,
         array $options = [],
     ): void {
-        if (!\array_key_exists('placeholder', $options)) {
+        if (!array_key_exists('placeholder', $options)) {
             $options['placeholder'] = false;
         }
 
         $this->withBuilder($builder, function () use ($name, $type, $options): void {
             $alias = str_contains($type, '\\')
                 ? match ($type) {
-                    HiddenType::class => 'hidden',
+                    HiddenType::class   => 'hidden',
                     TextareaType::class => 'textarea',
-                    default => $type,
+                    default             => $type,
                 }
             : $type;
             $this->addNamedField($name, $alias, $options);

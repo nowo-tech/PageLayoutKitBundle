@@ -9,11 +9,11 @@ namespace Nowo\PageLayoutKitBundle\Enum;
  */
 enum PageBlockType: string
 {
-    case Hero = 'hero';
-    case Text = 'text';
-    case Cards = 'cards';
-    case List = 'list';
-    case Cta = 'cta';
+    case Hero    = 'hero';
+    case Text    = 'text';
+    case Cards   = 'cards';
+    case List    = 'list';
+    case Cta     = 'cta';
     case Compare = 'compare';
 
     public function isModalEditable(): bool
