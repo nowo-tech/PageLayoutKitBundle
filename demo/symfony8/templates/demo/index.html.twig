@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block body %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                    <div>
+                        <span class="badge text-bg-primary text-uppercase">{{ page_key }}</span>
+                        <h1 class="h3 mt-3 mb-2">{{ page_title }}</h1>
+                        <p class="text-muted mb-0">{{ page_description }}</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-content-start">
+                        <a class="btn btn-outline-primary" href="{{ path('admin_page_layout', {pageKey: page_key}) }}">Admin layout</a>
+                        {% if not app.user %}
+                            <a class="btn btn-primary" href="{{ path('app_login') }}">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-8">
+        {% if layout is empty %}
+            <div class="alert alert-info shadow-sm mb-0">
+                No page layout blocks are configured yet for <strong>{{ page_key }}</strong>.
+                Sign in with <code>admin</code> / <code>admin</code> and open the admin layout screen to add or reorder blocks.
+            </div>
+        {% else %}
+            <div class="d-grid gap-3">
+                {% for block in layout %}
+                    <article class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <h2 class="h5 mb-1 text-capitalize">{{ block.type.value|replace({'_': ' '}) }}</h2>
+                                    <p class="text-muted mb-0">
+                                        Block #{{ block.blockId }}
+                                        {% if block.sectionKey %}
+                                            · section <code>{{ block.sectionKey }}</code>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% if app.user %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('admin_page_blocks_edit', {type: block.type.value, id: block.blockId}) }}">Edit block</a>
+                                {% endif %}
+                            </div>
+
+                            {% if block.type.value == 'hero' %}
+                                <h3 class="h4">{{ block.data.title|default('Untitled hero') }}</h3>
+                                {% if block.data.subtitle is defined and block.data.subtitle %}
+                                    <p class="mb-2">{{ block.data.subtitle }}</p>
+                                {% endif %}
+                                <div class="d-flex flex-wrap gap-2 text-muted small">
+                                    {% if block.data.eyebrow is defined and block.data.eyebrow %}<span>Eyebrow: {{ block.data.eyebrow }}</span>{% endif %}
+                                    {% if block.data.ctaPrimary is defined and block.data.ctaPrimary %}<span>Primary CTA: {{ block.data.ctaPrimary }}</span>{% endif %}
+                                    {% if block.data.ctaSecondary is defined and block.data.ctaSecondary %}<span>Secondary CTA: {{ block.data.ctaSecondary }}</span>{% endif %}
+                                </div>
+                            {% elseif block.type.value == 'text' %}
+                                <h3 class="h4">{{ block.data.title|default('Untitled text block') }}</h3>
+                                <div class="mb-0">{{ block.data.body|default('')|nl2br }}</div>
+                            {% elseif block.type.value == 'cards' %}
+                                <h3 class="h4">{{ block.data.title|default('Cards') }}</h3>
+                                <div class="row g-3">
+                                    {% for item in block.data.items|default([]) %}
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 h-100">
+                                                <h4 class="h6">{{ item.title|default('Item') }}</h4>
+                                                <p class="mb-0 text-muted">{{ item.body|default('') }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% elseif block.type.value == 'list' %}
+                                <h3 class="h4">{{ block.data.title|default('List') }}</h3>
+                                <ul class="mb-0">
+                                    {% for item in block.data.items|default([]) %}
+                                        <li>{{ item.text|default('') }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% elseif block.type.value == 'cta' %}
+                                <h3 class="h4">{{ block.data.title|default('Call to action') }}</h3>
+                                <p class="mb-0">{{ block.data.body|default('') }}</p>
+                            {% elseif block.type.value == 'compare' %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 h-100">
+                                            <h3 class="h6 text-danger">{{ block.data.beforeLabel|default('Before') }}</h3>
+                                            <div class="mb-0">{{ block.data.beforeText|default('')|nl2br }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 h-100">
+                                            <h3 class="h6 text-success">{{ block.data.afterLabel|default('After') }}</h3>
+                                            <div class="mb-0">{{ block.data.afterText|default('')|nl2br }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <pre class="mb-0">{{ block.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5">Demo notes</h2>
+                <ul class="mb-0">
+                    <li>The bundle admin routes live under <code>/admin/pages/&lt;pageKey&gt;/layout</code>.</li>
+                    <li>This public demo renders stored block data with Bootstrap cards instead of the host app's private Twig components.</li>
+                    <li>Configured pages: <code>home</code> and <code>contact</code>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

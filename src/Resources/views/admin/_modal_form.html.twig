@@ -1,0 +1,20 @@
+{% form_theme form with [
+  '@NowoCkeditor5EditorBundle/Form/ckeditor5_editor_theme.html.twig',
+  'form/auth_theme.html.twig',
+] %}
+
+{{ form_start(form, {attr: {class: 'admin-form cms-modal-form', id: 'cms-modal-active-form'}}) }}
+  {% for field in form %}
+    {% if field.vars.name == 'translations' %}
+      {{ include('components/admin/_locale_tabs.html.twig', {
+        translations: field,
+        active_locale: locale|default(active_locale|default(null)),
+        id_prefix: 'cms-locale',
+      }) }}
+    {% elseif field.vars.name == '_token' %}
+      {{ form_widget(field) }}
+    {% else %}
+      {{ form_row(field) }}
+    {% endif %}
+  {% endfor %}
+{{ form_end(form, {render_rest: false}) }}

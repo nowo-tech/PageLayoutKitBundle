@@ -1,0 +1,43 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Nowo\PageLayoutKitBundle\:
+        resource: '../../*'
+        exclude:
+            - '../../DependencyInjection/'
+            - '../../Entity/'
+            - '../../Controller/'
+            - '../../NowoPageLayoutKitBundle.php'
+            - '../../Resources/'
+
+    Nowo\PageLayoutKitBundle\Controller\:
+        resource: '../../Controller/'
+        tags: ['controller.service_arguments']
+
+    Nowo\PageLayoutKitBundle\Locale\PageLocales:
+        public: true
+        arguments:
+            $defaultLocale: '%nowo_page_layout_kit.default_locale%'
+            $locales: '%nowo_page_layout_kit.locales%'
+
+    Nowo\PageLayoutKitBundle\Form\:
+        resource: '../../Form/'
+        tags: ['form.type']
+
+    Nowo\PageLayoutKitBundle\Twig\PageLayoutKitExtension:
+        arguments:
+            $layoutTemplate: '%nowo_page_layout_kit.web_ui.layout_template%'
+            $cssFramework: '%nowo_page_layout_kit.web_ui.css_framework%'
+            $pages: '%nowo_page_layout_kit.pages%'
+            $defaultLocale: '%nowo_page_layout_kit.default_locale%'
+        tags: ['twig.extension']
+
+    Nowo\PageLayoutKitBundle\Service\PageBlockProvider:
+        arguments:
+            $legacyContentProvider: '@?Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface'
+
+    Nowo\PageLayoutKitBundle\Service\PageBlockMigrator:
+        arguments:
+            $legacyContentProvider: '@?Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface'

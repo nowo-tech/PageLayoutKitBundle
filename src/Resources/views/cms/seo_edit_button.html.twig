@@ -1,0 +1,14 @@
+{% if is_granted('ROLE_EDITOR') and pageKey|default('') != '' %}
+  <button
+    type="button"
+    class="cms-edit-button"
+    title="{{ 'cms.edit_seo'|trans }}"
+    aria-label="{{ 'cms.edit_seo'|trans }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="page-seo"
+    data-cms-modal-page-key-param="{{ pageKey }}"
+    data-cms-modal-title-param="{{ 'cms.edit_seo'|trans }}"
+  >
+    {{ include('components/cms/_icon_pencil.svg.twig') }}
+  </button>
+{% endif %}

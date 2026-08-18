@@ -1,0 +1,37 @@
+<section class="hero">
+  <div class="container hero__grid">
+    <div>
+      <span class="eyebrow">{{ data.eyebrow }}</span>
+      <h1 class="hero__title">{{ data.title }}</h1>
+      <p class="hero__subtitle">{{ data.subtitle }}</p>
+      <div class="btn-group">
+        <a href="{{ path('contact') }}" class="btn btn--primary">{{ data.ctaPrimary }}</a>
+        <a href="{{ path('services_index') }}" class="btn btn--secondary">{{ data.ctaSecondary }}</a>
+      </div>
+      <div class="badges">
+        <span class="badge">Symfony</span>
+        <span class="badge">Vue</span>
+        <span class="badge">DevOps</span>
+        <span class="badge">Performance</span>
+        <span class="badge">RGPD</span>
+        <span class="badge">Architecture</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal" aria-label="Panel de diagnóstico técnico">
+        <div class="terminal__header">
+          <span class="terminal__dot terminal__dot--red"></span>
+          <span class="terminal__dot terminal__dot--yellow"></span>
+          <span class="terminal__dot terminal__dot--green"></span>
+          <span class="terminal__title">diagnóstico técnico</span>
+        </div>
+        <div><span class="terminal__prompt">$</span> audit symfony-app --scope=architecture,performance,security,rgpd</div>
+        <div class="terminal__divider">──────────────────</div>
+        <div><span class="terminal__success">✓</span> 42 riesgos técnicos detectados</div>
+        <div><span class="terminal__success">✓</span> 18 mejoras priorizadas por impacto</div>
+        <div><span class="terminal__success">✓</span> 7 quick wins aplicables en menos de 2 semanas</div>
+        <div><span class="terminal__success">✓</span> roadmap técnico preparado para dirección y equipo</div>
+      </div>
+    </div>
+  </div>
+</section>

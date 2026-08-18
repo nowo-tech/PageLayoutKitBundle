@@ -1,0 +1,15 @@
+{% if is_granted('ROLE_EDITOR') and id|default(0) > 0 %}
+  <button
+    type="button"
+    class="cms-edit-button"
+    title="{{ title|default('cms.edit_item'|trans) }}"
+    aria-label="{{ title|default('cms.edit_item'|trans) }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="{{ resource }}"
+    data-cms-modal-id-param="{{ id }}"
+    data-cms-modal-mode-param="edit"
+    data-cms-modal-title-param="{{ title|default('cms.edit_item'|trans) }}"
+  >
+    {{ include('components/cms/_icon_pencil.svg.twig') }}
+  </button>
+{% endif %}

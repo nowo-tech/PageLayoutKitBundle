@@ -1,0 +1,29 @@
+{% if block.sectionKey starts with 'expect' %}
+<ul class="check-list">
+  {% for item in data.items %}
+    <li>{{ item.text }}</li>
+  {% endfor %}
+</ul>
+{% elseif block.sectionKey == 'process' %}
+<section class="section">
+  <div class="container">
+    <h2>{{ data.title }}</h2>
+    <ol class="steps" style="margin-top:1.5rem">
+      {% for item in data.items %}
+        <li>{{ item.text }}</li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+{% else %}
+<section class="section section--soft">
+  <div class="container">
+    <h2>{{ data.title }}</h2>
+    <ul class="problem-list" style="margin-top:1.5rem">
+      {% for item in data.items %}
+        <li>{{ item.text }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}

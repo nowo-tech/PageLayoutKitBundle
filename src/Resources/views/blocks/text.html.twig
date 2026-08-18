@@ -1,0 +1,14 @@
+{% set sectionClass = block.sectionKey == 'profile' ? 'section section--soft' : 'section' %}
+<section class="{{ sectionClass }}">
+  <div class="container">
+    <h2{% if block.sectionKey == 'problem' %}{% else %} style="margin-bottom:1.5rem"{% endif %}>{{ data.title }}</h2>
+    <div class="text-muted legal-content" style="max-width:48rem">{{ data.body|raw }}</div>
+    {% if block.sectionKey == 'services' %}
+      <div class="grid grid--3">
+        {% for service in site.services() %}
+          {{ include('components/service_card.html.twig') }}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>

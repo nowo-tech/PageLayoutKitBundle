@@ -1,0 +1,4 @@
+<div class="cms-block" data-cms-block="{{ block.type.value }}-{{ block.blockId }}">
+  {{ include('@NowoPageLayoutKitBundle/cms/edit_button.html.twig', {block: block}) }}
+  {{ include(block.templateName(), {block: block, data: block.data}) }}
+</div>

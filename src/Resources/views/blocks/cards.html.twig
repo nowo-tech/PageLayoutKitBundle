@@ -1,0 +1,26 @@
+{% if block.sectionKey == 'expect' %}
+<h2>{{ data.title }}</h2>
+<div class="text-muted legal-content">{{ data.body|raw }}</div>
+{% else %}
+<section class="section{% if block.sectionKey in ['value', 'pain'] %} section--soft{% endif %}">
+  <div class="container">
+    <h2 style="margin-bottom:1.5rem">{{ data.title }}</h2>
+    <div class="grid grid--{{ block.sectionKey == 'value' ? '4' : '3' }}">
+      {% for item in data.items %}
+        {% if block.sectionKey == 'value' %}
+          <article class="card value-card">
+            <span class="value-card__number">{{ loop.index }}</span>
+            <h3 class="card__title">{{ item.title }}</h3>
+            <p class="card__text">{{ item.body }}</p>
+          </article>
+        {% else %}
+          <article class="card">
+            <h3 class="card__title">{{ item.title }}</h3>
+            <p class="card__text">{{ item.body }}</p>
+          </article>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

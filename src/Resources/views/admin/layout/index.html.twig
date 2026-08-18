@@ -1,0 +1,53 @@
+{% extends nowo_page_layout_kit_layout %}
+{% trans_default_domain 'NowoPageLayoutKitBundle' %}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set _css_fw = nowo_page_layout_kit_css_framework|default('tailwind') %}
+
+{% block title %}{{ 'admin.layout.title'|trans({'%page%': page_key}) }}{% endblock %}
+{% block page_title %}{{ 'admin.layout.title'|trans({'%page%': page_key}) }}{% endblock %}
+
+{% block admin %}
+<div class="nowo-ui-toolbar nowo-ui-toolbar--split mb-3">
+  <div>
+    <p class="nowo-ui-lead">{{ 'admin.layout.lead'|trans({'%page%': page_key}) }}</p>
+  </div>
+  <a href="{{ path('home') }}" class="{{ ui.btn('secondary', _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
+</div>
+
+{% set reorderForm = csrf_action_form(path('admin_page_layout', {pageKey: page_key}), 'page_layout_reorder') %}
+{{ form_start(reorderForm, {attr: {class: 'nowo-ui-form'}}) }}
+  <table class="{{ ui.table(_css_fw) }}">
+    <thead>
+      <tr>
+        <th scope="col">{{ 'admin.layout.position'|trans }}</th>
+        <th scope="col">{{ 'admin.layout.type'|trans }}</th>
+        <th scope="col">{{ 'admin.layout.id'|trans }}</th>
+        <th scope="col"><span class="visually-hidden">{{ 'admin.layout.actions'|trans }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+        <tr>
+          <td>
+            {# Position values are submitted with the CSRF form; FormType collection planned for a follow-up. #}
+            <label class="visually-hidden" for="order_{{ entry.id }}">{{ 'admin.layout.position'|trans }}</label>
+            <input id="order_{{ entry.id }}" type="number" name="order[{{ entry.id }}]" value="{{ entry.position }}" min="0" class="form-control nowo-ui-input" style="width:5rem">
+          </td>
+          <td>{{ entry.blockType.value }}</td>
+          <td>#{{ entry.blockId }}</td>
+          <td>
+            <a class="{{ ui.btn('secondary', _css_fw) }}" href="{{ path('admin_page_blocks_edit', {type: entry.blockType.value, id: entry.blockId}) }}">{{ 'admin.layout.edit'|trans }}</a>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4">{{ 'admin.layout.empty'|trans }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if entries %}
+    <div class="nowo-ui-actions mt-3">
+      <button type="submit" class="{{ ui.btn('primary', _css_fw) }}">{{ 'admin.layout.save_order'|trans }}</button>
+    </div>
+  {% endif %}
+{{ form_end(reorderForm) }}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% if block.sectionKey == 'contact_form' %}
+{# CTA copy rendered inside contact form card #}
+{% else %}
+{{ include('components/cta.html.twig', {
+  title: data.title,
+  text: data.body,
+}) }}
+{% endif %}

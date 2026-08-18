@@ -1,0 +1,16 @@
+admin.title: Diseño de página
+admin.layout.title: 'Diseño: %page%'
+admin.layout.lead: Reordena los bloques de la página %page%.
+admin.layout.view_page: Ver página
+admin.layout.position: Posición
+admin.layout.type: Tipo
+admin.layout.id: ID
+admin.layout.actions: Acciones
+admin.layout.edit: Editar
+admin.layout.empty: 'No hay bloques migrados. Ejecuta nowo:page-layout:migrate.'
+admin.layout.save_order: Guardar orden
+admin.blocks.edit.title: Editar bloque
+admin.action.back: Volver
+admin.action.save: Guardar
+admin.flash.saved: Guardado.
+admin.flash.reordered: Orden actualizado.

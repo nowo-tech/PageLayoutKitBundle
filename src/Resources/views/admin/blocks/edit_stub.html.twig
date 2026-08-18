@@ -1,0 +1,11 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block admin %}
+<div class="admin-header">
+  <h1>{{ page_title }}</h1>
+  <p class="admin-lead">Edición completa de bloques {{ block_type.value }} (tarjetas y listas) — próximamente.</p>
+</div>
+<p><a href="{{ path('admin_page_layout', {pageKey: 'home'}) }}">Volver al layout</a></p>
+{% endblock %}

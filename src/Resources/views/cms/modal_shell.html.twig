@@ -1,0 +1,22 @@
+<div class="cms-modal" data-cms-modal-target="modal" hidden>
+  <div class="cms-modal__backdrop" data-action="click->cms-modal#close"></div>
+  <div class="cms-modal__dialog admin-modal" role="dialog" aria-modal="true" aria-labelledby="cms-modal-title">
+    <header class="cms-modal__header admin-modal__header">
+      <h2 id="cms-modal-title" class="admin-modal__title" data-cms-modal-target="title">{{ 'cms.edit_block'|trans }}</h2>
+      <button type="button" class="admin-modal__close" data-action="cms-modal#close" aria-label="{{ 'cms.close'|trans }}">
+        <span aria-hidden="true">×</span>
+      </button>
+    </header>
+    <div class="cms-modal__body admin-modal__body" data-cms-modal-target="body"></div>
+    <footer class="cms-modal__footer admin-modal__footer">
+      <button type="button" class="admin-modal__btn admin-modal__btn--outline" data-action="cms-modal#close">{{ 'cms.cancel'|trans }}</button>
+      <button
+        type="submit"
+        class="admin-modal__btn admin-modal__btn--primary"
+        form="cms-modal-active-form"
+        data-cms-modal-target="submit"
+        disabled
+      >{{ 'cms.save'|trans }}</button>
+    </footer>
+  </div>
+</div>

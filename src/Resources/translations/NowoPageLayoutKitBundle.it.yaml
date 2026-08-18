@@ -1,0 +1,16 @@
+admin.title: Layout pagina
+admin.layout.title: 'Layout: %page%'
+admin.layout.lead: Reorder blocks for page %page%.
+admin.layout.view_page: View page
+admin.layout.position: Position
+admin.layout.type: Type
+admin.layout.id: ID
+admin.layout.actions: Actions
+admin.layout.edit: Edit
+admin.layout.empty: 'No migrated blocks. Run nowo:page-layout:migrate.'
+admin.layout.save_order: Save order
+admin.blocks.edit.title: Edit block
+admin.action.back: Back
+admin.action.save: Save
+admin.flash.saved: Saved.
+admin.flash.reordered: Order updated.

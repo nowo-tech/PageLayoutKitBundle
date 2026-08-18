@@ -1,0 +1,15 @@
+{% if is_granted('ROLE_EDITOR') and serviceId|default(0) > 0 %}
+  <button
+    type="button"
+    class="cms-create-button"
+    title="{{ 'cms.create_faq'|trans }}"
+    aria-label="{{ 'cms.create_faq'|trans }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="service-faq"
+    data-cms-modal-id-param="{{ serviceId }}"
+    data-cms-modal-mode-param="create"
+    data-cms-modal-title-param="{{ 'cms.create_faq'|trans }}"
+  >
+    {{ include('components/cms/_icon_plus.svg.twig') }}
+  </button>
+{% endif %}

@@ -1,0 +1,14 @@
+{% if is_granted('ROLE_EDITOR') %}
+  <button
+    type="button"
+    class="cms-create-button"
+    title="{{ title|default('cms.create_item'|trans) }}"
+    aria-label="{{ title|default('cms.create_item'|trans) }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="{{ resource }}"
+    data-cms-modal-mode-param="create"
+    data-cms-modal-title-param="{{ title|default('cms.create_item'|trans) }}"
+  >
+    {{ include('components/cms/_icon_plus.svg.twig') }}
+  </button>
+{% endif %}

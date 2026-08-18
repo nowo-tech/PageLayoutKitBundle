@@ -1,0 +1,9 @@
+{
+    "bundles": {
+        "Nowo\\PageLayoutKitBundle\\NowoPageLayoutKitBundle": ["all"]
+    },
+    "copy-from-recipe": {
+        "config/": "%CONFIG_DIR%/"
+    },
+    "aliases": ["nowo-page-layout-kit", "page-layout-kit"]
+}

@@ -1,0 +1,15 @@
+{% if nowo_page_layout_kit_can_edit|default(false) and block.blockId > 0 %}
+  <button
+    type="button"
+    class="cms-edit-button"
+    title="{{ 'cms.edit_block'|trans }}"
+    aria-label="{{ 'cms.edit_block'|trans }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="page-block"
+    data-cms-modal-block-type-param="{{ block.type.value }}"
+    data-cms-modal-id-param="{{ block.blockId }}"
+    data-cms-modal-title-param="{{ 'cms.edit_block'|trans }}"
+  >
+    {{ include('@NowoPageLayoutKitBundle/cms/_icon_pencil.svg.twig') }}
+  </button>
+{% endif %}

@@ -1,0 +1,12 @@
+nowo_page_layout_kit:
+    default_locale: en
+    locales: [en, es]
+    pages: [home, contact]
+    security:
+        access_roles: [ROLE_ADMIN]
+        allow_unauthenticated: false
+    web_ui:
+        layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
+        css_framework: bootstrap5
+    doctrine:
+        table_prefix: ''

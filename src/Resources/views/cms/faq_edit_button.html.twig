@@ -1,0 +1,16 @@
+{% if is_granted('ROLE_EDITOR') and serviceId|default(0) > 0 %}
+  <button
+    type="button"
+    class="cms-edit-button"
+    title="{{ 'cms.edit_faq'|trans }}"
+    aria-label="{{ 'cms.edit_faq'|trans }}"
+    data-action="cms-modal#open"
+    data-cms-modal-resource-param="service-faq"
+    data-cms-modal-id-param="{{ serviceId }}"
+    data-cms-modal-faq-id-param="{{ faqId }}"
+    data-cms-modal-mode-param="edit"
+    data-cms-modal-title-param="{{ 'cms.edit_faq'|trans }}"
+  >
+    {{ include('components/cms/_icon_pencil.svg.twig') }}
+  </button>
+{% endif %}
