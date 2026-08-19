@@ -22,7 +22,7 @@ The bundle ships a reorder UI for configured page keys:
 
 More page keys become available when added to `nowo_page_layout_kit.pages`.
 
-The screen lists the enabled `PageLayoutEntry` rows for that page and lets editors reorder them with a CSRF-protected form. Block editing links open bundle-managed edit endpoints under `/admin/page-blocks/...`.
+The screen lists the enabled `PageLayoutEntry` rows for that page and lets editors reorder them with a CSRF-protected Symfony form (`PageLayoutReorderType`: a collection of row entries with hidden block id and integer position). Block editing links open bundle-managed edit endpoints under `/admin/page-blocks/...`.
 
 ## Public rendering with PageBlockProvider
 

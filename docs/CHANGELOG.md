@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Table of contents
 
-- [[1.0.0] - 2026-08-18](#100---2026-08-18)
+- [[Unreleased]](#unreleased)
+- [[1.0.1] - 2026-08-19](#101---2026-08-19)
+- [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
-## [1.0.0] - 2026-08-18
+## [Unreleased]
+
+## [1.0.1] - 2026-08-19
+
+### Fixed
+
+- **Demo:** register the `app_logout` route (`/logout`) required by `security.yaml` and `demo/symfony8/templates/base.html.twig`.
+
+### Documentation
+
+- [INSTALLATION.md](INSTALLATION.md) — PHP requirement aligned with `composer.json` (**8.4+**, not 8.2).
+- [README.md](../README.md) — coverage badge and QA table reflect the CI gate (**≥99%**).
+- [DEMO-FRANKENPHP.md](DEMO-FRANKENPHP.md) — correct demo routes, form login (`admin` / `admin`), and `/login` / `/logout`.
+- [USAGE.md](USAGE.md) — document admin reorder as a Symfony Form collection (`PageLayoutReorderType`).
+- [UPGRADING.md](UPGRADING.md) — add `1.0.1` notes.
+
+## [1.0.0] - 2026-08-19
 
 Initial public release of **Page Layout Kit Bundle** (`nowo-tech/page-layout-kit-bundle`).
 
@@ -27,6 +45,12 @@ Initial public release of **Page Layout Kit Bundle** (`nowo-tech/page-layout-kit
 - Optional Doctrine `table_prefix`
 - Symfony Flex recipe and FrankenPHP demo (`demo/symfony8`, default port `8127`)
 - Integrator documentation and Spec Kit baseline
+
+### Changed
+
+- Admin reorder uses `PageLayoutReorderType` and row form types with CSRF (REQ-TWIG-005); no raw HTML position inputs
+- CI matrix: PHP **8.4** / **8.5**, Symfony **7.4** / **8.0** / **8.1**; coverage gate **≥99%**
+- Removed inline `"version"` from `composer.json` (Packagist resolves versions from tags)
 
 ### Security
 

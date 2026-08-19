@@ -38,6 +38,12 @@ final class DemoController extends AbstractController
         ]);
     }
 
+    #[Route('/logout', name: 'app_logout')]
+    public function logout(): void
+    {
+        throw new \LogicException('Intercepted by the firewall logout listener.');
+    }
+
     private function renderPage(
         string $pageKey,
         string $fallbackTitle,

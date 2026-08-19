@@ -19,7 +19,7 @@ Install **Page Layout Kit Bundle** in a Symfony 7.4 or 8 application with Doctri
 
 | Component | Version |
 | --- | --- |
-| PHP | 8.2 - 8.5 |
+| PHP | 8.4 - 8.5 |
 | Symfony | ^7.4 or ^8.0 |
 | Doctrine Bundle | ^2.10 or ^3.0 |
 | Doctrine ORM | ^2.15 or ^3.0 |
@@ -32,7 +32,7 @@ Install **Page Layout Kit Bundle** in a Symfony 7.4 or 8 application with Doctri
 ## Composer
 
 ```bash
-composer require nowo-tech/page-layout-kit-bundle
+composer require nowo-tech/page-layout-kit-bundle:^1.0
 composer require twig/extra-bundle twig/string-extra
 ```
 

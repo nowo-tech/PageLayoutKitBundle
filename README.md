@@ -1,6 +1,6 @@
 # Page Layout Kit Bundle
 
-[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%2B%20%7C%208.x-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%2B%20%7C%208.x-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-%E2%89%A599%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** Give it a star on GitHub! It helps us maintain and improve the project.
 
@@ -32,7 +32,7 @@ Page Layout Kit Bundle gives Symfony applications a reusable page-layout layer b
 ## Quick start
 
 ```bash
-composer require nowo-tech/page-layout-kit-bundle
+composer require nowo-tech/page-layout-kit-bundle:^1.0
 composer require twig/extra-bundle twig/string-extra
 ```
 
@@ -95,14 +95,13 @@ Demo default URL: `http://localhost:8127`.
 
 | Area | Status | Command |
 | --- | --- | --- |
-| PHP `src/` coverage target | 100% | `make test-coverage-100` |
+| PHP `src/` coverage target | ≥99% (CI gate) | `make test-coverage` |
 | Unit and bundle QA | Enabled | `make test` |
 | Full release checks | Enabled | `make release-check` |
 
 ```bash
 make test
 make test-coverage
-make test-coverage-100
 make release-check
 ```
 

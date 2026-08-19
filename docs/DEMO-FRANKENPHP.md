@@ -35,16 +35,18 @@ The demo exists to prove that:
 - MySQL 8 service (`mysql`, not published to the host)
 - Path-mounted `PageLayoutKitBundle` from the repository root
 - `TwigExtraBundle`, `FormKitBundle`, `UiKitBundle`, and demo-only `HotReloadBundle` / `TwigInspectorBundle`
-- HTTP Basic auth for the editor user `admin` / `admin`
+- Form login for the in-memory user **`admin`** / **`admin`** (`ROLE_ADMIN`)
 - Bundle config rooted at `config/packages/nowo_page_layout_kit.yaml`
 
 Important demo routes:
 
-- `/`
-- `/api/ping`
-- `/api/echo`
-- `/admin/pages/home/layout`
-- `/admin/pages/contact/layout`
+| Route | Path | Notes |
+| --- | --- | --- |
+| `home` | `/` | Public home page (resolved layout) |
+| `contact` | `/contact` | Public contact page |
+| `app_login` | `/login` | Demo login form |
+| `app_logout` | `/logout` | Logout (handled by the security firewall) |
+| `admin_page_layout` | `/admin/pages/{pageKey}/layout` | Reorder UI (`home`, `contact`) |
 
 ## Development configuration
 
@@ -84,7 +86,8 @@ make -C demo/symfony8 restart
 ## Troubleshooting
 
 - If the demo does not answer on `8127`, check whether the port is already in use.
-- If admin pages fail with `401`, use `admin` / `admin`.
+- If admin pages redirect to login, sign in with `admin` / `admin`.
+- If logout fails with “route app_logout does not exist”, update to **1.0.1** or add a logout route in the demo controller.
 - If layout pages are empty, confirm schema creation ran successfully (`make -C demo/symfony8 database` or `link-bundle`).
 - If Doctrine cannot connect, wait for the `mysql` healthcheck and check `DATABASE_URL` uses host `mysql`.
 - If Twig changes are not visible, restart the demo or switch to classic mode while editing templates.

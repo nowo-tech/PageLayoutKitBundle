@@ -68,7 +68,7 @@ See [GITHUB_CI.md](GITHUB_CI.md).
 Before opening a PR, aim to pass:
 
 - `make test`
-- `make test-coverage-100`
+- `make test-coverage` (≥99% element coverage, same gate as CI)
 - `make phpstan`
 - `make validate-translations`
 - `make release-check`

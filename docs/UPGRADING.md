@@ -4,8 +4,21 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 
 ## Table of contents
 
+- [Unreleased](#unreleased)
+- [1.0.1](#101)
 - [1.0.0](#100)
-- [Future releases](#future-releases)
+
+## Unreleased
+
+## 1.0.1
+
+Patch release: demo logout route fix and documentation corrections only. **No integrator upgrade steps.**
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+If you run the FrankenPHP demo from this repository, pull latest `main` and restart the demo stack.
 
 ## 1.0.0
 
@@ -14,7 +27,7 @@ This is the first public release of `nowo-tech/page-layout-kit-bundle`, so there
 Install it with:
 
 ```bash
-composer require nowo-tech/page-layout-kit-bundle
+composer require nowo-tech/page-layout-kit-bundle:^1.0
 composer require twig/extra-bundle twig/string-extra
 ```
 
@@ -26,8 +39,6 @@ Then:
 4. Configure Security for `/admin/pages/*/layout` and `/admin/page-blocks/*`.
 5. Override Twig block templates as needed for your own routes and design system.
 
+When wiring logout in your host app, expose a route named `app_logout` (or point `security.firewalls.*.logout.path` at your route name). Symfony intercepts the controller; see the demo `DemoController::logout()` for the usual pattern.
+
 See [INSTALLATION.md](INSTALLATION.md), [CONFIGURATION.md](CONFIGURATION.md), and [USAGE.md](USAGE.md).
-
-## Future releases
-
-Breaking changes and migration notes will be listed here under a new version heading.
