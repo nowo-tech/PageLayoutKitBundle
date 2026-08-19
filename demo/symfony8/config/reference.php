@@ -427,7 +427,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         resources?: Param|string|array<string, scalar|Param|null>,
  *     },
  *     messenger?: bool|array{ // Messenger configuration
- *         enabled?: bool|Param, // Default: true
+ *         enabled?: bool|Param, // Default: false
  *         routing?: array<string, Param|string|list<scalar|Param|null>>,
  *         serializer?: array{
  *             default_serializer?: scalar|Param|null, // Service id to use as the default serializer for the transports. // Default: "messenger.transport.native_php_serializer"
@@ -707,6 +707,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         id?: scalar|Param|null,
  *         type?: scalar|Param|null,
  *         value?: mixed,
+ *         ...<string, mixed>
  *     }>,
  *     autoescape_service?: scalar|Param|null, // Default: null
  *     autoescape_service_method?: scalar|Param|null, // Default: null
@@ -1186,8 +1187,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 MultipleActiveResultSets?: bool|Param, // Configuring MultipleActiveResultSets for the pdo_sqlsrv driver
  *                 instancename?: scalar|Param|null, // Optional parameter, complete whether to add the INSTANCE_NAME parameter in the connection. It is generally used to connect to an Oracle RAC server to select the name of a particular instance.
  *                 connectstring?: scalar|Param|null, // Complete Easy Connect connection descriptor, see https://docs.oracle.com/database/121/NETAG/naming.htm.When using this option, you will still need to provide the user and password parameters, but the other parameters will no longer be used. Note that when using this parameter, the getHost and getPort methods from Doctrine\DBAL\Connection will no longer function as expected.
+ *                 ...<string, mixed>
  *             }>,
+ *             ...<string, mixed>
  *         }>,
+ *         ...<string, mixed>
  *     },
  *     orm?: array{
  *         default_entity_manager?: scalar|Param|null,
@@ -1222,6 +1226,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                         }>,
  *                     }>,
  *                 }>,
+ *                 ...<string, mixed>
  *             },
  *             connection?: scalar|Param|null,
  *             class_metadata_factory_name?: scalar|Param|null, // Default: "Doctrine\\ORM\\Mapping\\ClassMetadataFactory"
@@ -1282,65 +1287,36 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 class?: scalar|Param|null,
  *                 enabled?: bool|Param, // Default: false
  *                 parameters?: array<string, mixed>,
+ *                 ...<string, mixed>
  *             }>,
  *             identity_generation_preferences?: array<string, scalar|Param|null>,
  *         }>,
  *         resolve_target_entities?: array<string, scalar|Param|null>,
+ *         ...<string, mixed>
  *     },
  * }
  * @psalm-type NowoPageLayoutKitConfig = array{
- *     enabled?: bool|Param, // Default: true
- *     environments?: list<scalar|Param|null>,
- *     async?: bool|Param, // Default: true
- *     sampling_rate?: float|Param, // Default: 1.0
- *     track_sub_requests?: bool|Param, // Default: false
- *     ignore_routes?: list<scalar|Param|null>,
- *     ignore_path_prefixes?: list<scalar|Param|null>,
- *     capture?: array{
- *         request_headers?: bool|Param, // Default: true
- *         request_body?: bool|Param, // Default: false
- *         response_headers?: bool|Param, // Default: true
- *         client_ip?: bool|Param, // Default: true
- *         user?: bool|Param, // Default: true
- *         max_body_bytes?: int|Param, // Default: 65536
- *         response_body_by_type?: array{
- *             html?: bool|Param, // Default: false
- *             json?: bool|Param, // Default: true
- *             soap?: bool|Param, // Default: true
- *             xml?: bool|Param, // Default: true
- *             text?: bool|Param, // Default: false
- *             binary?: bool|Param, // Default: false
- *             other?: bool|Param, // Default: false
- *         },
- *     },
- *     redaction?: array{
- *         headers?: list<scalar|Param|null>,
- *         query_params?: list<scalar|Param|null>,
- *         json_paths?: list<scalar|Param|null>,
- *     },
- *     retention?: array{
- *         days?: mixed, // Null keeps entries forever // Default: 30
- *     },
- *     export?: array{
- *         formats?: list<scalar|Param|null>,
- *         max_sync_rows?: int|Param, // Default: 1000
- *     },
- *     web_ui?: array{
- *         enabled?: bool|Param, // Default: true
- *         path_prefix?: scalar|Param|null, // Default: "/admin/page-layout"
- *         layout_template?: scalar|Param|null, // Default: "@NowoPageLayoutKitBundle/layout.html.twig"
- *         css_framework?: "bootstrap5"|"tailwind"|"foundation"|"custom"|Param, // Default: "bootstrap5"
- *         page_size?: int|Param, // Default: 50
- *     },
+ *     default_locale?: scalar|Param|null, // Default: "es"
+ *     locales?: list<scalar|Param|null>,
+ *     pages?: list<scalar|Param|null>,
  *     security?: array{
  *         access_roles?: list<scalar|Param|null>,
  *         access_checker?: scalar|Param|null, // Default: null
  *         allow_unauthenticated?: bool|Param, // Default: false
  *     },
+ *     web_ui?: array{
+ *         layout_template?: scalar|Param|null, // Default: "@NowoPageLayoutKitBundle/admin/layout.html.twig"
+ *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tabler"|"tailwind"|"foundation"|"custom"|"none"|Param, // Default: "tailwind"
+ *     },
+ *     doctrine?: array{
+ *         table_prefix?: scalar|Param|null, // Default: ""
+ *         connection?: scalar|Param|null, // Default: "default"
+ *     },
  * }
  * @psalm-type NowoUiKitConfig = array{
  *     css_framework?: "bootstrap"|"bootstrap5"|"bootstrap4"|"tailwind"|"foundation"|"custom"|"tabler"|"none"|Param, // Host CSS stack: bootstrap5|bootstrap4|tailwind|foundation|custom|none|tabler (bootstrap alias → bootstrap5). // Default: "bootstrap5"
  *     icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param, // Icon rendering: bootstrap-icons|tabler-icons|ux_icon|svg_inline|none. // Default: "bootstrap-icons"
+ *     row_actions_display?: "icon"|"text"|"icon_text"|Param, // Table/list row actions: icon (glyph only) | text (label only) | icon_text (both). // Default: "icon"
  * }
  * @psalm-type NowoFormKitConfig = array{
  *     type_map?: array<string, scalar|Param|null>,
@@ -1349,6 +1325,8 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     profiles?: array<string, array{ // Default: []
  *         alias?: scalar|Param|null, // Alias for this profile (e.g. for reference in form types)
  *         translation_domain?: scalar|Param|null, // Default: "messages"
+ *         auto_placeholder?: bool|Param, // When true (default), unset placeholders become {form}.{field}.placeholder translation keys. Set false for kits that only set explicit labels. // Default: true
+ *         auto_help?: bool|Param, // When true (default), unset help becomes {form}.{field}.help translation keys. Set false to avoid raw missing-help keys in the UI. // Default: true
  *         required_label_suffix?: scalar|Param|null, // Appended to the label when the field is required (e.g. " *"). Empty or null to disable. // Default: null
  *         help_modal?: array{ // Default help modal configuration (used when the field option "help_modal" is enabled).
  *             framework?: scalar|Param|null, // Modal framework to use when opening from frontend. // Default: "bootstrap5"
@@ -1360,13 +1338,20 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         defaults?: array{
  *             attr?: array<string, scalar|Param|null>,
  *             row_attr?: array<string, scalar|Param|null>,
+ *             help_attr?: array<string, scalar|Param|null>,
+ *             label?: scalar|Param|null, // Default label for every field (e.g. false to suppress). When set, overrides the {form}.{field}.label convention.
+ *             placeholder?: scalar|Param|null, // Default placeholder for every field (e.g. false to suppress). When set, overrides auto_placeholder convention.
+ *             help?: scalar|Param|null, // Default help for every field (e.g. false to suppress). When set, overrides auto_help convention.
+ *             required?: bool|Param, // Default required flag for every field. Overridable via field_types, by_form, or PHP options.
  *         },
  *         field_types?: array<string, array{ // Default: []
  *             attr?: array<string, scalar|Param|null>,
  *             row_attr?: array<string, scalar|Param|null>,
+ *             help_attr?: array<string, scalar|Param|null>,
  *             label?: scalar|Param|null,
  *             placeholder?: scalar|Param|null,
  *             help?: scalar|Param|null,
+ *             required?: bool|Param, // Default required flag for this field type / field. Overridable by later cascade layers or PHP options.
  *             translation_domain?: scalar|Param|null,
  *             constraints?: list<mixed>,
  *         }>,
@@ -1375,13 +1360,20 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             defaults?: array{
  *                 attr?: array<string, scalar|Param|null>,
  *                 row_attr?: array<string, scalar|Param|null>,
+ *                 help_attr?: array<string, scalar|Param|null>,
+ *                 label?: scalar|Param|null, // Default label for every field (e.g. false to suppress). When set, overrides the {form}.{field}.label convention.
+ *                 placeholder?: scalar|Param|null, // Default placeholder for every field (e.g. false to suppress). When set, overrides auto_placeholder convention.
+ *                 help?: scalar|Param|null, // Default help for every field (e.g. false to suppress). When set, overrides auto_help convention.
+ *                 required?: bool|Param, // Default required flag for every field. Overridable via field_types, by_form, or PHP options.
  *             },
  *             fields?: array<string, array{ // Default: []
  *                 attr?: array<string, scalar|Param|null>,
  *                 row_attr?: array<string, scalar|Param|null>,
+ *                 help_attr?: array<string, scalar|Param|null>,
  *                 label?: scalar|Param|null,
  *                 placeholder?: scalar|Param|null,
  *                 help?: scalar|Param|null,
+ *                 required?: bool|Param, // Default required flag for this field type / field. Overridable by later cascade layers or PHP options.
  *                 translation_domain?: scalar|Param|null,
  *                 constraints?: list<mixed>,
  *             }>,
@@ -1399,13 +1391,20 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     defaults?: array{
  *         attr?: array<string, scalar|Param|null>,
  *         row_attr?: array<string, scalar|Param|null>,
+ *         help_attr?: array<string, scalar|Param|null>,
+ *         label?: scalar|Param|null, // Default label for every field (e.g. false to suppress). When set, overrides the {form}.{field}.label convention.
+ *         placeholder?: scalar|Param|null, // Default placeholder for every field (e.g. false to suppress). When set, overrides auto_placeholder convention.
+ *         help?: scalar|Param|null, // Default help for every field (e.g. false to suppress). When set, overrides auto_help convention.
+ *         required?: bool|Param, // Default required flag for every field. Overridable via field_types, by_form, or PHP options.
  *     },
  *     field_types?: array<string, array{ // Default: []
  *         attr?: array<string, scalar|Param|null>,
  *         row_attr?: array<string, scalar|Param|null>,
+ *         help_attr?: array<string, scalar|Param|null>,
  *         label?: scalar|Param|null,
  *         placeholder?: scalar|Param|null,
  *         help?: scalar|Param|null,
+ *         required?: bool|Param, // Default required flag for this field type / field. Overridable by later cascade layers or PHP options.
  *         translation_domain?: scalar|Param|null,
  *         constraints?: list<mixed>,
  *     }>,
@@ -1414,17 +1413,40 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         defaults?: array{
  *             attr?: array<string, scalar|Param|null>,
  *             row_attr?: array<string, scalar|Param|null>,
+ *             help_attr?: array<string, scalar|Param|null>,
+ *             label?: scalar|Param|null, // Default label for every field (e.g. false to suppress). When set, overrides the {form}.{field}.label convention.
+ *             placeholder?: scalar|Param|null, // Default placeholder for every field (e.g. false to suppress). When set, overrides auto_placeholder convention.
+ *             help?: scalar|Param|null, // Default help for every field (e.g. false to suppress). When set, overrides auto_help convention.
+ *             required?: bool|Param, // Default required flag for every field. Overridable via field_types, by_form, or PHP options.
  *         },
  *         fields?: array<string, array{ // Default: []
  *             attr?: array<string, scalar|Param|null>,
  *             row_attr?: array<string, scalar|Param|null>,
+ *             help_attr?: array<string, scalar|Param|null>,
  *             label?: scalar|Param|null,
  *             placeholder?: scalar|Param|null,
  *             help?: scalar|Param|null,
+ *             required?: bool|Param, // Default required flag for this field type / field. Overridable by later cascade layers or PHP options.
  *             translation_domain?: scalar|Param|null,
  *             constraints?: list<mixed>,
  *         }>,
  *     }>,
+ *     ...<string, mixed>
+ * }
+ * @psalm-type NowoHotReloadConfig = array{
+ *     enabled?: bool|Param, // Master switch. When false, nothing is injected even if FRANKENPHP_HOT_RELOAD is set. // Default: true
+ *     auto_inject?: bool|Param, // When true, HotReloadResponseSubscriber injects assets into HTML responses. // Default: true
+ *     require_frankenphp_env?: bool|Param, // When true (default), inject only if FRANKENPHP_HOT_RELOAD is set or mercure_url is configured. // Default: true
+ *     allow_production?: bool|Param, // When false (default), enabling this bundle in the prod environment raises InvalidConfigurationException. // Default: false
+ *     mercure_url?: scalar|Param|null, // Optional Mercure hub URL. When null, uses $_SERVER['FRANKENPHP_HOT_RELOAD'] when present. // Default: null
+ *     idiomorph?: bool|Param, // When true, include Idiomorph for DOM morphing instead of a full page reload. // Default: true
+ *     idiomorph_script_url?: scalar|Param|null, // URL of the Idiomorph script (classic script tag). Prefer a version-pinned CDN URL. // Default: "https://cdn.jsdelivr.net/npm/idiomorph@0.7.4"
+ *     hot_reload_script_url?: scalar|Param|null, // URL of the frankenphp-hot-reload ESM module. Prefer a version-pinned CDN URL. // Default: "https://cdn.jsdelivr.net/npm/frankenphp-hot-reload@1.0.1/+esm"
+ *     preserve_selectors?: list<scalar|Param|null>,
+ *     preserve_observe?: bool|Param, // When true, the preserve boot script also uses MutationObserver for late-injected toolbar nodes. // Default: true
+ *     csp_nonce_request_attribute?: scalar|Param|null, // Request attribute name that holds the CSP nonce (e.g. "_csp_nonce"). Applied to the inline preserve boot script. // Default: null
+ *     csp_augment_script_src?: bool|Param, // When true, append CDN hosts to an existing Content-Security-Policy script-src on the response after injection. // Default: true
+ *     csp_script_src_hosts?: list<scalar|Param|null>,
  * }
  * @psalm-type NowoTwigInspectorConfig = array{
  *     enabled_extensions?: list<scalar|Param|null>,
@@ -1468,6 +1490,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         nowo_page_layout_kit?: NowoPageLayoutKitConfig,
  *         nowo_ui_kit?: NowoUiKitConfig,
  *         nowo_form_kit?: NowoFormKitConfig,
+ *         nowo_hot_reload?: NowoHotReloadConfig,
  *         nowo_twig_inspector?: NowoTwigInspectorConfig,
  *     },
  *     "when@prod"?: array{
@@ -1496,6 +1519,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         nowo_page_layout_kit?: NowoPageLayoutKitConfig,
  *         nowo_ui_kit?: NowoUiKitConfig,
  *         nowo_form_kit?: NowoFormKitConfig,
+ *         nowo_hot_reload?: NowoHotReloadConfig,
  *         nowo_twig_inspector?: NowoTwigInspectorConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias

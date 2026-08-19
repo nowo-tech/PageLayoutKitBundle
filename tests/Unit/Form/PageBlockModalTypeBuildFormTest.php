@@ -62,10 +62,10 @@ final class PageBlockModalTypeBuildFormTest extends TestCase
     {
         $builder = $this->createMock(FormBuilderInterface::class);
         $builder->method('add')
-            ->willReturnCallback(function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
+            ->willReturnCallback(static function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
                 $fields[] = [
-                    'name' => $name,
-                    'type' => $type,
+                    'name'    => $name,
+                    'type'    => $type,
                     'options' => $options,
                 ];
 
@@ -82,8 +82,8 @@ final class PageBlockModalTypeBuildFormTest extends TestCase
             new FormOptionsMerger([
                 'page_layout_kit' => [
                     'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
+                    'defaults'           => [
+                        'attr'     => [],
                         'row_attr' => [],
                     ],
                     'field_types' => [],

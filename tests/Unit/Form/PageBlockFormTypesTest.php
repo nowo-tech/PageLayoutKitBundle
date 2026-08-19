@@ -78,7 +78,7 @@ final class PageBlockFormTypesTest extends TestCase
 
     public function testInlineModalTypesRequireTheExpectedBlockOption(): void
     {
-        $cardsBlock = new PageCardsBlock();
+        $cardsBlock   = new PageCardsBlock();
         $cardsOptions = $this->resolveOptions($this->createType(PageCardsBlockInlineModalType::class), [
             'block' => $cardsBlock,
         ]);
@@ -86,7 +86,7 @@ final class PageBlockFormTypesTest extends TestCase
         self::assertNull($cardsOptions['data_class']);
         self::assertSame($cardsBlock, $cardsOptions['block']);
 
-        $listBlock = new PageListBlock();
+        $listBlock   = new PageListBlock();
         $listOptions = $this->resolveOptions($this->createType(PageListBlockInlineModalType::class), [
             'block' => $listBlock,
         ]);
@@ -143,8 +143,8 @@ final class PageBlockFormTypesTest extends TestCase
             new FormOptionsMerger([
                 'page_layout_kit' => [
                     'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
+                    'defaults'           => [
+                        'attr'     => [],
                         'row_attr' => [],
                     ],
                     'field_types' => [],

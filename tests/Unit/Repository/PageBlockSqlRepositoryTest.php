@@ -11,6 +11,7 @@ use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 final class PageBlockSqlRepositoryTest extends TestCase
 {
@@ -21,61 +22,61 @@ final class PageBlockSqlRepositoryTest extends TestCase
 
     public function testLoadDataForEntriesReturnsNormalizedDataForEveryBlockType(): void
     {
-        $queries = [];
+        $queries    = [];
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAllAssociative')
-            ->willReturnCallback(function (string $sql, array $params) use (&$queries): array {
+            ->willReturnCallback(static function (string $sql, array $params) use (&$queries): array {
                 $queries[] = [$sql, $params];
 
                 return match (true) {
                     str_contains($sql, 'FROM content_page_hero_block b') => [[
-                        'block_id' => 10,
-                        'pageTitle' => 'Hero title',
+                        'block_id'        => 10,
+                        'pageTitle'       => 'Hero title',
                         'pageDescription' => 'Hero description',
-                        'eyebrow' => 'Eyebrow',
-                        'title' => 'Main hero',
-                        'subtitle' => 'Subtitle',
-                        'ctaPrimary' => 'Go',
-                        'ctaSecondary' => 'More',
+                        'eyebrow'         => 'Eyebrow',
+                        'title'           => 'Main hero',
+                        'subtitle'        => 'Subtitle',
+                        'ctaPrimary'      => 'Go',
+                        'ctaSecondary'    => 'More',
                     ]],
                     str_contains($sql, 'FROM content_page_text_block b') => [[
-                        'block_id' => 11,
-                        'sectionKey' => 'problem',
-                        'pageTitle' => 'Text title',
+                        'block_id'        => 11,
+                        'sectionKey'      => 'problem',
+                        'pageTitle'       => 'Text title',
                         'pageDescription' => 'Text description',
-                        'title' => 'Problem',
-                        'body' => 'Problem body',
+                        'title'           => 'Problem',
+                        'body'            => 'Problem body',
                     ]],
                     str_contains($sql, 'FROM content_page_cards_block b') => [[
-                        'block_id' => 12,
+                        'block_id'   => 12,
                         'sectionKey' => 'value',
-                        'title' => 'Cards title',
+                        'title'      => 'Cards title',
                     ]],
                     str_contains($sql, 'FROM content_page_card_item i') => [
                         ['block_id' => 12, 'position' => 0, 'title' => 'Card 1', 'body' => 'Body 1'],
                         ['block_id' => 12, 'position' => 1, 'title' => 'Card 2', 'body' => 'Body 2'],
                     ],
                     str_contains($sql, 'FROM content_page_list_block b') => [[
-                        'block_id' => 13,
+                        'block_id'   => 13,
                         'sectionKey' => 'steps',
-                        'title' => 'List title',
+                        'title'      => 'List title',
                     ]],
                     str_contains($sql, 'FROM content_page_list_item i') => [
                         ['block_id' => 13, 'position' => 0, 'text' => 'Step 1'],
                         ['block_id' => 13, 'position' => 1, 'text' => 'Step 2'],
                     ],
                     str_contains($sql, 'FROM content_page_cta_block b') => [[
-                        'block_id' => 14,
+                        'block_id'   => 14,
                         'sectionKey' => 'contact_form',
-                        'title' => 'CTA title',
-                        'body' => 'CTA body',
+                        'title'      => 'CTA title',
+                        'body'       => 'CTA body',
                     ]],
                     str_contains($sql, 'FROM content_page_compare_block b') => [[
-                        'block_id' => 15,
+                        'block_id'    => 15,
                         'beforeLabel' => 'Before',
-                        'beforeText' => 'Old state',
-                        'afterLabel' => 'After',
-                        'afterText' => 'New state',
+                        'beforeText'  => 'Old state',
+                        'afterLabel'  => 'After',
+                        'afterText'   => 'New state',
                     ]],
                     default => [],
                 };
@@ -85,7 +86,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager->method('getConnection')->willReturn($connection);
 
         $repository = new PageBlockSqlRepository($entityManager);
-        $data = $repository->loadDataForEntries([
+        $data       = $repository->loadDataForEntries([
             $this->createEntry(PageBlockType::Hero, 10),
             $this->createEntry(PageBlockType::Text, 11),
             $this->createEntry(PageBlockType::Cards, 12),
@@ -104,6 +105,67 @@ final class PageBlockSqlRepositoryTest extends TestCase
         self::assertTrue(str_starts_with(ltrim($queries[0][0]), '--'));
         self::assertSame('en', $queries[0][1]['locale']);
         self::assertSame('es', $queries[0][1]['fallback']);
+    }
+
+    public function testLoadDataForEntriesReturnsEmptyWhenNoEntries(): void
+    {
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::never())->method('getConnection');
+
+        $repository = new PageBlockSqlRepository($entityManager);
+
+        self::assertSame([], $repository->loadDataForEntries([], 'en'));
+    }
+
+    public function testLoadHeroBlocksReturnsEmptyForEmptyIds(): void
+    {
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::never())->method('getConnection');
+
+        $repository = new PageBlockSqlRepository($entityManager);
+        $method     = new ReflectionMethod(PageBlockSqlRepository::class, 'loadHeroBlocks');
+
+        self::assertSame([], $method->invoke($repository, [], 'en'));
+    }
+
+    public function testLoadTextBlocksReturnsEmptyForEmptyIds(): void
+    {
+        self::assertSame([], $this->invokeEmptyLoader('loadTextBlocks'));
+    }
+
+    public function testLoadCardsBlocksReturnsEmptyForEmptyIds(): void
+    {
+        self::assertSame([], $this->invokeEmptyLoader('loadCardsBlocks'));
+    }
+
+    public function testLoadListBlocksReturnsEmptyForEmptyIds(): void
+    {
+        self::assertSame([], $this->invokeEmptyLoader('loadListBlocks'));
+    }
+
+    public function testLoadCtaBlocksReturnsEmptyForEmptyIds(): void
+    {
+        self::assertSame([], $this->invokeEmptyLoader('loadCtaBlocks'));
+    }
+
+    public function testLoadCompareBlocksReturnsEmptyForEmptyIds(): void
+    {
+        self::assertSame([], $this->invokeEmptyLoader('loadCompareBlocks'));
+    }
+
+    /** @param non-empty-string $methodName */
+    private function invokeEmptyLoader(string $methodName): array
+    {
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::never())->method('getConnection');
+
+        $repository = new PageBlockSqlRepository($entityManager);
+        $method     = new ReflectionMethod(PageBlockSqlRepository::class, $methodName);
+
+        /** @var array<int, array<string, mixed>> $result */
+        $result = $method->invoke($repository, [], 'en');
+
+        return $result;
     }
 
     private function createEntry(PageBlockType $type, int $blockId): PageLayoutEntry

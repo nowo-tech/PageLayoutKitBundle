@@ -76,10 +76,10 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             ->with('nowo_form_kit', [
                 'profiles' => [
                     'page_layout_kit' => [
-                        'alias' => 'page_layout_kit',
+                        'alias'              => 'page_layout_kit',
                         'translation_domain' => 'NowoPageLayoutKitBundle',
-                        'defaults' => [
-                            'attr' => ['class' => 'nowo-ui-input form-control'],
+                        'defaults'           => [
+                            'attr'     => ['class' => 'nowo-ui-input form-control'],
                             'row_attr' => ['class' => 'mb-2'],
                         ],
                     ],
@@ -96,20 +96,20 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         (new NowoPageLayoutKitExtension())->load([
             [
                 'default_locale' => 'en',
-                'locales' => ['en', 'es'],
-                'pages' => ['landing'],
-                'security' => [
+                'locales'        => ['en', 'es'],
+                'pages'          => ['landing'],
+                'security'       => [
                     'allow_unauthenticated' => true,
-                    'access_roles' => ['ROLE_EDITOR'],
-                    'access_checker' => null,
+                    'access_roles'          => ['ROLE_EDITOR'],
+                    'access_checker'        => null,
                 ],
                 'web_ui' => [
                     'layout_template' => '@App/layout.html.twig',
-                    'css_framework' => 'custom',
+                    'css_framework'   => 'custom',
                 ],
                 'doctrine' => [
                     'table_prefix' => 'acme_',
-                    'connection' => 'reporting',
+                    'connection'   => 'reporting',
                 ],
             ],
         ], $container);
@@ -155,8 +155,8 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             [
                 'security' => [
                     'allow_unauthenticated' => false,
-                    'access_roles' => ['ROLE_ADMIN'],
-                    'access_checker' => 'app.page_layout_checker',
+                    'access_roles'          => ['ROLE_ADMIN'],
+                    'access_checker'        => 'app.page_layout_checker',
                 ],
             ],
         ], $container);
@@ -177,13 +177,13 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             [
                 'security' => [
                     'allow_unauthenticated' => false,
-                    'access_roles' => ['ROLE_MANAGER', 'ROLE_EDITOR'],
-                    'access_checker' => null,
+                    'access_roles'          => ['ROLE_MANAGER', 'ROLE_EDITOR'],
+                    'access_checker'        => null,
                 ],
             ],
         ], $container);
 
-        $id = 'nowo_page_layout_kit.access_checker.default';
+        $id         = 'nowo_page_layout_kit.access_checker.default';
         $definition = $container->getDefinition($id);
         self::assertSame(ConfigurablePageLayoutKitAccessChecker::class, $definition->getClass());
         self::assertSame(['ROLE_MANAGER', 'ROLE_EDITOR'], $definition->getArgument('$accessRoles'));
@@ -209,8 +209,8 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             [
                 'security' => [
                     'allow_unauthenticated' => false,
-                    'access_roles' => ['ROLE_ADMIN'],
-                    'access_checker' => null,
+                    'access_roles'          => ['ROLE_ADMIN'],
+                    'access_checker'        => null,
                 ],
             ],
         ], $container);
@@ -230,8 +230,8 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             [
                 'security' => [
                     'allow_unauthenticated' => false,
-                    'access_roles' => ['ROLE_ADMIN'],
-                    'access_checker' => null,
+                    'access_roles'          => ['ROLE_ADMIN'],
+                    'access_checker'        => null,
                 ],
             ],
         ], new ContainerBuilder());

@@ -9,10 +9,11 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Nowo\PageLayoutKitBundle\Controller\Admin\PageLayoutController;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
+use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -25,9 +26,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Twig\Environment;
 
 final class PageLayoutControllerTest extends TestCase
@@ -37,7 +38,7 @@ final class PageLayoutControllerTest extends TestCase
         $controller = new PageLayoutController(
             $this->createRepository([]),
             $this->createMock(EntityManagerInterface::class),
-            $this->createCsrfOnlyFormFactory(),
+            $this->createFormFactory(),
         );
         $controller->setContainer($this->createControllerContainer(['home']));
 
@@ -49,11 +50,11 @@ final class PageLayoutControllerTest extends TestCase
 
     public function testLayoutRendersEntriesOnGetRequests(): void
     {
-        $entries = [$this->createEntry(10, 1), $this->createEntry(11, 2)];
+        $entries    = [$this->createEntry(10, 1), $this->createEntry(11, 2)];
         $controller = new PageLayoutController(
             $this->createRepository(['home' => $entries]),
             $this->createMock(EntityManagerInterface::class),
-            $this->createCsrfOnlyFormFactory(),
+            $this->createFormFactory(),
         );
         $controller->setContainer($this->createControllerContainer(['home']));
 
@@ -65,71 +66,67 @@ final class PageLayoutControllerTest extends TestCase
 
     public function testLayoutReordersEntriesOnPostRequests(): void
     {
-        $first = $this->createEntry(10, 1);
+        $first  = $this->createEntry(10, 1);
         $second = $this->createEntry(11, 2);
+
+        $reorderData                    = PageLayoutReorderData::fromEntries([$first, $second]);
+        $reorderData->rows[0]->position = 7;
 
         $form = $this->createMock(FormInterface::class);
         $form->expects(self::once())->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn($reorderData);
 
-        $csrfCalls = [];
-        $csrfFactory = $this->createCsrfOnlyFormFactory($form, $csrfCalls);
+        $formCalls   = [];
+        $formFactory = $this->createFormFactory($form, $formCalls);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::once())->method('flush');
 
-        $request = Request::create('/admin/pages/home/layout', 'POST', [
-            'order' => [
-                '10' => '7',
-                '11' => 'invalid',
-            ],
-        ]);
+        $request = Request::create('/admin/pages/home/layout', 'POST');
         $session = new Session(new MockArraySessionStorage());
         $request->setSession($session);
 
         $controller = new PageLayoutController(
             $this->createRepository(['home' => [$first, $second]]),
             $entityManager,
-            $csrfFactory,
+            $formFactory,
         );
         $controller->setContainer($this->createControllerContainer(['home'], $request));
 
         $response = $controller->layout('home', $request);
 
         self::assertSame('/generated/admin_page_layout/home', $response->getTargetUrl());
-        self::assertSame('csrf_only', $csrfCalls[0]['name']);
-        self::assertSame('/generated/admin_page_layout/home', $csrfCalls[0]['options']['action']);
-        self::assertSame('page_layout_reorder', $csrfCalls[0]['options']['csrf_token_id']);
+        self::assertSame(PageLayoutReorderType::class, $formCalls[0]['type']);
+        self::assertSame('/generated/admin_page_layout/home', $formCalls[0]['options']['action']);
         self::assertSame(7, $first->getPosition());
         self::assertSame(2, $second->getPosition());
         self::assertSame(['Order updated.'], $session->getFlashBag()->get('success'));
     }
 
-    public function testLayoutRejectsInvalidCsrfSubmissions(): void
+    public function testLayoutRejectsInvalidSubmissions(): void
     {
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => false,
-            'isValid' => false,
+            'isValid'     => false,
         ]);
         $form->expects(self::once())->method('handleRequest');
 
-        $csrfFactory = $this->createCsrfOnlyFormFactory($form);
+        $formFactory = $this->createFormFactory($form);
 
-        $request = Request::create('/admin/pages/home/layout', 'POST', [
-            'order' => ['10' => '5'],
-        ]);
+        $request = Request::create('/admin/pages/home/layout', 'POST');
         $request->setSession(new Session(new MockArraySessionStorage()));
 
         $controller = new PageLayoutController(
             $this->createRepository(['home' => [$this->createEntry(10, 1)]]),
             $this->createMock(EntityManagerInterface::class),
-            $csrfFactory,
+            $formFactory,
         );
         $controller->setContainer($this->createControllerContainer(['home'], $request));
 
         $this->expectException(AccessDeniedException::class);
-        $this->expectExceptionMessage('Invalid CSRF token.');
+        $this->expectExceptionMessage('Invalid form submission.');
 
         $controller->layout('home', $request);
     }
@@ -152,6 +149,8 @@ final class PageLayoutControllerTest extends TestCase
         $twig = $this->createMock(Environment::class);
         $twig->method('render')
             ->willReturnCallback(static function (string $view, array $parameters = []): string {
+                self::assertArrayHasKey('reorder_form', $parameters);
+
                 return 'render:' . $view . ':' . ($parameters['page_title'] ?? '');
             });
         $container->set('twig', $twig);
@@ -165,23 +164,21 @@ final class PageLayoutControllerTest extends TestCase
         return $container;
     }
 
-
-    private function createCsrfOnlyFormFactory(?FormInterface $form = null, array &$calls = []): CsrfOnlyFormFactory
+    private function createFormFactory(?FormInterface $form = null, array &$calls = []): FormFactoryInterface
     {
         $factory = $this->createMock(FormFactoryInterface::class);
-        $factory->method('createNamed')
-            ->willReturnCallback(function (string $name, string $type, mixed $data = null, array $options = []) use ($form, &$calls): FormInterface {
+        $factory->method('create')
+            ->willReturnCallback(function (string $type, mixed $data = null, array $options = []) use ($form, &$calls): FormInterface {
                 $calls[] = [
-                    'name' => $name,
-                    'type' => $type,
-                    'data' => $data,
+                    'type'    => $type,
+                    'data'    => $data,
                     'options' => $options,
                 ];
 
                 return $form ?? $this->createMock(FormInterface::class);
             });
 
-        return new CsrfOnlyFormFactory($factory);
+        return $factory;
     }
 
     /** @param array<string, list<PageLayoutEntry>> $resultsByPageKey */
@@ -194,9 +191,9 @@ final class PageLayoutControllerTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getResult')
-                    ->willReturnCallback(function () use (&$params, $resultsByPageKey): array {
+                    ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         if (($params['enabled'] ?? null) !== true) {
                             return [];
                         }
@@ -210,7 +207,7 @@ final class PageLayoutControllerTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;

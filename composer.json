@@ -106,6 +106,5 @@
         "twig:lint": "twig-cs-fixer lint --config=.twig-cs-fixer.php",
         "twig:fix": "twig-cs-fixer fix --config=.twig-cs-fixer.php",
         "twig:fix:check": "twig-cs-fixer lint --config=.twig-cs-fixer.php --fix"
-    },
-    "version": "1.0.0"
+    }
 }

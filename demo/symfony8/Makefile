@@ -1,4 +1,4 @@
-.PHONY: help up down build install shell logs test test-coverage cache-clear link-bundle update update-bundle update-deps ensure-up restart release-check
+.PHONY: help up down build install shell logs test test-coverage cache-clear link-bundle update update-bundle update-deps ensure-up restart release-check database
 
 DOCKER_BIN := $(shell command -v docker 2>/dev/null)
 ifeq ($(DOCKER_BIN),)
@@ -44,14 +44,15 @@ down:
 	$(DOCKER_COMPOSE) down
 
 restart: ensure-up
-	$(DOCKER_COMPOSE) restart
+	$(DOCKER_COMPOSE) restart php
+	$(DOCKER_COMPOSE) exec -T php sh -c "php bin/console doctrine:database:create --if-not-exists --no-interaction && php bin/console doctrine:schema:update --force --no-interaction"
 
 build:
 	$(DOCKER_COMPOSE) build --no-cache
 
 ensure-up:
 	@if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi
-	@if ! $(DOCKER_COMPOSE) exec -T php true 2>/dev/null; then $(DOCKER_COMPOSE) up -d; sleep 3; fi
+	@if ! $(DOCKER_COMPOSE) exec -T php true 2>/dev/null; then $(DOCKER_COMPOSE) up -d; sleep 5; fi
 
 install: ensure-up
 	$(DOCKER_COMPOSE) exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction
@@ -61,6 +62,9 @@ shell: ensure-up
 
 logs:
 	$(DOCKER_COMPOSE) logs -f
+
+database: ensure-up
+	$(DOCKER_COMPOSE) exec -T php sh -c "php bin/console doctrine:database:create --if-not-exists --no-interaction && php bin/console doctrine:schema:update --force --no-interaction"
 
 test: ensure-up link-bundle
 	$(DOCKER_COMPOSE) exec -e APP_ENV=test php sh -c "mkdir -p var/data && php bin/console doctrine:schema:update --force"
@@ -73,7 +77,7 @@ cache-clear: ensure-up
 	$(DOCKER_COMPOSE) exec php php bin/console cache:clear
 
 link-bundle: ensure-up
-	$(DOCKER_COMPOSE) exec php sh -c "mkdir -p var/data && rm -rf vendor/nowo-tech/page-layout-kit-bundle && ln -sf /var/page-layout-kit-bundle vendor/nowo-tech/page-layout-kit-bundle && php bin/console doctrine:schema:update --force --complete && php bin/console cache:clear"
+	$(DOCKER_COMPOSE) exec php sh -c "rm -rf vendor/nowo-tech/page-layout-kit-bundle && ln -sf /var/page-layout-kit-bundle vendor/nowo-tech/page-layout-kit-bundle && php bin/console doctrine:database:create --if-not-exists --no-interaction && php bin/console doctrine:schema:update --force --no-interaction && php bin/console assets:install --symlink --relative --no-interaction && php bin/console cache:clear"
 
 update: ensure-up
 	$(DOCKER_COMPOSE) exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer update --no-interaction

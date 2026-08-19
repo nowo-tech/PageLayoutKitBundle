@@ -1,6 +1,6 @@
 # Symfony 8 demo — Page Layout Kit Bundle
 
-Minimal Symfony 8 application running under **FrankenPHP** with SQLite and the path-mounted bundle.
+Minimal Symfony 8 application running under **FrankenPHP** with MySQL and the path-mounted bundle.
 
 ## Quick start
 
@@ -34,6 +34,6 @@ make -C demo/symfony8 down
 - Bundle config: `config/packages/nowo_page_layout_kit.yaml`
 - Routes import: `config/routes/nowo_page_layout_kit.yaml`
 - Security: in-memory `ROLE_ADMIN` demo user with HTTP Basic
-- Database: SQLite at `var/data/demo.db`
+- Database: MySQL 8 (`mysql` service, not published to the host; DSN via `DATABASE_URL`)
 
 See [../../docs/DEMO-FRANKENPHP.md](../../docs/DEMO-FRANKENPHP.md).

@@ -14,15 +14,15 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockEditType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockEditType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 
 final class PageBlockEditTypeBuildFormTest extends TestCase
 {
     public function testLocalePanelBuildsExpectedFields(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
 
         $this->createType(PageBlockLocalePanelType::class)->buildForm($builder, []);
@@ -40,7 +40,7 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
 
     public function testHeroEditTypeBuildsSeoAndCtaFields(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
 
         $this->createType(PageHeroBlockEditType::class)->buildForm($builder, []);
@@ -56,7 +56,7 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
     public function testTextEditTypeCanIncludeMetaFields(): void
     {
         $withoutMeta = [];
-        $withMeta = [];
+        $withMeta    = [];
 
         $this->createType(PageTextBlockEditType::class)->buildForm($this->createBuilder($withoutMeta), [
             'include_meta' => false,
@@ -109,10 +109,10 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
     {
         $builder = $this->createMock(FormBuilderInterface::class);
         $builder->method('add')
-            ->willReturnCallback(function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
+            ->willReturnCallback(static function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
                 $fields[] = [
-                    'name' => $name,
-                    'type' => $type,
+                    'name'    => $name,
+                    'type'    => $type,
                     'options' => $options,
                 ];
 
@@ -129,16 +129,16 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
             new FormOptionsMerger([
                 'page_layout_kit' => [
                     'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
+                    'defaults'           => [
+                        'attr'     => [],
                         'row_attr' => [],
                     ],
                     'field_types' => [],
                 ],
             ], 'page_layout_kit', new ConstraintDefinitionFactory()),
             new FormTypeMap([
-                'hidden' => HiddenType::class,
-                'text' => TextType::class,
+                'hidden'   => HiddenType::class,
+                'text'     => TextType::class,
                 'textarea' => TextareaType::class,
             ]),
         );

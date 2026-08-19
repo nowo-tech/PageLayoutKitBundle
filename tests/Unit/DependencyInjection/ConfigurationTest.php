@@ -20,22 +20,22 @@ final class ConfigurationTest extends TestCase
     public function testConfigurationAppliesDefaultsAndCustomValues(): void
     {
         $processor = new Processor();
-        $config = $processor->processConfiguration(new Configuration(), [[
+        $config    = $processor->processConfiguration(new Configuration(), [[
             'default_locale' => 'en',
-            'locales' => ['en', 'es'],
-            'pages' => ['landing'],
-            'security' => [
-                'access_roles' => ['ROLE_ADMIN'],
-                'access_checker' => 'app.access_checker',
+            'locales'        => ['en', 'es'],
+            'pages'          => ['landing'],
+            'security'       => [
+                'access_roles'          => ['ROLE_ADMIN'],
+                'access_checker'        => 'app.access_checker',
                 'allow_unauthenticated' => true,
             ],
             'web_ui' => [
                 'layout_template' => '@App/layout.html.twig',
-                'css_framework' => 'custom',
+                'css_framework'   => 'custom',
             ],
             'doctrine' => [
                 'table_prefix' => 'acme_',
-                'connection' => 'reporting',
+                'connection'   => 'reporting',
             ],
         ]]);
 

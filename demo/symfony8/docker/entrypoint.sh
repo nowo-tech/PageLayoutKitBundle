@@ -28,4 +28,11 @@ git config --global --add safe.directory /var/page-layout-kit-bundle 2>/dev/null
 mkdir -p /app/var/cache /app/var/log /app/var/data
 chmod -R 777 /app/var 2>/dev/null || true
 
+# Ensure MySQL schema exists when the persistent demo stack starts without `make link-bundle`
+# (e.g. monorepo `update-deps` → `docker compose up -d`). MySQL is healthy via depends_on.
+if [ -f /app/vendor/autoload.php ] && [ -f /app/bin/console ]; then
+	php /app/bin/console doctrine:database:create --if-not-exists --no-interaction 2>/dev/null || true
+	php /app/bin/console doctrine:schema:update --force --no-interaction || true
+fi
+
 exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile

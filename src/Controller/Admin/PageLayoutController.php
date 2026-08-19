@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Nowo\PageLayoutKitBundle\Controller\RequiresValidFormTrait;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
+use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,7 +30,7 @@ final class PageLayoutController extends AbstractController
     public function __construct(
         private readonly PageLayoutEntryRepository $pageLayoutEntryRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly CsrfOnlyFormFactory $csrfOnlyFormFactory,
+        private readonly FormFactoryInterface $formFactory,
     ) {
     }
 
@@ -40,40 +43,53 @@ final class PageLayoutController extends AbstractController
             throw $this->createNotFoundException(sprintf('Unknown page key "%s".', $pageKey));
         }
 
-        $entries = $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey);
+        $entries     = $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey);
+        $reorderForm = $this->createReorderForm($pageKey, $entries);
 
         if ($request->isMethod('POST')) {
-            $this->reorder($request, $entries, $pageKey);
+            $this->reorder($request, $entries, $reorderForm);
 
             return $this->redirectToRoute('admin_page_layout', ['pageKey' => $pageKey]);
         }
 
         return $this->render('@NowoPageLayoutKitBundle/admin/layout/index.html.twig', [
-            'page_title' => sprintf('Layout: %s', $pageKey),
-            'page_key'   => $pageKey,
-            'entries'    => $entries,
+            'page_title'   => sprintf('Layout: %s', $pageKey),
+            'page_key'     => $pageKey,
+            'entries'      => $entries,
+            'reorder_form' => $reorderForm,
         ]);
     }
 
-    /** @param list<PageLayoutEntry> $entries */
-    private function reorder(Request $request, array $entries, string $pageKey): void
+    /**
+     * @param list<PageLayoutEntry> $entries
+     *
+     * @return FormInterface<PageLayoutReorderData>
+     */
+    private function createReorderForm(string $pageKey, array $entries): FormInterface
     {
-        $form = $this->csrfOnlyFormFactory->createNamed(
-            $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]),
-            'page_layout_reorder',
+        /** @var FormInterface<PageLayoutReorderData> $form */
+        $form = $this->formFactory->create(
+            PageLayoutReorderType::class,
+            PageLayoutReorderData::fromEntries($entries),
+            [
+                'action' => $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]),
+                'method' => 'POST',
+            ],
         );
-        $form->handleRequest($request);
-        $this->requireValidCsrfForm($form);
 
-        $order = $request->request->all('order');
+        return $form;
+    }
 
-        foreach ($entries as $entry) {
-            $id = (string) $entry->getId();
+    /**
+     * @param list<PageLayoutEntry> $entries
+     * @param FormInterface<PageLayoutReorderData> $reorderForm
+     */
+    private function reorder(Request $request, array $entries, FormInterface $reorderForm): void
+    {
+        $reorderForm->handleRequest($request);
+        $this->requireValidForm($reorderForm);
 
-            if (isset($order[$id]) && is_numeric($order[$id])) {
-                $entry->setPosition((int) $order[$id]);
-            }
-        }
+        $reorderForm->getData()?->applyToEntries($entries);
 
         $this->entityManager->flush();
         $this->addFlash('success', 'Order updated.');

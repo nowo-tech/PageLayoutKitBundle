@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Service;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItemTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
@@ -25,7 +26,8 @@ use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
-use Doctrine\ORM\EntityManagerInterface;
+
+use function sprintf;
 
 /**
  * Migrates legacy page JSON into typed page blocks and layout entries.
@@ -41,7 +43,7 @@ final readonly class PageBlockMigrator
 
     public function isEmpty(): bool
     {
-        return [] === $this->pageLayoutEntryRepository->findEnabledByPageKey('home');
+        return $this->pageLayoutEntryRepository->findEnabledByPageKey('home') === [];
     }
 
     public function migrate(bool $force = false): bool
@@ -70,20 +72,20 @@ final readonly class PageBlockMigrator
     {
         $pageHeroBlock = new PageHeroBlock();
         $this->fillHeroTranslations($pageHeroBlock, $locales, static fn (array $data): array => [
-            'pageTitle' => (string) ($data['page_title'] ?? ''),
+            'pageTitle'       => (string) ($data['page_title'] ?? ''),
             'pageDescription' => (string) ($data['page_description'] ?? ''),
-            'eyebrow' => (string) ($data['hero_eyebrow'] ?? ''),
-            'title' => (string) ($data['hero_title'] ?? ''),
-            'subtitle' => (string) ($data['hero_subtitle'] ?? ''),
-            'ctaPrimary' => (string) ($data['hero_cta_primary'] ?? ''),
-            'ctaSecondary' => (string) ($data['hero_cta_secondary'] ?? ''),
+            'eyebrow'         => (string) ($data['hero_eyebrow'] ?? ''),
+            'title'           => (string) ($data['hero_title'] ?? ''),
+            'subtitle'        => (string) ($data['hero_subtitle'] ?? ''),
+            'ctaPrimary'      => (string) ($data['hero_cta_primary'] ?? ''),
+            'ctaSecondary'    => (string) ($data['hero_cta_secondary'] ?? ''),
         ]);
         $this->entityManager->persist($pageHeroBlock);
         $this->addLayout('home', PageBlockType::Hero, $pageHeroBlock, 0);
 
         $pageTextBlock = $this->createTextBlock('problem', $locales, static fn (array $data): array => [
             'title' => (string) ($data['problem_title'] ?? ''),
-            'body' => (string) ($data['problem_text'] ?? ''),
+            'body'  => (string) ($data['problem_text'] ?? ''),
         ]);
         $this->addLayout('home', PageBlockType::Text, $pageTextBlock, 1);
 
@@ -110,13 +112,13 @@ final readonly class PageBlockMigrator
 
         $services = $this->createTextBlock('services', $locales, static fn (array $data): array => [
             'title' => (string) ($data['services_title'] ?? ''),
-            'body' => (string) ($data['services_text'] ?? ''),
+            'body'  => (string) ($data['services_text'] ?? ''),
         ]);
         $this->addLayout('home', PageBlockType::Text, $services, 5);
 
         $profile = $this->createTextBlock('profile', $locales, static fn (array $data): array => [
             'title' => (string) ($data['profile_title'] ?? ''),
-            'body' => (string) ($data['profile_text'] ?? ''),
+            'body'  => (string) ($data['profile_text'] ?? ''),
         ]);
         $this->addLayout('home', PageBlockType::Text, $profile, 6);
 
@@ -131,7 +133,7 @@ final readonly class PageBlockMigrator
 
         $pageCtaBlock = $this->createCtaBlock(null, $locales, static fn (array $data): array => [
             'title' => (string) ($data['cta_title'] ?? ''),
-            'body' => (string) ($data['cta_text'] ?? ''),
+            'body'  => (string) ($data['cta_text'] ?? ''),
         ]);
         $this->addLayout('home', PageBlockType::Cta, $pageCtaBlock, 8);
     }
@@ -140,16 +142,16 @@ final readonly class PageBlockMigrator
     private function migrateContact(array $locales): void
     {
         $pageTextBlock = $this->createTextBlock('contact_header', $locales, static fn (array $data): array => [
-            'pageTitle' => (string) ($data['page_title'] ?? ''),
+            'pageTitle'       => (string) ($data['page_title'] ?? ''),
             'pageDescription' => (string) ($data['page_description'] ?? ''),
-            'title' => (string) ($data['h1'] ?? ''),
-            'body' => (string) ($data['intro'] ?? ''),
+            'title'           => (string) ($data['h1'] ?? ''),
+            'body'            => (string) ($data['intro'] ?? ''),
         ]);
         $this->addLayout('contact', PageBlockType::Text, $pageTextBlock, 0);
 
         $expect = $this->createTextBlock('expect', $locales, static fn (array $data): array => [
             'title' => (string) ($data['expect_title'] ?? ''),
-            'body' => (string) ($data['expect_text'] ?? ''),
+            'body'  => (string) ($data['expect_text'] ?? ''),
         ]);
         $this->addLayout('contact', PageBlockType::Text, $expect, 1);
 
@@ -165,16 +167,16 @@ final readonly class PageBlockMigrator
         $pageCompareBlock = new PageCompareBlock();
         $this->fillCompareTranslations($pageCompareBlock, $locales, static fn (array $data): array => [
             'beforeLabel' => (string) ($data['before_label'] ?? ''),
-            'beforeText' => (string) ($data['before_text'] ?? ''),
-            'afterLabel' => (string) ($data['after_label'] ?? ''),
-            'afterText' => (string) ($data['after_text'] ?? ''),
+            'beforeText'  => (string) ($data['before_text'] ?? ''),
+            'afterLabel'  => (string) ($data['after_label'] ?? ''),
+            'afterText'   => (string) ($data['after_text'] ?? ''),
         ]);
         $this->entityManager->persist($pageCompareBlock);
         $this->addLayout('contact', PageBlockType::Compare, $pageCompareBlock, 3);
 
         $pageCtaBlock = $this->createCtaBlock('contact_form', $locales, static fn (array $data): array => [
             'title' => (string) ($data['form_submit'] ?? ''),
-            'body' => (string) ($data['form_note'] ?? ''),
+            'body'  => (string) ($data['form_note'] ?? ''),
         ]);
         $this->addLayout('contact', PageBlockType::Cta, $pageCtaBlock, 4);
     }
@@ -187,12 +189,12 @@ final readonly class PageBlockMigrator
             return [];
         }
 
-        $content = [];
+        $content       = [];
         $defaultLocale = PageLocales::default();
-        $defaultData = $provider->contentForPage($pageKey, $defaultLocale);
+        $defaultData   = $provider->contentForPage($pageKey, $defaultLocale);
 
         foreach (PageLocales::all() as $locale) {
-            $stored = $provider->contentForPage($pageKey, $locale);
+            $stored           = $provider->contentForPage($pageKey, $locale);
             $content[$locale] = $stored !== [] ? $stored : $defaultData;
         }
 
@@ -205,7 +207,7 @@ final readonly class PageBlockMigrator
         $pageTextBlock = (new PageTextBlock())->setSectionKey($sectionKey);
 
         foreach (PageLocales::all() as $locale) {
-            $mapped = $mapper($locales[$locale] ?? []);
+            $mapped      = $mapper($locales[$locale] ?? []);
             $translation = new PageTextBlockTranslation()
                 ->setLocale($locale)
                 ->setPageTitle($mapped['pageTitle'] ?? null)
@@ -227,7 +229,7 @@ final readonly class PageBlockMigrator
     private function createCardsBlock(string $sectionKey, array $locales, callable $mapper): PageCardsBlock
     {
         $pageCardsBlock = (new PageCardsBlock())->setSectionKey($sectionKey);
-        $reference = $mapper($locales[PageLocales::default()] ?? []);
+        $reference      = $mapper($locales[PageLocales::default()] ?? []);
 
         foreach (PageLocales::all() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
@@ -242,7 +244,7 @@ final readonly class PageBlockMigrator
             $item = (new PageCardItem())->setPosition($position);
 
             foreach (PageLocales::all() as $locale) {
-                $mapped = $mapper($locales[$locale] ?? []);
+                $mapped     = $mapper($locales[$locale] ?? []);
                 $localeItem = $mapped['items'][$position] ?? ['title' => '', 'body' => ''];
                 $item->addTranslation(
                     new PageCardItemTranslation()
@@ -267,7 +269,7 @@ final readonly class PageBlockMigrator
     private function createListBlock(string $sectionKey, array $locales, callable $mapper): PageListBlock
     {
         $pageListBlock = (new PageListBlock())->setSectionKey($sectionKey);
-        $reference = $mapper($locales[PageLocales::default()] ?? []);
+        $reference     = $mapper($locales[PageLocales::default()] ?? []);
 
         foreach (PageLocales::all() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
@@ -369,7 +371,7 @@ final readonly class PageBlockMigrator
         for ($i = 1; $i <= $count; ++$i) {
             $items[] = [
                 'title' => (string) ($data[sprintf('%s_%d_title', $prefix, $i)] ?? ''),
-                'body' => (string) ($data[sprintf('%s_%d_text', $prefix, $i)] ?? ''),
+                'body'  => (string) ($data[sprintf('%s_%d_text', $prefix, $i)] ?? ''),
             ];
         }
 
@@ -380,7 +382,7 @@ final readonly class PageBlockMigrator
     {
         $id = method_exists($block, 'getId') ? $block->getId() : null;
 
-        if (null === $id) {
+        if ($id === null) {
             $this->entityManager->flush();
             $id = $block->getId();
         }

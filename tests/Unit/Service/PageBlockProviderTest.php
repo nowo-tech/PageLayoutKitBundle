@@ -18,6 +18,7 @@ use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionObject;
 use stdClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -33,26 +34,26 @@ final class PageBlockProviderTest extends TestCase
     {
         $provider = new PageBlockProvider(
             $this->createPageLayoutEntryRepository([
-                'home' => [],
+                'home'    => [],
                 'contact' => [],
             ]),
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('es'),
             new PageLocales('es', ['es', 'en']),
             new FakeLegacyPageContentProvider([
-                'home:es'    => [
-                    'page_title'          => 'Inicio',
-                    'page_description'    => 'Meta inicio',
-                    'hero_title'          => 'Hero ES',
-                    'hero_subtitle'       => 'Sub ES',
-                    'hero_cta_primary'    => 'Go',
-                    'hero_cta_secondary'  => 'More',
-                    'problem_title'       => 'Problem',
-                    'problem_text'        => 'Body',
-                    'detect_items'        => ['Uno', 'Dos'],
-                    'process_items'       => ['Paso 1'],
-                    'cta_title'           => 'CTA',
-                    'cta_text'            => 'CTA body',
+                'home:es' => [
+                    'page_title'         => 'Inicio',
+                    'page_description'   => 'Meta inicio',
+                    'hero_title'         => 'Hero ES',
+                    'hero_subtitle'      => 'Sub ES',
+                    'hero_cta_primary'   => 'Go',
+                    'hero_cta_secondary' => 'More',
+                    'problem_title'      => 'Problem',
+                    'problem_text'       => 'Body',
+                    'detect_items'       => ['Uno', 'Dos'],
+                    'process_items'      => ['Paso 1'],
+                    'cta_title'          => 'CTA',
+                    'cta_text'           => 'CTA body',
                 ],
                 'contact:es' => [
                     'page_title'       => 'Contacto',
@@ -97,8 +98,8 @@ final class PageBlockProviderTest extends TestCase
 
     public function testPageMetaFallsBackToLegacyWhenStoredLayoutHasNoSeoBlock(): void
     {
-        $ctaEntry = $this->createLayoutEntry('landing', PageBlockType::Cta, 12, 0, 701);
-        $state = new stdClass();
+        $ctaEntry       = $this->createLayoutEntry('landing', PageBlockType::Cta, 12, 0, 701);
+        $state          = new stdClass();
         $state->queries = 0;
 
         $provider = new PageBlockProvider(
@@ -107,17 +108,17 @@ final class PageBlockProviderTest extends TestCase
             ]),
             $this->createPageBlockSqlRepository([
                 'FROM content_page_cta_block b' => [[
-                    'block_id' => 12,
+                    'block_id'   => 12,
                     'sectionKey' => 'footer',
-                    'title' => 'CTA',
-                    'body' => 'Body',
+                    'title'      => 'CTA',
+                    'body'       => 'Body',
                 ]],
             ], $state),
             $this->createRequestStack('en'),
             new PageLocales('es', ['es', 'en']),
             new FakeLegacyPageContentProvider([
                 'landing:en' => [
-                    'page_title' => 'Landing title',
+                    'page_title'       => 'Landing title',
                     'page_description' => 'Landing description',
                 ],
             ]),
@@ -155,7 +156,7 @@ final class PageBlockProviderTest extends TestCase
             new PageLocales('es', ['es', 'en']),
             new FakeLegacyPageContentProvider([
                 'home:es' => [
-                    'page_title' => 'Inicio',
+                    'page_title'       => 'Inicio',
                     'page_description' => 'Descripcion',
                 ],
                 'home:en' => [],
@@ -185,9 +186,9 @@ final class PageBlockProviderTest extends TestCase
 
     public function testBuildsStoredLayoutViewsCachesAndSkipsEntriesWithoutLoadedData(): void
     {
-        $heroEntry = $this->createLayoutEntry('home', PageBlockType::Hero, 10, 0, 501);
-        $textEntry = $this->createLayoutEntry('home', PageBlockType::Text, 11, 1, 502);
-        $state = new stdClass();
+        $heroEntry      = $this->createLayoutEntry('home', PageBlockType::Hero, 10, 0, 501);
+        $textEntry      = $this->createLayoutEntry('home', PageBlockType::Text, 11, 1, 502);
+        $state          = new stdClass();
         $state->queries = 0;
 
         $provider = new PageBlockProvider(
@@ -196,14 +197,14 @@ final class PageBlockProviderTest extends TestCase
             ]),
             $this->createPageBlockSqlRepository([
                 'FROM content_page_hero_block b' => [[
-                    'block_id'         => 10,
-                    'pageTitle'        => 'Stored title',
-                    'pageDescription'  => 'Stored description',
-                    'eyebrow'          => 'Eyebrow',
-                    'title'            => 'Stored hero',
-                    'subtitle'         => 'Stored subtitle',
-                    'ctaPrimary'       => 'Primary',
-                    'ctaSecondary'     => 'Secondary',
+                    'block_id'        => 10,
+                    'pageTitle'       => 'Stored title',
+                    'pageDescription' => 'Stored description',
+                    'eyebrow'         => 'Eyebrow',
+                    'title'           => 'Stored hero',
+                    'subtitle'        => 'Stored subtitle',
+                    'ctaPrimary'      => 'Primary',
+                    'ctaSecondary'    => 'Secondary',
                 ]],
                 'FROM content_page_text_block b' => [],
             ], $state),
@@ -261,9 +262,9 @@ final class PageBlockProviderTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getResult')
-                    ->willReturnCallback(function () use (&$params, $resultsByPageKey): array {
+                    ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
                     });
 
@@ -273,7 +274,7 @@ final class PageBlockProviderTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;
@@ -298,7 +299,7 @@ final class PageBlockProviderTest extends TestCase
     {
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAllAssociative')
-            ->willReturnCallback(function (string $sql) use ($rowsBySqlFragment, $state): array {
+            ->willReturnCallback(static function (string $sql) use ($rowsBySqlFragment, $state): array {
                 ++$state->queries;
 
                 foreach ($rowsBySqlFragment as $fragment => $rows) {
@@ -328,7 +329,7 @@ final class PageBlockProviderTest extends TestCase
 
     private function assignEntityId(object $entity, int $id): void
     {
-        $reflection = new \ReflectionObject($entity);
+        $reflection = new ReflectionObject($entity);
 
         do {
             if ($reflection->hasProperty('id')) {

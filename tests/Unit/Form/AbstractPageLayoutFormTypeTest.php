@@ -18,15 +18,15 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
 {
     public function testAddCkeditorFallsBackToTextareaAndDropsEditorOnlyOptions(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
-        $type = $this->createType();
+        $type    = $this->createType();
 
         $type->buildCkeditorField($builder, 'body', [
-            'config' => 'simple',
-            'theme' => 'auto',
+            'config'     => 'simple',
+            'theme'      => 'auto',
             'min_height' => '180px',
-            'attr' => ['class' => 'wide'],
+            'attr'       => ['class' => 'wide'],
         ]);
 
         self::assertCount(1, $fields);
@@ -41,9 +41,9 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
 
     public function testAddHiddenLocaleFieldAppliesCsrfFriendlyDefaults(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
-        $type = $this->createType();
+        $type    = $this->createType();
 
         $type->buildHiddenLocaleField($builder, ['required' => false]);
 
@@ -54,9 +54,9 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
 
     public function testAddWithDefaultsAlsoAcceptsPlainTypeAliases(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
-        $type = $this->createType();
+        $type    = $this->createType();
 
         $type->buildWithDefaultsField($builder, 'body', 'textarea', []);
 
@@ -65,9 +65,9 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
 
     public function testAddWithDefaultsMapsKnownTypeClassesAndSetsPlaceholderOnlyWhenMissing(): void
     {
-        $fields = [];
+        $fields  = [];
         $builder = $this->createBuilder($fields);
-        $type = $this->createType();
+        $type    = $this->createType();
 
         $type->buildWithDefaultsField($builder, 'notes', TextareaType::class, []);
         $type->buildWithDefaultsField($builder, 'token', HiddenType::class, ['placeholder' => 'keep-me']);
@@ -87,10 +87,10 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
     {
         $builder = $this->createMock(FormBuilderInterface::class);
         $builder->method('add')
-            ->willReturnCallback(function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
+            ->willReturnCallback(static function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
                 $fields[] = [
-                    'name' => $name,
-                    'type' => $type,
+                    'name'    => $name,
+                    'type'    => $type,
                     'options' => $options,
                 ];
 
@@ -102,23 +102,7 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
 
     private function createType(): object
     {
-        return new class(
-            new FormOptionsMerger([
-                'page_layout_kit' => [
-                    'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
-                        'row_attr' => [],
-                    ],
-                    'field_types' => [],
-                ],
-            ], 'page_layout_kit', new ConstraintDefinitionFactory()),
-            new FormTypeMap([
-                'hidden' => HiddenType::class,
-                'textarea' => TextareaType::class,
-                CollectionType::class => CollectionType::class,
-            ]),
-        ) extends AbstractPageLayoutFormType {
+        return new class(new FormOptionsMerger(['page_layout_kit' => ['translation_domain' => 'form', 'defaults' => ['attr' => [], 'row_attr' => []], 'field_types' => []]], 'page_layout_kit', new ConstraintDefinitionFactory()), new FormTypeMap(['hidden' => HiddenType::class, 'textarea' => TextareaType::class, CollectionType::class => CollectionType::class])) extends AbstractPageLayoutFormType {
             public function buildCkeditorField(FormBuilderInterface $builder, string $name, array $options): void
             {
                 $this->withBuilder($builder, function () use ($name, $options): void {

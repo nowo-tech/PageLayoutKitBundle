@@ -24,7 +24,6 @@ use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 
 final class PageBlockEntitiesTest extends TestCase
 {
@@ -35,7 +34,7 @@ final class PageBlockEntitiesTest extends TestCase
 
     public function testHeroTextAndCompareBlocksExposeExpectedData(): void
     {
-        $hero = new PageHeroBlock();
+        $hero   = new PageHeroBlock();
         $heroTr = (new PageHeroBlockTranslation())
             ->setLocale('es')
             ->setPageTitle('SEO')
@@ -53,7 +52,7 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertSame('More', $heroTr->getCtaSecondary());
         self::assertSame('Sub', $heroTr->getSubtitle());
 
-        $text = (new PageTextBlock())->setSectionKey('intro');
+        $text            = (new PageTextBlock())->setSectionKey('intro');
         $textTranslation = (new PageTextBlockTranslation())
             ->setLocale('es')
             ->setPageTitle('Meta title')
@@ -70,7 +69,7 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertSame('B', $textTranslation->getBody());
         self::assertSame($text, $textTranslation->getTranslatable());
 
-        $compare = new PageCompareBlock();
+        $compare            = new PageCompareBlock();
         $compareTranslation = (new PageCompareBlockTranslation())
             ->setLocale('es')
             ->setBeforeLabel('Before')
@@ -88,10 +87,10 @@ final class PageBlockEntitiesTest extends TestCase
 
     public function testCardsListCtaBlocksAndItemsManageRelationsAndArrays(): void
     {
-        $cards = (new PageCardsBlock())->setSectionKey('value');
+        $cards            = (new PageCardsBlock())->setSectionKey('value');
         $cardsTranslation = (new PageCardsBlockTranslation())->setLocale('es')->setTitle('Cards');
         $cards->addTranslation($cardsTranslation);
-        $card = (new PageCardItem())->setPosition(2);
+        $card            = (new PageCardItem())->setPosition(2);
         $cardTranslation = (new PageCardItemTranslation())->setLocale('es')->setTitle('Card')->setBody('Body');
         $card->addTranslation($cardTranslation);
         $cards->addItem($card)->addItem($card);
@@ -109,10 +108,10 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertSame('Card', $cards->toArray('es')['items'][0]['title']);
         self::assertSame('Body', $cards->toArray('es')['items'][0]['body']);
 
-        $list = (new PageListBlock())->setSectionKey('steps');
+        $list            = (new PageListBlock())->setSectionKey('steps');
         $listTranslation = (new PageListBlockTranslation())->setLocale('es')->setTitle('Steps');
         $list->addTranslation($listTranslation);
-        $item = (new PageListItem())->setPosition(1);
+        $item            = (new PageListItem())->setPosition(1);
         $itemTranslation = (new PageListItemTranslation())->setLocale('es')->setText('Step one');
         $item->addTranslation($itemTranslation);
         $list->addItem($item);
@@ -126,7 +125,7 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertCount(0, $list->getItems());
         $list->addItem($item);
 
-        $cta = (new PageCtaBlock())->setSectionKey('footer');
+        $cta            = (new PageCtaBlock())->setSectionKey('footer');
         $ctaTranslation = (new PageCtaBlockTranslation())->setLocale('es')->setTitle('CTA')->setBody('Text');
         $cta->addTranslation($ctaTranslation);
 
@@ -160,27 +159,27 @@ final class PageBlockEntitiesTest extends TestCase
 
     public function testRemainingEntityAccessorsAreReachable(): void
     {
-        $cardsBlock = (new PageCardsBlock())->setSectionKey('cards');
+        $cardsBlock            = (new PageCardsBlock())->setSectionKey('cards');
         $cardsBlockTranslation = (new PageCardsBlockTranslation())->setLocale('es')->setTitle('Cards');
         $cardsBlock->addTranslation($cardsBlockTranslation);
 
-        $cardItem = (new PageCardItem())->setPosition(1);
+        $cardItem            = (new PageCardItem())->setPosition(1);
         $cardItemTranslation = (new PageCardItemTranslation())->setLocale('es')->setTitle('Item')->setBody('Body');
         $cardItem->setBlock($cardsBlock)->addTranslation($cardItemTranslation);
 
-        $listBlock = (new PageListBlock())->setSectionKey('list');
+        $listBlock            = (new PageListBlock())->setSectionKey('list');
         $listBlockTranslation = (new PageListBlockTranslation())->setLocale('es')->setTitle('List');
         $listBlock->addTranslation($listBlockTranslation);
 
-        $listItem = (new PageListItem())->setPosition(2);
+        $listItem            = (new PageListItem())->setPosition(2);
         $listItemTranslation = (new PageListItemTranslation())->setLocale('es')->setText('Line');
         $listItem->setBlock($listBlock)->addTranslation($listItemTranslation);
 
-        $ctaBlock = (new PageCtaBlock())->setSectionKey('cta');
+        $ctaBlock       = (new PageCtaBlock())->setSectionKey('cta');
         $ctaTranslation = (new PageCtaBlockTranslation())->setLocale('es')->setTitle('CTA')->setBody('CTA body');
         $ctaBlock->addTranslation($ctaTranslation);
 
-        $compareBlock = new PageCompareBlock();
+        $compareBlock       = new PageCompareBlock();
         $compareTranslation = (new PageCompareBlockTranslation())
             ->setLocale('es')
             ->setBeforeLabel('Antes')
@@ -189,7 +188,7 @@ final class PageBlockEntitiesTest extends TestCase
             ->setAfterText('Nuevo');
         $compareBlock->addTranslation($compareTranslation);
 
-        $heroBlock = new PageHeroBlock();
+        $heroBlock       = new PageHeroBlock();
         $heroTranslation = (new PageHeroBlockTranslation())
             ->setLocale('es')
             ->setPageTitle('SEO')
@@ -201,7 +200,7 @@ final class PageBlockEntitiesTest extends TestCase
             ->setCtaSecondary('More');
         $heroBlock->addTranslation($heroTranslation);
 
-        $textBlock = new PageTextBlock();
+        $textBlock       = new PageTextBlock();
         $textTranslation = (new PageTextBlockTranslation())
             ->setLocale('es')
             ->setPageTitle('Meta')
@@ -253,12 +252,12 @@ final class PageBlockEntitiesTest extends TestCase
 
     public function testTranslatableBlockTraitFallbacks(): void
     {
-        $block = new PageTextBlock();
+        $block    = new PageTextBlock();
         $fallback = $block->getTranslationOrFallback('es');
         self::assertInstanceOf(PageTextBlockTranslation::class, $fallback);
         self::assertSame('', $fallback->getTitle());
 
-        $enTr = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
+        $enTr   = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
         $block2 = new PageTextBlock();
         $block2->addTranslation($enTr);
         $got = $block2->getTranslationOrFallback('fr');

@@ -23,6 +23,8 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 
+use function count;
+
 final class PageBlockInlineModalTypeTest extends TestCase
 {
     protected function setUp(): void
@@ -32,10 +34,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testCardsInlineModalBuildsCollectionAndHydratesLocalePanels(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createCardsBlockWithOneItem();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createCardsBlockWithOneItem();
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
 
@@ -52,18 +54,18 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $translationsField->expects(self::once())
             ->method('setData')
             ->with(self::callback(static function (array $panels): bool {
-                if (2 !== count($panels)) {
+                if (count($panels) !== 2) {
                     return false;
                 }
 
                 return $panels[0] instanceof PageBlockLocalePanelData
-                    && 'es' === $panels[0]->locale
-                    && 'Tarjetas' === $panels[0]->title
-                    && "Uno | Linea uno Linea dos" === $panels[0]->items
+                    && $panels[0]->locale === 'es'
+                    && $panels[0]->title === 'Tarjetas'
+                    && $panels[0]->items === 'Uno | Linea uno Linea dos'
                     && $panels[1] instanceof PageBlockLocalePanelData
-                    && 'en' === $panels[1]->locale
-                    && 'Cards' === $panels[1]->title
-                    && "One | Line one Line two" === $panels[1]->items;
+                    && $panels[1]->locale === 'en'
+                    && $panels[1]->title === 'Cards'
+                    && $panels[1]->items === 'One | Line one Line two';
             }));
 
         $form = $this->createMock(FormInterface::class);
@@ -77,10 +79,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testCardsInlineModalSubmitUpdatesExistingItemsAndPrunesTrailingEmptyOnes(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createCardsBlockWithTwoItems();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createCardsBlockWithTwoItems();
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
 
@@ -113,10 +115,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testCardsInlineModalSubmitCreatesMissingItems(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = new PageCardsBlock();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = new PageCardsBlock();
         $block->ensureTranslations();
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
@@ -145,10 +147,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testCardsInlineModalSkipsBlankParsedLinesAndKeepsTrailingNonEmptyItems(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createCardsBlockWithTwoItems();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createCardsBlockWithTwoItems();
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
 
@@ -172,10 +174,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testCardsInlineModalIgnoresBlankLinesWhileParsing(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = new PageCardsBlock();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = new PageCardsBlock();
         $block->ensureTranslations();
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
@@ -200,10 +202,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testListInlineModalBuildsCollectionAndHydratesLocalePanels(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createListBlockWithOneItem();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createListBlockWithOneItem();
 
         $this->createListType()->buildForm($builder, ['block' => $block]);
 
@@ -217,16 +219,16 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $translationsField->expects(self::once())
             ->method('setData')
             ->with(self::callback(static function (array $panels): bool {
-                if (2 !== count($panels)) {
+                if (count($panels) !== 2) {
                     return false;
                 }
 
                 return $panels[0] instanceof PageBlockLocalePanelData
-                    && 'Puntos' === $panels[0]->title
-                    && 'Primer punto' === $panels[0]->items
+                    && $panels[0]->title === 'Puntos'
+                    && $panels[0]->items === 'Primer punto'
                     && $panels[1] instanceof PageBlockLocalePanelData
-                    && 'Points' === $panels[1]->title
-                    && 'First point' === $panels[1]->items;
+                    && $panels[1]->title === 'Points'
+                    && $panels[1]->items === 'First point';
             }));
 
         $form = $this->createConfiguredMock(FormInterface::class, [
@@ -241,10 +243,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testListInlineModalSubmitUpdatesExistingItemsAndPrunesTrailingEmptyOnes(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createListBlockWithTwoItems();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createListBlockWithTwoItems();
 
         $this->createListType()->buildForm($builder, ['block' => $block]);
 
@@ -275,10 +277,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testListInlineModalKeepsTrailingItemsWhenAnotherLocaleStillHasContent(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = $this->createListBlockWithTwoItems();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = $this->createListBlockWithTwoItems();
 
         $this->createListType()->buildForm($builder, ['block' => $block]);
 
@@ -302,10 +304,10 @@ final class PageBlockInlineModalTypeTest extends TestCase
 
     public function testListInlineModalSubmitCreatesMissingItems(): void
     {
-        $fields = [];
+        $fields    = [];
         $listeners = [];
-        $builder = $this->createBuilder($fields, $listeners);
-        $block = new PageListBlock();
+        $builder   = $this->createBuilder($fields, $listeners);
+        $block     = new PageListBlock();
         $block->ensureTranslations();
 
         $this->createListType()->buildForm($builder, ['block' => $block]);
@@ -333,24 +335,24 @@ final class PageBlockInlineModalTypeTest extends TestCase
     }
 
     /**
-     * @param list<array{name: string, type: string, options: array<string, mixed>}>                  $fields
+     * @param list<array{name: string, type: string, options: array<string, mixed>}> $fields
      * @param array<string, callable(FormEvent): void> $listeners
      */
     private function createBuilder(array &$fields, array &$listeners): FormBuilderInterface
     {
         $builder = $this->createMock(FormBuilderInterface::class);
         $builder->method('add')
-            ->willReturnCallback(function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
+            ->willReturnCallback(static function (string $name, string $type, array $options) use (&$fields, $builder): FormBuilderInterface {
                 $fields[] = [
-                    'name' => $name,
-                    'type' => $type,
+                    'name'    => $name,
+                    'type'    => $type,
                     'options' => $options,
                 ];
 
                 return $builder;
             });
         $builder->method('addEventListener')
-            ->willReturnCallback(function (string $eventName, callable $listener) use (&$listeners, $builder): FormBuilderInterface {
+            ->willReturnCallback(static function (string $eventName, callable $listener) use (&$listeners, $builder): FormBuilderInterface {
                 $listeners[$eventName] = $listener;
 
                 return $builder;
@@ -365,8 +367,8 @@ final class PageBlockInlineModalTypeTest extends TestCase
             new FormOptionsMerger([
                 'page_layout_kit' => [
                     'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
+                    'defaults'           => [
+                        'attr'     => [],
                         'row_attr' => [],
                     ],
                     'field_types' => [],
@@ -384,8 +386,8 @@ final class PageBlockInlineModalTypeTest extends TestCase
             new FormOptionsMerger([
                 'page_layout_kit' => [
                     'translation_domain' => 'form',
-                    'defaults' => [
-                        'attr' => [],
+                    'defaults'           => [
+                        'attr'     => [],
                         'row_attr' => [],
                     ],
                     'field_types' => [],

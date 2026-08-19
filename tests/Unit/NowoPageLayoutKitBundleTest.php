@@ -10,6 +10,7 @@ use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\NowoPageLayoutKitBundle;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,7 +18,7 @@ final class NowoPageLayoutKitBundleTest extends TestCase
 {
     public function testBuildRegistersTwigAndDoctrineCompilerPasses(): void
     {
-        $bundle = new NowoPageLayoutKitBundle();
+        $bundle    = new NowoPageLayoutKitBundle();
         $container = new ContainerBuilder();
 
         $bundle->build($container);
@@ -31,7 +32,7 @@ final class NowoPageLayoutKitBundleTest extends TestCase
     {
         $this->unbindPageLocales();
 
-        $locales = new PageLocales('es', ['es', 'en']);
+        $locales   = new PageLocales('es', ['es', 'en']);
         $container = $this->createMock(ContainerInterface::class);
         $container->expects(self::once())->method('has')->with(PageLocales::class)->willReturn(true);
         $container->expects(self::once())->method('get')->with(PageLocales::class)->willReturn($locales);
@@ -71,8 +72,8 @@ final class NowoPageLayoutKitBundleTest extends TestCase
 
     private function unbindPageLocales(): void
     {
-        $reflection = new \ReflectionClass(PageLocales::class);
-        $property = $reflection->getProperty('instance');
+        $reflection = new ReflectionClass(PageLocales::class);
+        $property   = $reflection->getProperty('instance');
         $property->setAccessible(true);
         $property->setValue(null, null);
     }

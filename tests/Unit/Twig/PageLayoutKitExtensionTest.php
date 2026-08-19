@@ -27,11 +27,11 @@ final class PageLayoutKitExtensionTest extends TestCase
 
         self::assertSame(
             [
-                'nowo_page_layout_kit_layout' => '@NowoPageLayoutKitBundle/admin/layout.html.twig',
-                'nowo_page_layout_kit_css_framework' => 'tailwind',
-                'nowo_page_layout_kit_pages' => ['home', 'contact'],
+                'nowo_page_layout_kit_layout'         => '@NowoPageLayoutKitBundle/admin/layout.html.twig',
+                'nowo_page_layout_kit_css_framework'  => 'tailwind',
+                'nowo_page_layout_kit_pages'          => ['home', 'contact'],
                 'nowo_page_layout_kit_default_locale' => 'es',
-                'nowo_page_layout_kit_can_edit' => true,
+                'nowo_page_layout_kit_can_edit'       => true,
             ],
             $extension->getGlobals(),
         );

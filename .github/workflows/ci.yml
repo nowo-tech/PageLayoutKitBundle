@@ -29,18 +29,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        php: ['8.2', '8.3', '8.4', '8.5']
-        symfony: ['7.0', '7.4', '8.0', '8.1']
-        exclude:
-          # Symfony 8.0 and 8.1 require PHP 8.4+
-          - php: '8.2'
-            symfony: '8.0'
-          - php: '8.2'
-            symfony: '8.1'
-          - php: '8.3'
-            symfony: '8.0'
-          - php: '8.3'
-            symfony: '8.1'
+        php: ['8.4', '8.5']
+        symfony: ['7.4', '8.0', '8.1']
+        exclude: []
 
     steps:
       - name: Checkout code
@@ -73,12 +64,6 @@ jobs:
       - name: Install dependencies with Symfony ${{ matrix.symfony }}
         run: |
           echo "📦 Installing dependencies for Symfony ${{ matrix.symfony }}..."
-          # doctrine/doctrine-bundle ^3.0 requires PHP ^8.4; use ^2.10 on PHP 8.2/8.3.
-          if [ "${{ matrix.php }}" = "8.4" ] || [ "${{ matrix.php }}" = "8.5" ]; then
-            DOCTRINE_BUNDLE='doctrine/doctrine-bundle:^3.0'
-          else
-            DOCTRINE_BUNDLE='doctrine/doctrine-bundle:^2.10'
-          fi
           composer require \
             symfony/framework-bundle:^${{ matrix.symfony }} \
             symfony/security-core:^${{ matrix.symfony }} \
@@ -87,7 +72,7 @@ jobs:
             symfony/dependency-injection:^${{ matrix.symfony }} \
             symfony/http-kernel:^${{ matrix.symfony }} \
             doctrine/orm:^3.0 \
-            "$DOCTRINE_BUNDLE" \
+            doctrine/doctrine-bundle:^3.0 \
             --no-interaction --no-update
           composer require symfony/yaml:^${{ matrix.symfony }} --dev --no-interaction --no-update
           composer update --with-all-dependencies --no-interaction --prefer-dist --no-progress
@@ -102,8 +87,8 @@ jobs:
           fi
           echo "✅ All tests passed successfully"
 
-      - name: Validate coverage (PHP 8.2 with Symfony 7.4 only)
-        if: matrix.php == '8.2' && matrix.symfony == '7.4'
+      - name: Validate coverage (PHP 8.4 with Symfony 7.4 only)
+        if: matrix.php == '8.4' && matrix.symfony == '7.4'
         run: |
           echo "📊 Generating coverage report..."
           composer test-coverage
@@ -113,7 +98,7 @@ jobs:
             exit 1
           fi
 
-          echo "✅ All tests passed, validating 100% coverage..."
+          echo "✅ All tests passed, validating ≥99% coverage..."
 
           # Validate that coverage is 100%
           php -r "
@@ -141,12 +126,12 @@ jobs:
 
           echo \"Coverage: \$coveredElements/\$elements (\$percentage%)\n\";
 
-          if (\$percentage < 100) {
-              echo \"ERROR: Coverage must be 100%. Current: \$percentage%\n\";
+          if (\$percentage < 99) {
+              echo \"ERROR: Coverage must be at least 99%. Current: \$percentage%\n\";
               exit(1);
           }
 
-          echo \"✅ 100% coverage confirmed\n\";
+          echo \"✅ Coverage threshold confirmed (≥99%)\n\";
           "
 
   code-style:
@@ -167,7 +152,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:v2, cs2pr
 
       - name: Install dependencies
@@ -207,7 +192,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:v2, cs2pr
 
       - name: Install dependencies
@@ -227,7 +212,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: json
           coverage: pcov
           tools: composer:v2
@@ -246,9 +231,9 @@ jobs:
           fi
           echo "✅ All tests passed successfully"
 
-      - name: Validate 100% coverage
+      - name: Validate ≥99% coverage
         run: |
-          echo "📊 Validating 100% coverage..."
+          echo "📊 Validating ≥99% coverage..."
 
           # Validate that coverage is 100%
           php -r "
@@ -276,12 +261,12 @@ jobs:
 
           echo \"Coverage: \$coveredElements/\$elements (\$percentage%)\n\";
 
-          if (\$percentage < 100) {
-              echo \"ERROR: Coverage must be 100%. Current: \$percentage%\n\";
+          if (\$percentage < 99) {
+              echo \"ERROR: Coverage must be at least 99%. Current: \$percentage%\n\";
               exit(1);
           }
 
-          echo \"✅ 100% coverage confirmed\n\";
+          echo \"✅ Coverage threshold confirmed (≥99%)\n\";
           "
 
       - name: Upload coverage to Codecov

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Model;
 
-use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Doctrine\Common\Collections\Collection;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 
 /**
  * @template T of LocaleAwareTranslationInterface
@@ -36,13 +36,13 @@ trait TranslatableBlockTrait
         $translation = $this->getTranslation($locale)
             ?? $this->getTranslation(PageLocales::default());
 
-        if (null !== $translation) {
+        if ($translation !== null) {
             return $translation;
         }
 
         $first = $this->getTranslations()->first();
 
-        if (false !== $first) {
+        if ($first !== false) {
             return $first;
         }
 
@@ -54,7 +54,7 @@ trait TranslatableBlockTrait
     public function ensureTranslations(): self
     {
         foreach (PageLocales::all() as $locale) {
-            if (null === $this->getTranslation($locale)) {
+            if ($this->getTranslation($locale) === null) {
                 $class = $this->translationClass();
                 $this->addTranslation((new $class())->setLocale($locale));
             }

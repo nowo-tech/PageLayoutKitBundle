@@ -15,7 +15,7 @@ final class RequiresValidFormTraitTest extends TestCase
     {
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => true,
-            'isValid' => true,
+            'isValid'     => true,
         ]);
 
         $controller = new class {
@@ -40,7 +40,7 @@ final class RequiresValidFormTraitTest extends TestCase
     {
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => true,
-            'isValid' => false,
+            'isValid'     => false,
         ]);
 
         $controller = new class {
@@ -67,7 +67,7 @@ final class RequiresValidFormTraitTest extends TestCase
     {
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => false,
-            'isValid' => false,
+            'isValid'     => false,
         ]);
 
         $controller = new class {

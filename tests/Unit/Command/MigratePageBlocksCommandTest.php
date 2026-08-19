@@ -17,6 +17,7 @@ use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use PHPUnit\Framework\TestCase;
+use ReflectionObject;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class MigratePageBlocksCommandTest extends TestCase
@@ -30,7 +31,7 @@ final class MigratePageBlocksCommandTest extends TestCase
     {
         PageLocales::bind(new PageLocales('es', ['es', 'en']));
         $this->persisted = [];
-        $this->nextId = 1;
+        $this->nextId    = 1;
     }
 
     public function testCommandNotesWhenIfEmptyFlagFindsExistingLayout(): void
@@ -74,18 +75,18 @@ final class MigratePageBlocksCommandTest extends TestCase
         $command = new MigratePageBlocksCommand(new PageBlockMigrator(
             $this->entityManagerMock(),
             $this->createPageLayoutEntryRepository([
-                'home' => [],
+                'home'    => [],
                 'contact' => [],
             ]),
             new FakeCommandLegacyProvider([
-                'home:es'    => [
-                    'hero_title' => 'Hero',
-                    'detect_items' => [],
+                'home:es' => [
+                    'hero_title'    => 'Hero',
+                    'detect_items'  => [],
                     'process_items' => [],
                 ],
                 'home:en'    => [],
                 'contact:es' => [
-                    'h1' => 'Contact',
+                    'h1'           => 'Contact',
                     'expect_items' => [],
                 ],
                 'contact:en' => [],
@@ -109,9 +110,9 @@ final class MigratePageBlocksCommandTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getResult')
-                    ->willReturnCallback(function () use (&$params, $resultsByPageKey): array {
+                    ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
                     });
 
@@ -121,7 +122,7 @@ final class MigratePageBlocksCommandTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;
@@ -145,13 +146,13 @@ final class MigratePageBlocksCommandTest extends TestCase
         $entityManager->method('persist')->willReturnCallback(function (object $entity): void {
             $this->persisted[] = $entity;
 
-            if (method_exists($entity, 'getId') && null === $entity->getId()) {
+            if (method_exists($entity, 'getId') && $entity->getId() === null) {
                 $this->assignEntityId($entity, $this->nextId++);
             }
         });
         $entityManager->method('flush')->willReturnCallback(function (): void {
             foreach ($this->persisted as $entity) {
-                if (method_exists($entity, 'getId') && null === $entity->getId()) {
+                if (method_exists($entity, 'getId') && $entity->getId() === null) {
                     $this->assignEntityId($entity, $this->nextId++);
                 }
             }
@@ -162,7 +163,7 @@ final class MigratePageBlocksCommandTest extends TestCase
 
     private function assignEntityId(object $entity, int $id): void
     {
-        $reflection = new \ReflectionObject($entity);
+        $reflection = new ReflectionObject($entity);
 
         do {
             if ($reflection->hasProperty('id')) {

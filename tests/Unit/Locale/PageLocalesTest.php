@@ -6,6 +6,7 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\Locale;
 
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use RuntimeException;
 
 final class PageLocalesTest extends TestCase
@@ -33,8 +34,8 @@ final class PageLocalesTest extends TestCase
 
     private function unbindPageLocales(): void
     {
-        $reflection = new \ReflectionClass(PageLocales::class);
-        $property = $reflection->getProperty('instance');
+        $reflection = new ReflectionClass(PageLocales::class);
+        $property   = $reflection->getProperty('instance');
         $property->setAccessible(true);
         $property->setValue(null, null);
     }

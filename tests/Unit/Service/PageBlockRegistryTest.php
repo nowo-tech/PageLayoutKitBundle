@@ -29,11 +29,11 @@ final class PageBlockRegistryTest extends TestCase
 {
     public function testGetReturnsEntitiesForEachBlockType(): void
     {
-        $hero = new PageHeroBlock();
-        $text = new PageTextBlock();
-        $cards = new PageCardsBlock();
-        $list = new PageListBlock();
-        $cta = new PageCtaBlock();
+        $hero    = new PageHeroBlock();
+        $text    = new PageTextBlock();
+        $cards   = new PageCardsBlock();
+        $list    = new PageListBlock();
+        $cta     = new PageCtaBlock();
         $compare = new PageCompareBlock();
 
         $registry = new PageBlockRegistry(
@@ -74,8 +74,8 @@ final class PageBlockRegistryTest extends TestCase
      * @template TEntity of object
      *
      * @param class-string<TRepository> $repositoryClass
-     * @param class-string<TEntity>     $entityClass
-     * @param TEntity|null              $result
+     * @param class-string<TEntity> $entityClass
+     * @param TEntity|null $result
      *
      * @return TRepository
      */
@@ -93,9 +93,9 @@ final class PageBlockRegistryTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($expectedId, $result): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getOneOrNullResult')
-                    ->willReturnCallback(function () use (&$params, $expectedId, $result): ?object {
+                    ->willReturnCallback(static function () use (&$params, $expectedId, $result): ?object {
                         return ($params['id'] ?? null) === $expectedId ? $result : null;
                     });
 
@@ -107,7 +107,7 @@ final class PageBlockRegistryTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;

@@ -32,7 +32,7 @@ The demo exists to prove that:
 
 - Symfony 8 application under `demo/symfony8`
 - FrankenPHP + Docker Compose
-- SQLite database, no external DB container
+- MySQL 8 service (`mysql`, not published to the host)
 - Path-mounted `PageLayoutKitBundle` from the repository root
 - `TwigExtraBundle`, `FormKitBundle`, `UiKitBundle`, and demo-only `HotReloadBundle` / `TwigInspectorBundle`
 - HTTP Basic auth for the editor user `admin` / `admin`
@@ -85,6 +85,7 @@ make -C demo/symfony8 restart
 
 - If the demo does not answer on `8127`, check whether the port is already in use.
 - If admin pages fail with `401`, use `admin` / `admin`.
-- If layout pages are empty, confirm schema creation ran successfully inside `link-bundle`.
+- If layout pages are empty, confirm schema creation ran successfully (`make -C demo/symfony8 database` or `link-bundle`).
+- If Doctrine cannot connect, wait for the `mysql` healthcheck and check `DATABASE_URL` uses host `mysql`.
 - If Twig changes are not visible, restart the demo or switch to classic mode while editing templates.
 - If routes are missing, verify `config/routes/nowo_page_layout_kit.yaml` is present in the demo app.

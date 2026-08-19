@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
@@ -65,8 +66,8 @@ final class PageBlockEditControllerTest extends TestCase
 
     public function testEditModalRendersResolvedFormAndLocale(): void
     {
-        $block = $this->withId(new PageHeroBlock(), 5);
-        $form = $this->createMock(FormInterface::class);
+        $block     = $this->withId(new PageHeroBlock(), 5);
+        $form      = $this->createMock(FormInterface::class);
         $formCalls = [];
 
         $controller = new PageBlockEditController(
@@ -90,7 +91,7 @@ final class PageBlockEditControllerTest extends TestCase
     public function testUpdateReturnsUnprocessableEntityWhenSubmittedFormIsInvalid(): void
     {
         $block = $this->withId((new PageTextBlock())->setSectionKey('contact_header'), 7);
-        $form = $this->createMock(FormInterface::class);
+        $form  = $this->createMock(FormInterface::class);
         $form->expects(self::once())->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(false);
@@ -115,7 +116,7 @@ final class PageBlockEditControllerTest extends TestCase
     public function testUpdateFlushesAndRedirectsToRefererWhenFormIsValid(): void
     {
         $block = $this->withId(new PageCtaBlock(), 9);
-        $form = $this->createMock(FormInterface::class);
+        $form  = $this->createMock(FormInterface::class);
         $form->expects(self::once())->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
@@ -145,9 +146,9 @@ final class PageBlockEditControllerTest extends TestCase
     public function testUpdateFallsBackToGeneratedHomeUrlWithoutReferer(): void
     {
         $block = $this->withId(new PageCompareBlock(), 12);
-        $form = $this->createConfiguredMock(FormInterface::class, [
+        $form  = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => true,
-            'isValid' => true,
+            'isValid'     => true,
         ]);
         $form->expects(self::once())->method('handleRequest');
 
@@ -172,7 +173,7 @@ final class PageBlockEditControllerTest extends TestCase
     {
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => true,
-            'isValid' => true,
+            'isValid'     => true,
         ]);
 
         $request = Request::create('/admin/page-blocks/hero/404', 'POST');
@@ -219,8 +220,8 @@ final class PageBlockEditControllerTest extends TestCase
 
     public function testCreateBlockFormSelectsTheExpectedFormTypeForEveryBlockKind(): void
     {
-        $form = $this->createMock(FormInterface::class);
-        $formCalls = [];
+        $form       = $this->createMock(FormInterface::class);
+        $formCalls  = [];
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
@@ -298,7 +299,7 @@ final class PageBlockEditControllerTest extends TestCase
         $router = $this->createMock(UrlGeneratorInterface::class);
         $router->method('generate')
             ->willReturnCallback(static function (string $route, array $parameters = []): string {
-                if ('home' === $route) {
+                if ($route === 'home') {
                     return '/generated/home';
                 }
 
@@ -315,14 +316,14 @@ final class PageBlockEditControllerTest extends TestCase
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')
-            ->willReturnCallback(function (string $type, mixed $data = null, array $options = []) use ($form, &$formCalls): FormInterface {
+            ->willReturnCallback(static function (string $type, mixed $data = null, array $options = []) use ($form, &$formCalls): FormInterface {
                 $formCalls[] = [
-                    'type' => $type,
-                    'data' => $data,
+                    'type'    => $type,
+                    'data'    => $data,
                     'options' => $options,
                 ];
 
-                return $form ?? throw new \LogicException('Expected a form instance for this test.');
+                return $form ?? throw new LogicException('Expected a form instance for this test.');
             });
         $container->set('form.factory', $formFactory);
 
@@ -352,8 +353,8 @@ final class PageBlockEditControllerTest extends TestCase
      * @template TRepository of object
      *
      * @param class-string<TRepository> $repositoryClass
-     * @param class-string<object>      $entityClass
-     * @param array<int, object>        $resultsById
+     * @param class-string<object> $entityClass
+     * @param array<int, object> $resultsById
      *
      * @return TRepository
      */
@@ -366,14 +367,14 @@ final class PageBlockEditControllerTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use (&$resultsById): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getOneOrNullResult')
-                    ->willReturnCallback(function () use (&$params, $resultsById): ?object {
+                    ->willReturnCallback(static function () use (&$params, $resultsById): ?object {
                         $id = $params['id'] ?? null;
 
-                        $id = null === $id ? null : (int) $id;
+                        $id = $id === null ? null : (int) $id;
 
-                        return null === $id ? null : ($resultsById[$id] ?? null);
+                        return $id === null ? null : ($resultsById[$id] ?? null);
                     });
 
                 $queryBuilder = $this->createMock(QueryBuilder::class);
@@ -384,7 +385,7 @@ final class PageBlockEditControllerTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;

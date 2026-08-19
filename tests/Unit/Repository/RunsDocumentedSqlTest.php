@@ -6,6 +6,7 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use Nowo\PageLayoutKitBundle\Repository\Concerns\RunsDocumentedSql;
 use PHPUnit\Framework\TestCase;
 
@@ -38,7 +39,7 @@ final class RunsDocumentedSqlTest extends TestCase
     {
         $helper = $this->createHelper($this->createMock(Connection::class));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $helper->fetchAll('SELECT 1');
     }
 
@@ -47,7 +48,7 @@ final class RunsDocumentedSqlTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getConnection')->willReturn($connection);
 
-        return new class ($entityManager) {
+        return new class($entityManager) {
             use RunsDocumentedSql;
 
             public function __construct(private readonly EntityManagerInterface $entityManager)

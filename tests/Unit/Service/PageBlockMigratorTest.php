@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
@@ -16,6 +17,8 @@ use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+use ReflectionObject;
 
 final class PageBlockMigratorTest extends TestCase
 {
@@ -27,7 +30,7 @@ final class PageBlockMigratorTest extends TestCase
     protected function setUp(): void
     {
         PageLocales::bind(new PageLocales('es', ['es', 'en']));
-        $this->nextId = 1;
+        $this->nextId    = 1;
         $this->persisted = [];
     }
 
@@ -113,7 +116,7 @@ final class PageBlockMigratorTest extends TestCase
         $migrator = new PageBlockMigrator(
             $this->entityManagerMock(7),
             $this->createPageLayoutEntryRepository([
-                'home' => [$entry],
+                'home'    => [$entry],
                 'contact' => [],
             ]),
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
@@ -132,7 +135,7 @@ final class PageBlockMigratorTest extends TestCase
             null,
         );
 
-        $method = new \ReflectionMethod(PageBlockMigrator::class, 'contentForPage');
+        $method = new ReflectionMethod(PageBlockMigrator::class, 'contentForPage');
         $method->setAccessible(true);
 
         self::assertSame([], $method->invoke($migrator, 'home'));
@@ -150,7 +153,7 @@ final class PageBlockMigratorTest extends TestCase
             ->method('flush')
             ->willReturnCallback(function (): void {
                 foreach ($this->persisted as $entity) {
-                    if ($entity instanceof \Nowo\PageLayoutKitBundle\Entity\PageHeroBlock) {
+                    if ($entity instanceof PageHeroBlock) {
                         $this->assignEntityId($entity, 99);
                     }
                 }
@@ -164,10 +167,10 @@ final class PageBlockMigratorTest extends TestCase
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
-        $block = new \Nowo\PageLayoutKitBundle\Entity\PageHeroBlock();
+        $block = new PageHeroBlock();
         $entityManager->persist($block);
 
-        $method = new \ReflectionMethod(PageBlockMigrator::class, 'addLayout');
+        $method = new ReflectionMethod(PageBlockMigrator::class, 'addLayout');
         $method->setAccessible(true);
         $method->invoke($migrator, 'home', PageBlockType::Hero, $block, 4);
 
@@ -183,7 +186,7 @@ final class PageBlockMigratorTest extends TestCase
     public function testMigrateReturnsTrueAndPersistsTypedBlocksWithLegacyContent(): void
     {
         $entityManager = $this->entityManagerMock();
-        $migrator = new PageBlockMigrator(
+        $migrator      = new PageBlockMigrator(
             $entityManager,
             $this->createPageLayoutEntryRepository([
                 'home'    => [],
@@ -212,58 +215,58 @@ final class PageBlockMigratorTest extends TestCase
     private function legacyContentMap(): array
     {
         return [
-            'home:es'    => [
-                'page_title' => 'Inicio',
-                'page_description' => 'Meta inicio',
-                'hero_eyebrow' => 'Hola',
-                'hero_title' => 'Hero',
-                'hero_subtitle' => 'Sub',
-                'hero_cta_primary' => 'Ir',
+            'home:es' => [
+                'page_title'         => 'Inicio',
+                'page_description'   => 'Meta inicio',
+                'hero_eyebrow'       => 'Hola',
+                'hero_title'         => 'Hero',
+                'hero_subtitle'      => 'Sub',
+                'hero_cta_primary'   => 'Ir',
                 'hero_cta_secondary' => 'Mas',
-                'problem_title' => 'Problema',
-                'problem_text' => 'Texto problema',
-                'value_title' => 'Valor',
-                'value_1_title' => 'V1',
-                'value_1_text' => 'VT1',
-                'value_2_title' => 'V2',
-                'value_2_text' => 'VT2',
-                'value_3_title' => 'V3',
-                'value_3_text' => 'VT3',
-                'value_4_title' => 'V4',
-                'value_4_text' => 'VT4',
-                'pain_title' => 'Dolor',
-                'pain_1_title' => 'P1',
-                'pain_1_text' => 'PT1',
-                'pain_2_title' => 'P2',
-                'pain_2_text' => 'PT2',
-                'pain_3_title' => 'P3',
-                'pain_3_text' => 'PT3',
-                'detect_title' => 'Detectar',
-                'detect_items' => ['Uno', 'Dos'],
-                'services_title' => 'Servicios',
-                'services_text' => 'Texto servicios',
-                'profile_title' => 'Perfil',
-                'profile_text' => 'Texto perfil',
-                'process_title' => 'Proceso',
-                'process_items' => ['Paso 1', 'Paso 2'],
-                'cta_title' => 'CTA',
-                'cta_text' => 'Texto CTA',
+                'problem_title'      => 'Problema',
+                'problem_text'       => 'Texto problema',
+                'value_title'        => 'Valor',
+                'value_1_title'      => 'V1',
+                'value_1_text'       => 'VT1',
+                'value_2_title'      => 'V2',
+                'value_2_text'       => 'VT2',
+                'value_3_title'      => 'V3',
+                'value_3_text'       => 'VT3',
+                'value_4_title'      => 'V4',
+                'value_4_text'       => 'VT4',
+                'pain_title'         => 'Dolor',
+                'pain_1_title'       => 'P1',
+                'pain_1_text'        => 'PT1',
+                'pain_2_title'       => 'P2',
+                'pain_2_text'        => 'PT2',
+                'pain_3_title'       => 'P3',
+                'pain_3_text'        => 'PT3',
+                'detect_title'       => 'Detectar',
+                'detect_items'       => ['Uno', 'Dos'],
+                'services_title'     => 'Servicios',
+                'services_text'      => 'Texto servicios',
+                'profile_title'      => 'Perfil',
+                'profile_text'       => 'Texto perfil',
+                'process_title'      => 'Proceso',
+                'process_items'      => ['Paso 1', 'Paso 2'],
+                'cta_title'          => 'CTA',
+                'cta_text'           => 'Texto CTA',
             ],
             'home:en'    => [],
             'contact:es' => [
-                'page_title' => 'Contacto',
+                'page_title'       => 'Contacto',
                 'page_description' => 'Meta contacto',
-                'h1' => 'Hablemos',
-                'intro' => 'Intro contacto',
-                'expect_title' => 'Que esperar',
-                'expect_text' => 'Texto expect',
-                'expect_items' => ['Item A', 'Item B'],
-                'before_label' => 'Antes',
-                'before_text' => 'Texto antes',
-                'after_label' => 'Despues',
-                'after_text' => 'Texto despues',
-                'form_submit' => 'Enviar',
-                'form_note' => 'Nota form',
+                'h1'               => 'Hablemos',
+                'intro'            => 'Intro contacto',
+                'expect_title'     => 'Que esperar',
+                'expect_text'      => 'Texto expect',
+                'expect_items'     => ['Item A', 'Item B'],
+                'before_label'     => 'Antes',
+                'before_text'      => 'Texto antes',
+                'after_label'      => 'Despues',
+                'after_text'       => 'Texto despues',
+                'form_submit'      => 'Enviar',
+                'form_note'        => 'Nota form',
             ],
             'contact:en' => [],
         ];
@@ -275,13 +278,13 @@ final class PageBlockMigratorTest extends TestCase
         $entityManager->method('persist')->willReturnCallback(function (object $entity): void {
             $this->persisted[] = $entity;
 
-            if (method_exists($entity, 'getId') && null === $entity->getId()) {
+            if (method_exists($entity, 'getId') && $entity->getId() === null) {
                 $this->assignEntityId($entity, $this->nextId++);
             }
         });
         $entityManager->method('flush')->willReturnCallback(function (): void {
             foreach ($this->persisted as $entity) {
-                if (method_exists($entity, 'getId') && null === $entity->getId()) {
+                if (method_exists($entity, 'getId') && $entity->getId() === null) {
                     $this->assignEntityId($entity, $this->nextId++);
                 }
             }
@@ -310,9 +313,9 @@ final class PageBlockMigratorTest extends TestCase
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
                 $params = [];
-                $query = $this->createMock(Query::class);
+                $query  = $this->createMock(Query::class);
                 $query->method('getResult')
-                    ->willReturnCallback(function () use (&$params, $resultsByPageKey): array {
+                    ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
                     });
 
@@ -322,7 +325,7 @@ final class PageBlockMigratorTest extends TestCase
                 $queryBuilder->method('andWhere')->willReturnSelf();
                 $queryBuilder->method('orderBy')->willReturnSelf();
                 $queryBuilder->method('setParameter')
-                    ->willReturnCallback(function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
+                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
                         $params[$key] = $value;
 
                         return $queryBuilder;
@@ -342,7 +345,7 @@ final class PageBlockMigratorTest extends TestCase
 
     private function assignEntityId(object $entity, int $id): void
     {
-        $reflection = new \ReflectionObject($entity);
+        $reflection = new ReflectionObject($entity);
 
         do {
             if ($reflection->hasProperty('id')) {

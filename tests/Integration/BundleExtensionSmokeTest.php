@@ -20,7 +20,7 @@ final class BundleExtensionSmokeTest extends TestCase
     public function testConfigurationDefaults(): void
     {
         $processor = new Processor();
-        $config = $processor->processConfiguration(new Configuration(), [[]]);
+        $config    = $processor->processConfiguration(new Configuration(), [[]]);
 
         self::assertSame('es', $config['default_locale']);
         self::assertSame(['es', 'en'], $config['locales']);
