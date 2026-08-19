@@ -29,7 +29,22 @@ nowo_page_layout_kit:
     doctrine:
         table_prefix: ''
         connection: default
+    html:
+        sanitize:
+            strategy: none      # none | strip | allowlist | service
+            service: null
 ```
+
+Production (Flex recipe): `when@prod` sets `html.sanitize.strategy: allowlist`.
+
+## html.sanitize
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `strategy` | `none` | `none` (trusted editors), `strip`, `allowlist`, or `service` |
+| `service` | `null` | Host service implementing `PageLayoutHtmlSanitizerInterface` when `strategy: service` |
+
+Sanitization runs on Doctrine persist/update for text/compare/cta block translations and again when serving public layouts via `PageBlockProvider`.
 
 ## Top-level options
 

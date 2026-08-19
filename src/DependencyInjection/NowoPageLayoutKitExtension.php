@@ -7,10 +7,13 @@ namespace Nowo\PageLayoutKitBundle\DependencyInjection;
 use Doctrine\ORM\Events;
 use LogicException;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Configuration as BundleConfiguration;
+use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -92,6 +95,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         }
 
         $this->registerAccessChecker($container, $config['security']);
+        $this->registerPageLayoutProtection($container, $config);
 
         $tablePrefix = (string) $config['doctrine']['table_prefix'];
         if ($tablePrefix !== '') {
@@ -132,6 +136,42 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $definition->setArgument('$authorizationChecker', new Reference('security.authorization_checker'));
         $container->setDefinition($id, $definition);
         $container->setAlias(PageLayoutKitAccessCheckerInterface::class, $id);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function registerPageLayoutProtection(ContainerBuilder $container, array $config): void
+    {
+        /** @var array<string, mixed> $html */
+        $html = $config['html']['sanitize'];
+
+        $container->register(PageLayoutProtectionConfig::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                HtmlSanitizeStrategy::from((string) $html['strategy']),
+                $this->optionalServiceId($html['service'] ?? null),
+            ]);
+
+        $customSanitizer = $this->optionalServiceId($html['service'] ?? null);
+
+        $container->register(PageLayoutProtection::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new Reference(PageLayoutProtectionConfig::class),
+                $customSanitizer !== null ? new Reference($customSanitizer) : null,
+            ]);
+    }
+
+    private function optionalServiceId(mixed $serviceId): ?string
+    {
+        if (!is_string($serviceId) || $serviceId === '') {
+            return null;
+        }
+
+        return $serviceId;
     }
 
     private function isSecurityBundleAvailable(ContainerBuilder $container): bool

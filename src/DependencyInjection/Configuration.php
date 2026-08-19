@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\DependencyInjection;
 
+use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -72,6 +73,25 @@ final class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('table_prefix')->defaultValue('')->end()
                         ->scalarNode('connection')->defaultValue('default')->end()
+                    ->end()
+                ->end()
+                ->arrayNode('html')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('sanitize')
+                            ->addDefaultsIfNotSet()
+                            ->info('Sanitize block HTML on persist and public render. Default none keeps trusted-editor |raw.')
+                            ->children()
+                                ->enumNode('strategy')
+                                    ->values(HtmlSanitizeStrategy::values())
+                                    ->defaultValue(HtmlSanitizeStrategy::None->value)
+                                ->end()
+                                ->scalarNode('service')
+                                    ->defaultNull()
+                                    ->info('Service id implementing PageLayoutHtmlSanitizerInterface when strategy=service.')
+                                ->end()
+                            ->end()
+                        ->end()
                     ->end()
                 ->end()
             ->end();

@@ -8,5 +8,14 @@ nowo_page_layout_kit:
     web_ui:
         layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
         css_framework: tailwind
+    html:
+        sanitize:
+            strategy: none
     doctrine:
         table_prefix: ''
+
+when@prod:
+    nowo_page_layout_kit:
+        html:
+            sanitize:
+                strategy: allowlist
