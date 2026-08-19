@@ -87,9 +87,10 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
         $this->withBuilder($builder, function () use ($name, $type, $options): void {
             $alias = str_contains($type, '\\')
                 ? match ($type) {
-                    HiddenType::class   => 'hidden',
-                    TextareaType::class => 'textarea',
-                    default             => $type,
+                    HiddenType::class     => 'hidden',
+                    TextareaType::class   => 'textarea',
+                    CollectionType::class => 'collection',
+                    default               => $type,
                 }
             : $type;
             $this->addNamedField($name, $alias, $options);
