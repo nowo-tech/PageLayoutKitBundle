@@ -37,12 +37,12 @@ final class PageBlockRegistryTest extends TestCase
         $compare = new PageCompareBlock();
 
         $registry = new PageBlockRegistry(
-            $this->createRepository(PageHeroBlockRepository::class, PageHeroBlock::class, 'findWithTranslations', 1, $hero),
-            $this->createRepository(PageTextBlockRepository::class, PageTextBlock::class, 'findWithTranslations', 2, $text),
-            $this->createRepository(PageCardsBlockRepository::class, PageCardsBlock::class, 'findWithItemsAndTranslations', 3, $cards),
-            $this->createRepository(PageListBlockRepository::class, PageListBlock::class, 'findWithItemsAndTranslations', 4, $list),
-            $this->createRepository(PageCtaBlockRepository::class, PageCtaBlock::class, 'findWithTranslations', 5, $cta),
-            $this->createRepository(PageCompareBlockRepository::class, PageCompareBlock::class, 'findWithTranslations', 6, $compare),
+            $this->createRepository(PageHeroBlockRepository::class, PageHeroBlock::class, 1, $hero),
+            $this->createRepository(PageTextBlockRepository::class, PageTextBlock::class, 2, $text),
+            $this->createRepository(PageCardsBlockRepository::class, PageCardsBlock::class, 3, $cards),
+            $this->createRepository(PageListBlockRepository::class, PageListBlock::class, 4, $list),
+            $this->createRepository(PageCtaBlockRepository::class, PageCtaBlock::class, 5, $cta),
+            $this->createRepository(PageCompareBlockRepository::class, PageCompareBlock::class, 6, $compare),
         );
 
         self::assertSame($hero, $registry->get(PageBlockType::Hero, 1));
@@ -56,12 +56,12 @@ final class PageBlockRegistryTest extends TestCase
     public function testGetReturnsNullForMissingIds(): void
     {
         $registry = new PageBlockRegistry(
-            $this->createRepository(PageHeroBlockRepository::class, PageHeroBlock::class, 'findWithTranslations', 1, null),
-            $this->createRepository(PageTextBlockRepository::class, PageTextBlock::class, 'findWithTranslations', 1, null),
-            $this->createRepository(PageCardsBlockRepository::class, PageCardsBlock::class, 'findWithItemsAndTranslations', 1, null),
-            $this->createRepository(PageListBlockRepository::class, PageListBlock::class, 'findWithItemsAndTranslations', 1, null),
-            $this->createRepository(PageCtaBlockRepository::class, PageCtaBlock::class, 'findWithTranslations', 1, null),
-            $this->createRepository(PageCompareBlockRepository::class, PageCompareBlock::class, 'findWithTranslations', 1, null),
+            $this->createRepository(PageHeroBlockRepository::class, PageHeroBlock::class, 1, null),
+            $this->createRepository(PageTextBlockRepository::class, PageTextBlock::class, 1, null),
+            $this->createRepository(PageCardsBlockRepository::class, PageCardsBlock::class, 1, null),
+            $this->createRepository(PageListBlockRepository::class, PageListBlock::class, 1, null),
+            $this->createRepository(PageCtaBlockRepository::class, PageCtaBlock::class, 1, null),
+            $this->createRepository(PageCompareBlockRepository::class, PageCompareBlock::class, 1, null),
         );
 
         foreach (PageBlockType::cases() as $type) {
@@ -82,7 +82,6 @@ final class PageBlockRegistryTest extends TestCase
     private function createRepository(
         string $repositoryClass,
         string $entityClass,
-        string $method,
         int $expectedId,
         ?object $result,
     ): object {

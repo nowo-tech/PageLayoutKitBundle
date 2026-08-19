@@ -74,7 +74,6 @@ final class NowoPageLayoutKitBundleTest extends TestCase
     {
         $reflection = new ReflectionClass(PageLocales::class);
         $property   = $reflection->getProperty('instance');
-        $property->setAccessible(true);
         $property->setValue(null, null);
     }
 }

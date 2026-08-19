@@ -175,7 +175,6 @@ final class PageBlockProviderTest extends TestCase
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('es'),
             new PageLocales('es', ['es', 'en']),
-            null,
         );
 
         self::assertSame(
@@ -334,7 +333,6 @@ final class PageBlockProviderTest extends TestCase
         do {
             if ($reflection->hasProperty('id')) {
                 $property = $reflection->getProperty('id');
-                $property->setAccessible(true);
                 $property->setValue($entity, $id);
 
                 return;
@@ -345,14 +343,14 @@ final class PageBlockProviderTest extends TestCase
     }
 }
 
-final class FakeLegacyPageContentProvider implements LegacyPageContentProviderInterface
+final readonly class FakeLegacyPageContentProvider implements LegacyPageContentProviderInterface
 {
     /**
      * @param array<string, array<string, mixed>> $contentByPageAndLocale
      */
     public function __construct(
-        private readonly array $contentByPageAndLocale,
-        private readonly string $defaultLocale = 'es',
+        private array $contentByPageAndLocale,
+        private string $defaultLocale = 'es',
     ) {
     }
 

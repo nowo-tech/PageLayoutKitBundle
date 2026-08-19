@@ -229,7 +229,6 @@ final class PageBlockEditControllerTest extends TestCase
         $controller->setContainer($this->createControllerContainer(form: $form, formCalls: $formCalls));
 
         $method = new ReflectionMethod(PageBlockEditController::class, 'createBlockForm');
-        $method->setAccessible(true);
 
         $hero = $this->withId(new PageHeroBlock(), 1);
         $method->invoke($controller, PageBlockType::Hero, $hero);
@@ -277,7 +276,6 @@ final class PageBlockEditControllerTest extends TestCase
         $controller->setContainer($this->createControllerContainer());
 
         $method = new ReflectionMethod(PageBlockEditController::class, 'ensureBlockTranslations');
-        $method->setAccessible(true);
         $method->invoke($controller, $cards);
         $method->invoke($controller, $list);
         $method->invoke($controller, $hero);
@@ -309,9 +307,7 @@ final class PageBlockEditControllerTest extends TestCase
 
         $twig = $this->createMock(Environment::class);
         $twig->method('render')
-            ->willReturnCallback(static function (string $view, array $parameters = []): string {
-                return 'render:' . $view . ':' . ($parameters['locale'] ?? $parameters['page_title'] ?? '');
-            });
+            ->willReturnCallback(static fn (string $view, array $parameters = []): string => 'render:' . $view . ':' . ($parameters['locale'] ?? $parameters['page_title'] ?? ''));
         $container->set('twig', $twig);
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
@@ -328,7 +324,7 @@ final class PageBlockEditControllerTest extends TestCase
         $container->set('form.factory', $formFactory);
 
         $requestStack = new RequestStack();
-        if ($request !== null) {
+        if ($request instanceof Request) {
             $requestStack->push($request);
         }
         $container->set('request_stack', $requestStack);

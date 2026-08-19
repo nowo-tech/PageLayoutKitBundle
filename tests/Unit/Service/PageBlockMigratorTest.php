@@ -41,7 +41,6 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
-            null,
         );
 
         self::assertTrue($migrator->isEmpty());
@@ -60,7 +59,6 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [$entry],
             ]),
-            null,
         );
 
         self::assertFalse($migrator->isEmpty());
@@ -77,7 +75,6 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
-            null,
         );
 
         self::assertFalse($migrator->migrate());
@@ -132,11 +129,9 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
-            null,
         );
 
         $method = new ReflectionMethod(PageBlockMigrator::class, 'contentForPage');
-        $method->setAccessible(true);
 
         self::assertSame([], $method->invoke($migrator, 'home'));
     }
@@ -171,7 +166,6 @@ final class PageBlockMigratorTest extends TestCase
         $entityManager->persist($block);
 
         $method = new ReflectionMethod(PageBlockMigrator::class, 'addLayout');
-        $method->setAccessible(true);
         $method->invoke($migrator, 'home', PageBlockType::Hero, $block, 4);
 
         $layoutEntries = array_values(array_filter(
@@ -350,7 +344,6 @@ final class PageBlockMigratorTest extends TestCase
         do {
             if ($reflection->hasProperty('id')) {
                 $property = $reflection->getProperty('id');
-                $property->setAccessible(true);
                 $property->setValue($entity, $id);
 
                 return;
@@ -361,14 +354,14 @@ final class PageBlockMigratorTest extends TestCase
     }
 }
 
-final class FakeMigratorLegacyProvider implements LegacyPageContentProviderInterface
+final readonly class FakeMigratorLegacyProvider implements LegacyPageContentProviderInterface
 {
     /**
      * @param array<string, array<string, mixed>> $contentByPageAndLocale
      */
     public function __construct(
-        private readonly array $contentByPageAndLocale,
-        private readonly string $defaultLocale = 'es',
+        private array $contentByPageAndLocale,
+        private string $defaultLocale = 'es',
     ) {
     }
 

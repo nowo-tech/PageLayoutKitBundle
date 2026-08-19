@@ -47,7 +47,6 @@ final class MigratePageBlocksCommandTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [$entry],
             ]),
-            null,
         ));
 
         $tester = new CommandTester($command);
@@ -62,7 +61,6 @@ final class MigratePageBlocksCommandTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
-            null,
         ));
 
         $tester = new CommandTester($command);
@@ -168,7 +166,6 @@ final class MigratePageBlocksCommandTest extends TestCase
         do {
             if ($reflection->hasProperty('id')) {
                 $property = $reflection->getProperty('id');
-                $property->setAccessible(true);
                 $property->setValue($entity, $id);
 
                 return;
@@ -179,14 +176,14 @@ final class MigratePageBlocksCommandTest extends TestCase
     }
 }
 
-final class FakeCommandLegacyProvider implements LegacyPageContentProviderInterface
+final readonly class FakeCommandLegacyProvider implements LegacyPageContentProviderInterface
 {
     /**
      * @param array<string, array<string, mixed>> $contentByPageAndLocale
      */
     public function __construct(
-        private readonly array $contentByPageAndLocale,
-        private readonly string $defaultLocale = 'es',
+        private array $contentByPageAndLocale,
+        private string $defaultLocale = 'es',
     ) {
     }
 

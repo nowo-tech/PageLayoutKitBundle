@@ -141,9 +141,7 @@ final class PageLayoutControllerTest extends TestCase
 
         $router = $this->createMock(UrlGeneratorInterface::class);
         $router->method('generate')
-            ->willReturnCallback(static function (string $route, array $parameters = []): string {
-                return '/generated/' . $route . '/' . ($parameters['pageKey'] ?? '');
-            });
+            ->willReturnCallback(static fn (string $route, array $parameters = []): string => '/generated/' . $route . '/' . ($parameters['pageKey'] ?? ''));
         $container->set('router', $router);
 
         $twig = $this->createMock(Environment::class);
@@ -156,7 +154,7 @@ final class PageLayoutControllerTest extends TestCase
         $container->set('twig', $twig);
 
         $requestStack = new RequestStack();
-        if ($request !== null) {
+        if ($request instanceof Request) {
             $requestStack->push($request);
         }
         $container->set('request_stack', $requestStack);

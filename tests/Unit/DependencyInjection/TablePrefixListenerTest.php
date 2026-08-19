@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Nowo\PageLayoutKitBundle\DependencyInjection\TablePrefixListener;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
 use PHPUnit\Framework\TestCase;
 
 final class TablePrefixListenerTest extends TestCase
@@ -42,7 +43,7 @@ final class TablePrefixListenerTest extends TestCase
     public function testPrefixesBundleEntityTableNames(): void
     {
         $metadata = $this->createMock(ClassMetadata::class);
-        $metadata->method('getName')->willReturn('Nowo\\PageLayoutKitBundle\\Entity\\PageHeroBlock');
+        $metadata->method('getName')->willReturn(PageHeroBlock::class);
         $metadata->method('getTableName')->willReturn('content_page_hero_block');
         $metadata->expects(self::once())
             ->method('setPrimaryTable')

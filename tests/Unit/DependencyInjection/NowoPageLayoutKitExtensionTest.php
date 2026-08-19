@@ -13,6 +13,7 @@ use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Reference;
@@ -148,7 +149,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.bundles', [
-            'SecurityBundle' => 'Symfony\\Bundle\\SecurityBundle\\SecurityBundle',
+            'SecurityBundle' => SecurityBundle::class,
         ]);
 
         (new NowoPageLayoutKitExtension())->load([
@@ -170,7 +171,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.bundles', [
-            'SecurityBundle' => 'Symfony\\Bundle\\SecurityBundle\\SecurityBundle',
+            'SecurityBundle' => SecurityBundle::class,
         ]);
 
         (new NowoPageLayoutKitExtension())->load([

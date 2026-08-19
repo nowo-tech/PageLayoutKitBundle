@@ -100,7 +100,7 @@ jobs:
 
           echo "✅ All tests passed, validating ≥99% coverage..."
 
-          # Validate that coverage is 100%
+          # Validate element coverage ≥99%
           php -r "
           if (!file_exists('coverage.xml')) {
               echo 'ERROR: coverage.xml file was not generated\n';
@@ -235,7 +235,7 @@ jobs:
         run: |
           echo "📊 Validating ≥99% coverage..."
 
-          # Validate that coverage is 100%
+          # Validate element coverage ≥99%
           php -r "
           if (!file_exists('coverage.xml')) {
               echo 'ERROR: coverage.xml file was not generated\n';
