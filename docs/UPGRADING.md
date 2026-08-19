@@ -5,10 +5,21 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.0.2](#102)
 - [1.0.1](#101)
 - [1.0.0](#100)
 
 ## Unreleased
+
+## 1.0.2
+
+Patch release: fixes admin reorder forms when using FormKit collection fields. **No integrator upgrade steps.**
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+If admin reorder at `/admin/pages/{pageKey}/layout` failed with a FormKit type resolution error on **1.0.1**, upgrade to **1.0.2**.
 
 ## 1.0.1
 

@@ -8,10 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.0.2] - 2026-08-19](#102---2026-08-19)
 - [[1.0.1] - 2026-08-19](#101---2026-08-19)
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.0.2] - 2026-08-19
+
+### Fixed
+
+- **Admin reorder:** map `CollectionType::class` to the FormKit `collection` alias in `AbstractPageLayoutFormType::addWithDefaults`, so `PageLayoutReorderType` resolves correctly at runtime.
+
+### Changed
+
+- **CI:** workflow comments now describe the **≥99%** element-coverage gate (no threshold change).
+- **Tests:** Rector-aligned class-name references in unit tests (`StringClassNameToClassConstantRector`).
 
 ## [1.0.1] - 2026-08-19
 
