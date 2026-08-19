@@ -12,6 +12,8 @@ use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -143,6 +145,9 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         self::assertSame([
             ['event' => Events::loadClassMetadata],
         ], $listener->getTag('doctrine.event_listener'));
+
+        self::assertTrue($container->hasDefinition(PageLayoutProtectionConfig::class));
+        self::assertTrue($container->hasDefinition(PageLayoutProtection::class));
     }
 
     public function testLoadUsesCustomAccessCheckerAliasWhenConfigured(): void

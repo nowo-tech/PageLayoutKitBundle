@@ -49,5 +49,21 @@ final class ConfigurationTest extends TestCase
         self::assertSame('custom', $config['web_ui']['css_framework']);
         self::assertSame('acme_', $config['doctrine']['table_prefix']);
         self::assertSame('reporting', $config['doctrine']['connection']);
+        self::assertSame('none', $config['html']['sanitize']['strategy']);
+        self::assertNull($config['html']['sanitize']['service']);
+    }
+
+    public function testHtmlSanitizeStrategyAllowlist(): void
+    {
+        $processor = new Processor();
+        $config    = $processor->processConfiguration(new Configuration(), [[
+            'html' => [
+                'sanitize' => [
+                    'strategy' => 'allowlist',
+                ],
+            ],
+        ]]);
+
+        self::assertSame('allowlist', $config['html']['sanitize']['strategy']);
     }
 }

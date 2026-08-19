@@ -11,11 +11,14 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Nowo\PageLayoutKitBundle\Service\PageBlockProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
@@ -40,6 +43,7 @@ final class PageBlockProviderTest extends TestCase
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('es'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
             new FakeLegacyPageContentProvider([
                 'home:es' => [
                     'page_title'         => 'Inicio',
@@ -116,6 +120,7 @@ final class PageBlockProviderTest extends TestCase
             ], $state),
             $this->createRequestStack('en'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
             new FakeLegacyPageContentProvider([
                 'landing:en' => [
                     'page_title'       => 'Landing title',
@@ -139,6 +144,7 @@ final class PageBlockProviderTest extends TestCase
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('es'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
             new FakeLegacyPageContentProvider([]),
         );
 
@@ -154,6 +160,7 @@ final class PageBlockProviderTest extends TestCase
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('en'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
             new FakeLegacyPageContentProvider([
                 'home:es' => [
                     'page_title'       => 'Inicio',
@@ -175,6 +182,7 @@ final class PageBlockProviderTest extends TestCase
             $this->createPageBlockSqlRepository([], new stdClass()),
             $this->createRequestStack('es'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
         );
 
         self::assertSame(
@@ -209,6 +217,7 @@ final class PageBlockProviderTest extends TestCase
             ], $state),
             $this->createRequestStack('en'),
             new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
             new FakeLegacyPageContentProvider([]),
         );
 
@@ -229,6 +238,39 @@ final class PageBlockProviderTest extends TestCase
         $provider->reset();
         $provider->getLayout('home', 'en');
         self::assertSame(4, $state->queries);
+    }
+
+    public function testAllowlistSanitizerStripsScriptFromStoredBlockBody(): void
+    {
+        $textEntry      = $this->createLayoutEntry('home', PageBlockType::Text, 11, 0, 502);
+        $state          = new stdClass();
+        $state->queries = 0;
+
+        $provider = new PageBlockProvider(
+            $this->createPageLayoutEntryRepository([
+                'home' => [$textEntry],
+            ]),
+            $this->createPageBlockSqlRepository([
+                'FROM content_page_text_block b' => [[
+                    'block_id' => 11,
+                    'title'    => 'Title',
+                    'body'     => '<p>Safe</p><script>alert(1)</script>',
+                ]],
+            ], $state),
+            $this->createRequestStack('es'),
+            new PageLocales('es', ['es', 'en']),
+            $this->createProtection(HtmlSanitizeStrategy::Allowlist),
+        );
+
+        $layout = $provider->getLayout('home', 'es');
+        self::assertCount(1, $layout);
+        self::assertStringContainsString('<p>Safe</p>', $layout[0]->data['body']);
+        self::assertStringNotContainsString('script', $layout[0]->data['body']);
+    }
+
+    private function createProtection(HtmlSanitizeStrategy $strategy = HtmlSanitizeStrategy::None): PageLayoutProtection
+    {
+        return new PageLayoutProtection(new PageLayoutProtectionConfig($strategy, null));
     }
 
     private function createLayoutEntry(

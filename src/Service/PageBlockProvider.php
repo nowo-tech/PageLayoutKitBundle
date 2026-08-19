@@ -9,6 +9,7 @@ use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Service\ResetInterface;
 
@@ -29,6 +30,7 @@ final class PageBlockProvider implements ResetInterface
         private readonly PageBlockSqlRepository $pageBlockSqlRepository,
         private readonly RequestStack $requestStack,
         private readonly PageLocales $pageLocales,
+        private readonly PageLayoutProtection $protection,
         private readonly ?LegacyPageContentProviderInterface $legacyContentProvider = null,
     ) {
     }
@@ -64,6 +66,8 @@ final class PageBlockProvider implements ResetInterface
             if (!is_array($data)) {
                 continue;
             }
+
+            $data = $this->sanitizeBlockData($data);
 
             $sectionKey = $data['sectionKey'] ?? null;
 
@@ -123,15 +127,23 @@ final class PageBlockProvider implements ResetInterface
     {
         $content = $this->legacyContent($pageKey, $locale);
 
-        if ($pageKey === 'home') {
-            return $this->legacyHomeLayout($content);
-        }
+        $views = match ($pageKey) {
+            'home'    => $this->legacyHomeLayout($content),
+            'contact' => $this->legacyContactLayout($content),
+            default   => [],
+        };
 
-        if ($pageKey === 'contact') {
-            return $this->legacyContactLayout($content);
-        }
-
-        return [];
+        return array_map(
+            fn (PageBlockView $view): PageBlockView => new PageBlockView(
+                layoutId: $view->layoutId,
+                pageKey: $view->pageKey,
+                type: $view->type,
+                blockId: $view->blockId,
+                sectionKey: $view->sectionKey,
+                data: $this->sanitizeBlockData($view->data),
+            ),
+            $views,
+        );
     }
 
     /** @param array<string, mixed> $content
@@ -268,5 +280,39 @@ final class PageBlockProvider implements ResetInterface
         $request = $this->requestStack->getCurrentRequest();
 
         return $request?->getLocale() ?? $this->pageLocales->getDefault();
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function sanitizeBlockData(array $data): array
+    {
+        $sanitizer = $this->protection->htmlSanitizer();
+
+        if (isset($data['body']) && is_string($data['body']) && $data['body'] !== '') {
+            $data['body'] = $sanitizer->sanitize($data['body']);
+        }
+
+        if (isset($data['beforeText']) && is_string($data['beforeText']) && $data['beforeText'] !== '') {
+            $data['beforeText'] = $sanitizer->sanitize($data['beforeText']);
+        }
+
+        if (isset($data['afterText']) && is_string($data['afterText']) && $data['afterText'] !== '') {
+            $data['afterText'] = $sanitizer->sanitize($data['afterText']);
+        }
+
+        if (isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $index => $item) {
+                if (!is_array($item) || !isset($item['body']) || !is_string($item['body']) || $item['body'] === '') {
+                    continue;
+                }
+
+                $data['items'][$index]['body'] = $sanitizer->sanitize($item['body']);
+            }
+        }
+
+        return $data;
     }
 }

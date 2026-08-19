@@ -11,6 +11,9 @@ services:
             - '../../Controller/'
             - '../../NowoPageLayoutKitBundle.php'
             - '../../Resources/'
+            - '../../Security/PageLayoutProtection.php'
+            - '../../Security/PageLayoutProtectionConfig.php'
+            - '../../Security/Html/'
 
     Nowo\PageLayoutKitBundle\Controller\:
         resource: '../../Controller/'
@@ -37,6 +40,12 @@ services:
     Nowo\PageLayoutKitBundle\Service\PageBlockProvider:
         arguments:
             $legacyContentProvider: '@?Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface'
+            $protection: '@Nowo\PageLayoutKitBundle\Security\PageLayoutProtection'
+
+    Nowo\PageLayoutKitBundle\EventSubscriber\PageBlockHtmlSanitizeSubscriber:
+        tags:
+            - { name: doctrine.event_listener, event: prePersist }
+            - { name: doctrine.event_listener, event: preUpdate }
 
     Nowo\PageLayoutKitBundle\Service\PageBlockMigrator:
         arguments:

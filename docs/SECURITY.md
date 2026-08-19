@@ -61,11 +61,23 @@ Recommendations:
 
 ## Rich text rendering
 
-Several default public block templates render editor-authored HTML with `|raw`, especially for long-form text and compare content. That is intentional for CMS-managed rich text, but it means:
+Several default public block templates render editor-authored HTML with `|raw`, especially for long-form text and compare content. That is intentional for CMS-managed rich text.
 
-- Only trusted editors should be able to update those fields.
-- Hosts should sanitize content before storage or before rendering if untrusted HTML is possible.
-- Template overrides should keep escaping behavior explicit and reviewed.
+**HTML sanitization (2026-08-19):** configure `nowo_page_layout_kit.html.sanitize.strategy`:
+
+| Strategy | Behaviour |
+| -------- | --------- |
+| `none` (default) | Trusted editors only; HTML stored/rendered as-is |
+| `allowlist` | DOM allowlist on persist + public render (recipe `when@prod`) |
+| `strip` | Remove all tags |
+| `service` | Host `PageLayoutHtmlSanitizerInterface` |
+
+Flex recipe sets `when@prod: strategy: allowlist`. Demo/dev may keep `none`.
+
+Additional guidance:
+
+- Only trusted editors should be able to update rich-text fields.
+- Template overrides should keep escaping behaviour explicit and reviewed.
 
 ## Operational guidance
 
