@@ -11,6 +11,7 @@ use Nowo\PageLayoutKitBundle\Repository\PageCompareBlockTranslationRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageCtaBlockTranslationRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageHeroBlockTranslationRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageListBlockTranslationRepository;
+use Nowo\PageLayoutKitBundle\Repository\PageListItemRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageListItemTranslationRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockTranslationRepository;
 use PHPUnit\Framework\TestCase;
@@ -28,6 +29,7 @@ final class PageTranslationRepositoriesTest extends TestCase
         self::assertInstanceOf(PageHeroBlockTranslationRepository::class, new PageHeroBlockTranslationRepository($registry));
         self::assertInstanceOf(PageListBlockTranslationRepository::class, new PageListBlockTranslationRepository($registry));
         self::assertInstanceOf(PageListItemTranslationRepository::class, new PageListItemTranslationRepository($registry));
+        self::assertInstanceOf(PageListItemRepository::class, new PageListItemRepository($registry));
         self::assertInstanceOf(PageTextBlockTranslationRepository::class, new PageTextBlockTranslationRepository($registry));
     }
 }

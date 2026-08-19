@@ -11,6 +11,7 @@ use Nowo\PageLayoutKitBundle\DependencyInjection\TablePrefixListener;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
+use Nowo\PageLayoutKitBundle\Security\Html\NullPageLayoutHtmlSanitizer;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
@@ -241,6 +242,32 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
                 ],
             ],
         ], new ContainerBuilder());
+    }
+
+    public function testLoadRegistersHtmlSanitizerServiceWhenConfigured(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register('app.page_layout_html_sanitizer', NullPageLayoutHtmlSanitizer::class);
+
+        (new NowoPageLayoutKitExtension())->load([
+            [
+                'security' => [
+                    'allow_unauthenticated' => true,
+                ],
+                'html' => [
+                    'sanitize' => [
+                        'strategy' => 'service',
+                        'service'  => 'app.page_layout_html_sanitizer',
+                    ],
+                ],
+            ],
+        ], $container);
+
+        $definition = $container->getDefinition(PageLayoutProtection::class);
+        self::assertEquals(
+            new Reference('app.page_layout_html_sanitizer'),
+            $definition->getArgument(1),
+        );
     }
 
     public function testAliasMatchesBundleConfigurationAlias(): void

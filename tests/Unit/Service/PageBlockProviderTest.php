@@ -268,6 +268,38 @@ final class PageBlockProviderTest extends TestCase
         self::assertStringNotContainsString('script', $layout[0]->data['body']);
     }
 
+    public function testAllowlistSanitizerStripsScriptFromCardItemBodies(): void
+    {
+        $cardsEntry     = $this->createLayoutEntry('home', PageBlockType::Cards, 12, 0, 503);
+        $state          = new stdClass();
+        $state->queries = 0;
+
+        $provider = new PageBlockProvider(
+            $this->createPageLayoutEntryRepository([
+                'home' => [$cardsEntry],
+            ]),
+            $this->createPageBlockSqlRepository([
+                'FROM content_page_cards_block b' => [[
+                    'block_id' => 12,
+                    'title'    => 'Cards',
+                ]],
+                'FROM content_page_card_item i' => [[
+                    'block_id' => 12,
+                    'position' => 0,
+                    'title'    => 'Card',
+                    'body'     => '<p>Card</p><script>alert(1)</script>',
+                ]],
+            ], $state),
+            $this->createRequestStack('es'),
+            new PageLocales('es', ['es', 'en']),
+            $this->createProtection(HtmlSanitizeStrategy::Allowlist),
+        );
+
+        $layout = $provider->getLayout('home', 'es');
+        self::assertStringContainsString('<p>Card</p>', $layout[0]->data['items'][0]['body']);
+        self::assertStringNotContainsString('script', $layout[0]->data['items'][0]['body']);
+    }
+
     private function createProtection(HtmlSanitizeStrategy $strategy = HtmlSanitizeStrategy::None): PageLayoutProtection
     {
         return new PageLayoutProtection(new PageLayoutProtectionConfig($strategy, null));
