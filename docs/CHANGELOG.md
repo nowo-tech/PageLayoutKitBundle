@@ -8,11 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.0.4] - 2026-08-19](#104---2026-08-19)
 - [[1.0.2] - 2026-08-19](#102---2026-08-19)
 - [[1.0.1] - 2026-08-19](#101---2026-08-19)
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.0.4] - 2026-08-19
+
+Security patch: HTML sanitization for CMS block content and CI hardening.
+
+### Security
+
+- **`html.sanitize`:** configurable strategy (`none`, `strip`, `allowlist`, `service`) with Doctrine subscriber on persist and sanitization at public render time via `PageBlockProvider`.
+- **Flex recipe:** `when@prod` defaults to `allowlist` for production hosts.
+- **CI:** run `composer audit --locked` after dependency install (REQ-SEC / P3).
+
+### Changed
+
+- **Tests:** 100% PHP coverage for the HTML sanitize stack (`AllowlistPageLayoutHtmlSanitizer`, subscriber, protection wiring).
 
 ## [1.0.2] - 2026-08-19
 

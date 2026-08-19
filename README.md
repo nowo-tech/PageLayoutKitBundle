@@ -26,6 +26,7 @@ Page Layout Kit Bundle gives Symfony applications a reusable page-layout layer b
 - Legacy fallback and migration command for pre-block JSON/content sources
 - Doctrine entities, repositories, and optional table prefixing
 - Configurable access guard: roles, custom checker, or demo-only unauthenticated mode
+- Optional HTML sanitization for rich-text blocks (`html.sanitize`: `none`, `strip`, `allowlist`, `service`)
 - Twig namespace `NowoPageLayoutKitBundle` with host override precedence
 - Symfony Flex recipe and FrankenPHP demo in `demo/symfony8`
 

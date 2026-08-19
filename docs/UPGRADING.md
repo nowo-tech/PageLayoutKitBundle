@@ -5,11 +5,33 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.0.4](#104)
 - [1.0.2](#102)
 - [1.0.1](#101)
 - [1.0.0](#100)
 
 ## Unreleased
+
+## 1.0.4
+
+Security patch: HTML sanitization for rich-text CMS blocks. **Review production config** if you store editor HTML in `text` or `compare` blocks.
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+php bin/console cache:clear
+```
+
+Recommended production configuration (also shipped in the Flex recipe under `when@prod`):
+
+```yaml
+# config/packages/prod/nowo_page_layout_kit.yaml
+nowo_page_layout_kit:
+    html:
+        sanitize:
+            strategy: allowlist
+```
+
+If you already trust every editor and rely on Twig escaping elsewhere, you may keep `strategy: none` — see [SECURITY.md](SECURITY.md).
 
 ## 1.0.2
 
