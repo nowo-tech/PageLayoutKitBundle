@@ -4,11 +4,29 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 
 ## Table of contents
 
+
+- [From 1.0.4 to 1.0.5](#from-104-to-105)
 - [Unreleased](#unreleased)
 - [1.0.4](#104)
 - [1.0.2](#102)
 - [1.0.1](#101)
 - [1.0.0](#100)
+
+## From 1.0.4 to 1.0.5
+
+No breaking changes. **No application upgrade steps.**
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+## From 1.0.4 to 1.0.5
+
+No breaking changes. **No application upgrade steps.**
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 ## Unreleased
 
