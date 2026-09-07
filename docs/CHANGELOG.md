@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.0.6] - 2026-09-07](#106---2026-09-07)
+- [[1.0.5] - 2026-08-24](#105---2026-08-24)
 - [[1.0.4] - 2026-08-19](#104---2026-08-19)
 - [[1.0.2] - 2026-08-19](#102---2026-08-19)
 - [[1.0.1] - 2026-08-19](#101---2026-08-19)
@@ -15,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-09-07
+
+### Changed
+
+- **Dependency:** bump `symfony/security-bundle` in the Symfony group (lock refresh).
+- **Style:** PHP CS Fixer alignment.
+
+### Notes
+
+- **No API or configuration changes** for integrators.
+
+[1.0.6]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.0.6
 
 ## [1.0.5] - 2026-08-24
 

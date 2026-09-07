@@ -5,6 +5,7 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 ## Table of contents
 
 
+- [From 1.0.5 to 1.0.6](#from-105-to-106)
 - [From 1.0.4 to 1.0.5](#from-104-to-105)
 - [Unreleased](#unreleased)
 - [1.0.4](#104)
@@ -12,7 +13,7 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 - [1.0.1](#101)
 - [1.0.0](#100)
 
-## From 1.0.4 to 1.0.5
+## From 1.0.5 to 1.0.6
 
 No breaking changes. **No application upgrade steps.**
 
