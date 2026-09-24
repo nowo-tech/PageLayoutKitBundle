@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Form;
 
+use Nowo\FormKitBundle\Form\FormOptionsMerger;
+use Nowo\FormKitBundle\Form\FormTypeMap;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageListItem;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
@@ -19,10 +21,20 @@ use function count;
 /** @extends AbstractPageLayoutFormType<null> */
 final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
 {
+    public function __construct(
+        FormOptionsMerger $formOptionsMerger,
+        FormTypeMap $formTypeMap,
+        private readonly ?PageLocales $pageLocales = null,
+    ) {
+        parent::__construct($formOptionsMerger, $formTypeMap);
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var PageListBlock $block */
-        $block = $options['block'];
+        $block       = $options['block'];
+        $pageLocales = $this->pageLocales;
+        $locales     = $pageLocales?->getAll() ?? PageLocales::all();
 
         $this->withBuilder($builder, function (): void {
             $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
@@ -34,19 +46,19 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
             ]);
         });
 
-        $builder->addEventListener(FormEvents::POST_SET_DATA, static function (FormEvent $formEvent) use ($block): void {
+        $builder->addEventListener(FormEvents::POST_SET_DATA, static function (FormEvent $formEvent) use ($block, $pageLocales, $locales): void {
             $panels = [];
 
-            foreach (PageLocales::all() as $locale) {
+            foreach ($locales as $locale) {
                 $lines = [];
 
                 foreach ($block->getItems() as $item) {
-                    $lines[] = $item->getTranslationOrFallback($locale)->getText();
+                    $lines[] = $item->getTranslationOrFallback($locale, $pageLocales)->getText();
                 }
 
                 $panels[] = new PageBlockLocalePanelData(
                     locale: $locale,
-                    title: $block->getTranslationOrFallback($locale)->getTitle(),
+                    title: $block->getTranslationOrFallback($locale, $pageLocales)->getTitle(),
                     items: implode("\n", $lines),
                 );
             }
@@ -54,8 +66,8 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
             $formEvent->getForm()->get('translations')->setData($panels);
         });
 
-        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $formEvent) use ($block): void {
-            /** @var list<PageBlockLocalePanelData> $panels */
+        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $formEvent) use ($block, $pageLocales, $locales): void {
+            /** @var list<mixed> $panels */
             $panels        = $formEvent->getForm()->get('translations')->getData() ?? [];
             $existingItems = $block->getItems()->toArray();
             $maxParsed     = 0;
@@ -70,7 +82,7 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
                     continue;
                 }
 
-                $blockTranslation = $block->getTranslation($locale) ?? $block->ensureTranslations()->getTranslation($locale);
+                $blockTranslation = $block->getTranslation($locale) ?? $block->ensureTranslations($pageLocales)->getTranslation($locale);
                 if ($blockTranslation === null) {
                     continue;
                 }
@@ -89,13 +101,13 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
 
                     if (!$item instanceof PageListItem) {
                         $item = new PageListItem();
-                        $item->ensureTranslations();
+                        $item->ensureTranslations($pageLocales);
                         $item->setPosition($index);
                         $block->addItem($item);
                         $existingItems[$index] = $item;
                     }
 
-                    $itemTranslation = $item->getTranslationOrFallback($locale);
+                    $itemTranslation = $item->getTranslationOrFallback($locale, $pageLocales);
                     $itemTranslation->setLocale($locale);
                     $itemTranslation->setText($text);
                 }
@@ -103,7 +115,7 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
                 $counter = count($existingItems);
 
                 for ($index = count($parsedItems); $index < $counter; ++$index) {
-                    $existingItems[$index]->getTranslationOrFallback($locale)->setText('');
+                    $existingItems[$index]->getTranslationOrFallback($locale, $pageLocales)->setText('');
                 }
             }
 
@@ -114,8 +126,8 @@ final class PageListBlockInlineModalType extends AbstractPageLayoutFormType
                 $item     = $existingItems[$index];
                 $allEmpty = true;
 
-                foreach (PageLocales::all() as $locale) {
-                    if (trim($item->getTranslationOrFallback($locale)->getText()) !== '') {
+                foreach ($locales as $locale) {
+                    if (trim($item->getTranslationOrFallback($locale, $pageLocales)->getText()) !== '') {
                         $allEmpty = false;
                         break;
                     }

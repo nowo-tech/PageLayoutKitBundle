@@ -18,6 +18,7 @@ use Nowo\PageLayoutKitBundle\Form\PageCtaBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -33,6 +34,7 @@ final class PageBlockEditController extends AbstractController
     public function __construct(
         private readonly PageBlockRegistry $pageBlockRegistry,
         private readonly EntityManagerInterface $entityManager,
+        private readonly ?PageLocales $pageLocales = null,
     ) {
     }
 
@@ -149,17 +151,17 @@ final class PageBlockEditController extends AbstractController
     private function ensureBlockTranslations(
         PageHeroBlock|PageTextBlock|PageCardsBlock|PageListBlock|PageCtaBlock|PageCompareBlock $block,
     ): void {
-        $block->ensureTranslations();
+        $block->ensureTranslations($this->pageLocales);
 
         if ($block instanceof PageCardsBlock) {
             foreach ($block->getItems() as $item) {
-                $item->ensureTranslations();
+                $item->ensureTranslations($this->pageLocales);
             }
         }
 
         if ($block instanceof PageListBlock) {
             foreach ($block->getItems() as $item) {
-                $item->ensureTranslations();
+                $item->ensureTranslations($this->pageLocales);
             }
         }
     }

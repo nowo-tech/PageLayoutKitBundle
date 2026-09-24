@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormTypeInterface;
 
 final class PageBlockEditTypeBuildFormTest extends TestCase
 {
@@ -104,7 +105,11 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
         self::assertSame(8, $fields[4]['options']['attr']['rows']);
     }
 
-    /** @param list<array{name: string, type: string, options: array<string, mixed>}> $fields */
+    /**
+     * @param list<array{name: string, type: string, options: array<string, mixed>}> $fields
+     *
+     * @return FormBuilderInterface<mixed>
+     */
     private function createBuilder(array &$fields): FormBuilderInterface
     {
         $builder = $this->createMock(FormBuilderInterface::class);
@@ -122,7 +127,13 @@ final class PageBlockEditTypeBuildFormTest extends TestCase
         return $builder;
     }
 
-    /** @param class-string<object> $typeClass */
+    /**
+     * @template T of FormTypeInterface<mixed>
+     *
+     * @param class-string<T> $typeClass
+     *
+     * @return T
+     */
     private function createType(string $typeClass): object
     {
         return new $typeClass(

@@ -32,6 +32,16 @@ final class PageLocalesTest extends TestCase
         self::assertSame(['es', 'en'], $locales->getAll());
     }
 
+    public function testInstanceAccessWorksWithoutStaticBinding(): void
+    {
+        $this->unbindPageLocales();
+
+        $locales = new PageLocales('fr', ['fr', 'de']);
+
+        self::assertSame('fr', $locales->getDefault());
+        self::assertSame(['fr', 'de'], $locales->getAll());
+    }
+
     private function unbindPageLocales(): void
     {
         $reflection = new ReflectionClass(PageLocales::class);

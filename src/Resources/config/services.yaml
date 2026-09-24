@@ -19,6 +19,11 @@ services:
         resource: '../../Controller/'
         tags: ['controller.service_arguments']
 
+    Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController:
+        tags: ['controller.service_arguments']
+        arguments:
+            $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
     Nowo\PageLayoutKitBundle\Locale\PageLocales:
         public: true
         arguments:
@@ -28,6 +33,20 @@ services:
     Nowo\PageLayoutKitBundle\Form\:
         resource: '../../Form/'
         tags: ['form.type']
+
+    Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType:
+        tags: ['form.type']
+        arguments:
+            $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
+    Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType:
+        tags: ['form.type']
+        arguments:
+            $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
+    Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository:
+        arguments:
+            $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
 
     Nowo\PageLayoutKitBundle\Twig\PageLayoutKitExtension:
         arguments:
@@ -50,3 +69,4 @@ services:
     Nowo\PageLayoutKitBundle\Service\PageBlockMigrator:
         arguments:
             $legacyContentProvider: '@?Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface'
+            $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'

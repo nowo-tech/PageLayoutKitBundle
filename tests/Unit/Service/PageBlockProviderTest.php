@@ -240,6 +240,50 @@ final class PageBlockProviderTest extends TestCase
         self::assertSame(4, $state->queries);
     }
 
+    public function testLayoutMemoIsScopedToTheMainRequestWithoutCallingReset(): void
+    {
+        $heroEntry      = $this->createLayoutEntry('home', PageBlockType::Hero, 10, 0, 501);
+        $state          = new stdClass();
+        $state->title   = 'Title from request 1';
+        $state->queries = 0;
+
+        $connection = $this->createStub(Connection::class);
+        $connection->method('fetchAllAssociative')
+            ->willReturnCallback(static function () use ($state): array {
+                ++$state->queries;
+
+                return [['block_id' => 10, 'title' => $state->title]];
+            });
+        $sqlEntityManager = $this->createStub(EntityManagerInterface::class);
+        $sqlEntityManager->method('getConnection')->willReturn($connection);
+
+        $requestStack = new RequestStack();
+        $provider     = new PageBlockProvider(
+            $this->createPageLayoutEntryRepository(['home' => [$heroEntry]]),
+            new PageBlockSqlRepository($sqlEntityManager),
+            $requestStack,
+            new PageLocales('es', ['es', 'en']),
+            $this->createProtection(),
+        );
+
+        $requestStack->push(Request::create('/'));
+        self::assertSame('Title from request 1', $provider->getLayout('home', 'es')[0]->data['title']);
+        self::assertSame('Title from request 1', $provider->getLayout('home', 'es')[0]->data['title']);
+        self::assertSame(1, $state->queries);
+        $requestStack->pop();
+
+        $state->title = 'Title saved by another worker';
+
+        $requestStack->push(Request::create('/'));
+        self::assertSame('Title saved by another worker', $provider->getLayout('home', 'es')[0]->data['title']);
+        self::assertSame(2, $state->queries);
+        $requestStack->pop();
+
+        $provider->getLayout('home', 'es');
+        $provider->getLayout('home', 'es');
+        self::assertSame(4, $state->queries, 'Without a request (CLI) nothing is memoized.');
+    }
+
     public function testAllowlistSanitizerStripsScriptFromStoredBlockBody(): void
     {
         $textEntry      = $this->createLayoutEntry('home', PageBlockType::Text, 11, 0, 502);
@@ -330,12 +374,17 @@ final class PageBlockProviderTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with(PageLayoutEntry::class)
-            ->willReturn(new ClassMetadata(PageLayoutEntry::class));
+            ->willReturnCallback(static function (string $className): ClassMetadata {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return new ClassMetadata(PageLayoutEntry::class);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getResult')
                     ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
@@ -359,8 +408,11 @@ final class PageBlockProviderTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with(PageLayoutEntry::class)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return $entityManager;
+            });
 
         return new PageLayoutEntryRepository($registry);
     }

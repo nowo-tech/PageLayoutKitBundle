@@ -7,6 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
 use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 
@@ -44,17 +45,17 @@ class PageListBlock
     }
 
     /** @return array<string, mixed> */
-    public function toArray(string $locale): array
+    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
     {
         $items = [];
 
         foreach ($this->items as $item) {
-            $items[] = $item->toArray($locale);
+            $items[] = $item->toArray($locale, $pageLocales);
         }
 
         return array_merge(
             ['sectionKey' => $this->sectionKey],
-            $this->getTranslationOrFallback($locale)->toArray(),
+            $this->getTranslationOrFallback($locale, $pageLocales)->toArray(),
             ['items' => $items],
         );
     }

@@ -7,6 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Twig;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFunction;
 
 /**
  * Twig globals for page layout kit admin + CMS pencils.
@@ -25,6 +26,26 @@ final class PageLayoutKitExtension extends AbstractExtension implements GlobalsI
     ) {
     }
 
+    /**
+     * @return list<TwigFunction>
+     */
+    public function getFunctions(): array
+    {
+        return [
+            new TwigFunction('nowo_page_layout_kit_can_edit', $this->canEdit(...)),
+        ];
+    }
+
+    public function canEdit(): bool
+    {
+        return $this->accessChecker->canAccess();
+    }
+
+    /**
+     * The `nowo_page_layout_kit_can_edit` global is deprecated: Twig resolves globals once per
+     * environment, so in long-running workers without `services_resetter` it keeps the first
+     * user's value. Use the `nowo_page_layout_kit_can_edit()` function instead.
+     */
     public function getGlobals(): array
     {
         return [

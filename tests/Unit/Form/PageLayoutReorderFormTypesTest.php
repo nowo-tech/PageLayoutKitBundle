@@ -15,6 +15,7 @@ use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderRowType;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class PageLayoutReorderFormTypesTest extends TestCase
@@ -60,11 +61,12 @@ final class PageLayoutReorderFormTypesTest extends TestCase
     }
 
     /**
+     * @param FormTypeInterface<mixed> $type
      * @param array<string, mixed> $input
      *
      * @return array<string, mixed>
      */
-    private function resolveOptions(object $type, array $input = []): array
+    private function resolveOptions(FormTypeInterface $type, array $input = []): array
     {
         $resolver = new OptionsResolver();
         $type->configureOptions($resolver);

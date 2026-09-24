@@ -103,12 +103,17 @@ final class MigratePageBlocksCommandTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with(PageLayoutEntry::class)
-            ->willReturn(new ClassMetadata(PageLayoutEntry::class));
+            ->willReturnCallback(static function (string $className): ClassMetadata {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return new ClassMetadata(PageLayoutEntry::class);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getResult')
                     ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
@@ -132,8 +137,11 @@ final class MigratePageBlocksCommandTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with(PageLayoutEntry::class)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return $entityManager;
+            });
 
         return new PageLayoutEntryRepository($registry);
     }

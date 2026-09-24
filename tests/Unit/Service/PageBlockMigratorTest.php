@@ -9,13 +9,17 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
+use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
+use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionObject;
@@ -203,6 +207,41 @@ final class PageBlockMigratorTest extends TestCase
         self::assertGreaterThan(0, $layoutEntries[0]->getBlockId());
     }
 
+    public function testMigrateUsesInjectedPageLocalesWithoutStaticBinding(): void
+    {
+        $migrator = new PageBlockMigrator(
+            $this->entityManagerMock(),
+            $this->createPageLayoutEntryRepository([
+                'home'    => [],
+                'contact' => [],
+            ]),
+            new FakeMigratorLegacyProvider($this->legacyContentMap()),
+            new PageLocales('es', ['es', 'fr']),
+        );
+
+        self::assertTrue(LocaleTestSupport::withoutStaticBinding(static fn (): bool => $migrator->migrate(false)));
+
+        $heroBlocks = array_values(array_filter(
+            $this->persisted,
+            static fn (object $entity): bool => $entity instanceof PageHeroBlock,
+        ));
+        self::assertCount(1, $heroBlocks);
+        self::assertSame(['es', 'fr'], array_map(
+            static fn (PageHeroBlockTranslation $translation): string => $translation->getLocale(),
+            array_values($heroBlocks[0]->getTranslations()->toArray()),
+        ));
+        self::assertSame('Hero', $heroBlocks[0]->getTranslation('fr')?->getTitle());
+
+        $cardsBlocks = array_values(array_filter(
+            $this->persisted,
+            static fn (object $entity): bool => $entity instanceof PageCardsBlock,
+        ));
+        $cardItem = $cardsBlocks[0]->getItems()->first();
+        self::assertInstanceOf(PageCardItem::class, $cardItem);
+        self::assertSame('V1', $cardItem->getTranslation('fr')?->getTitle());
+        self::assertNull($cardItem->getTranslation('en'));
+    }
+
     /**
      * @return array<string, array<string, mixed>>
      */
@@ -302,12 +341,17 @@ final class PageBlockMigratorTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with(PageLayoutEntry::class)
-            ->willReturn(new ClassMetadata(PageLayoutEntry::class));
+            ->willReturnCallback(static function (string $className): ClassMetadata {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return new ClassMetadata(PageLayoutEntry::class);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getResult')
                     ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
@@ -331,8 +375,11 @@ final class PageBlockMigratorTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with(PageLayoutEntry::class)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return $entityManager;
+            });
 
         return new PageLayoutEntryRepository($registry);
     }

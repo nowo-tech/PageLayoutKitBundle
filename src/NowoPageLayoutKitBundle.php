@@ -45,8 +45,6 @@ class NowoPageLayoutKitBundle extends Bundle
             $this->extension = new NowoPageLayoutKitExtension();
         }
 
-        $extension = $this->extension;
-
-        return $extension === false ? null : $extension;
+        return $this->extension;
     }
 }

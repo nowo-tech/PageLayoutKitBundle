@@ -101,7 +101,15 @@ The bundle Twig extension publishes:
 | `nowo_page_layout_kit_css_framework` | Selected CSS framework hint |
 | `nowo_page_layout_kit_pages` | Configured page keys |
 | `nowo_page_layout_kit_default_locale` | Configured default locale |
-| `nowo_page_layout_kit_can_edit` | Whether the current user may use inline CMS editing |
+| `nowo_page_layout_kit_can_edit` | **Deprecated**, use `nowo_page_layout_kit_can_edit()`. Whether the current user may use inline CMS editing |
+
+Twig function:
+
+| Function | Meaning |
+| --- | --- |
+| `nowo_page_layout_kit_can_edit()` | Whether the current user may use inline CMS editing (evaluated per call) |
+
+Twig resolves globals once per environment. In long-running workers (FrankenPHP / RoadRunner) without `services_resetter` (or on Twig < 3.14, which has no `Environment::resetGlobals()`), the `nowo_page_layout_kit_can_edit` global keeps the value of the first user rendered by the worker; the function is evaluated on every call.
 
 ## Examples
 

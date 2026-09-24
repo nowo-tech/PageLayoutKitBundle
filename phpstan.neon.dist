@@ -8,7 +8,17 @@ parameters:
         - tests
     excludePaths:
         - demo/*
-    ignoreErrors: []
+    ignoreErrors:
+        # Deprecated static binding kept for BC until 2.0; bundle code injects PageLocales.
+        -
+            identifier: frankenphp.worker.noMutableStaticProperty
+            path: src/Locale/PageLocales.php
+
+services:
+    -
+        class: Nowo\PageLayoutKitBundle\Tests\PHPStan\DoctrineGeneratedIdPropertiesExtension
+        tags:
+            - phpstan.properties.readWriteExtension
 
 includes:
   - vendor/nowo-tech/phpstan-frankenphp/ruleset-classic.neon

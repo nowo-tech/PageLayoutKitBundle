@@ -5,13 +5,36 @@ This document describes how to upgrade **Page Layout Kit Bundle** between releas
 ## Table of contents
 
 
+- [From 1.0.6 to 1.1.0](#from-106-to-110)
 - [From 1.0.5 to 1.0.6](#from-105-to-106)
 - [From 1.0.4 to 1.0.5](#from-104-to-105)
-- [Unreleased](#unreleased)
 - [1.0.4](#104)
 - [1.0.2](#102)
 - [1.0.1](#101)
 - [1.0.0](#100)
+
+## From 1.0.6 to 1.1.0
+
+No breaking changes. Recommended steps for FrankenPHP / RoadRunner workers that disable kernel reset / `services_resetter`:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+- **Twig global `nowo_page_layout_kit_can_edit` is deprecated.** In template overrides replace `{% if nowo_page_layout_kit_can_edit %}` with `{% if nowo_page_layout_kit_can_edit() %}`. The global keeps the first user's value for the lifetime of a worker when `services_resetter` does not run.
+- `PageBlockProvider::getLayout()` no longer memoizes outside an HTTP request (CLI commands query on every call).
+- **Static `PageLocales` accessors are deprecated since 1.1.0** (`PageLocales::bind()`, `PageLocales::default()`, `PageLocales::all()`; removed in 2.0). They keep working because the bundle still binds the instance in `boot()`. Inject the service instead:
+
+  ```php
+  public function __construct(private readonly PageLocales $pageLocales) {}
+
+  $default = $this->pageLocales->getDefault(); // was PageLocales::default()
+  $locales = $this->pageLocales->getAll();     // was PageLocales::all()
+  ```
+
+  When calling `getTranslationOrFallback()`, `ensureTranslations()` or `toArray()` on block entities, pass the injected instance as the last argument (`$block->ensureTranslations($this->pageLocales)`, `$block->toArray($locale, $this->pageLocales)`) so no static lookup happens. If you instantiate `PageBlockSqlRepository`, `PageBlockMigrator`, `PageBlockEditController`, `PageCardsBlockInlineModalType` or `PageListBlockInlineModalType` manually (e.g. in tests), pass the `PageLocales` instance as the new last constructor argument; without it they fall back to the static binding. Tests that only called `PageLocales::bind()` for these classes can inject the instance instead.
+
+See [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md) for the full scenario A/B notes.
 
 ## From 1.0.5 to 1.0.6
 
@@ -28,8 +51,6 @@ No breaking changes. **No application upgrade steps.**
 ```bash
 composer update nowo-tech/page-layout-kit-bundle
 ```
-
-## Unreleased
 
 ## 1.0.4
 

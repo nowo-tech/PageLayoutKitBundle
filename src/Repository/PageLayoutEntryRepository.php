@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 
@@ -20,7 +21,12 @@ final class PageLayoutEntryRepository extends ServiceEntityRepository
         parent::__construct($registry, PageLayoutEntry::class);
     }
 
-    /** @return list<PageLayoutEntry> */
+    /**
+     * Entries are refreshed from the database so a long-lived identity map (worker mode without
+     * reset) cannot serve stale `position` / `enabled` values edited by another worker.
+     *
+     * @return list<PageLayoutEntry>
+     */
     public function findEnabledByPageKey(string $pageKey): array
     {
         return $this->createQueryBuilder('e')
@@ -30,6 +36,7 @@ final class PageLayoutEntryRepository extends ServiceEntityRepository
             ->setParameter('enabled', true)
             ->orderBy('e.position', 'ASC')
             ->getQuery()
+            ->setHint(Query::HINT_REFRESH, true)
             ->getResult();
     }
 }

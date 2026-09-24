@@ -17,16 +17,22 @@ final class PageCardItemRepositoryTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with(PageCardItem::class)
-            ->willReturn(new ClassMetadata(PageCardItem::class));
+            ->willReturnCallback(static function (string $className): ClassMetadata {
+                self::assertSame(PageCardItem::class, $className);
+
+                return new ClassMetadata(PageCardItem::class);
+            });
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with(PageCardItem::class)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
+                self::assertSame(PageCardItem::class, $className);
+
+                return $entityManager;
+            });
 
         $repository = new PageCardItemRepository($registry);
 
-        self::assertInstanceOf(PageCardItemRepository::class, $repository);
+        self::assertSame(PageCardItem::class, $repository->getClassName());
     }
 }

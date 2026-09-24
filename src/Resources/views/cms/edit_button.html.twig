@@ -1,4 +1,4 @@
-{% if nowo_page_layout_kit_can_edit|default(false) and block.blockId > 0 %}
+{% if block.blockId > 0 and nowo_page_layout_kit_can_edit() %}
   <button
     type="button"
     class="cms-edit-button"

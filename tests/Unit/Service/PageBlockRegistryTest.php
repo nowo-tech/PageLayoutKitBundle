@@ -87,12 +87,17 @@ final class PageBlockRegistryTest extends TestCase
     ): object {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with($entityClass)
-            ->willReturn(new ClassMetadata($entityClass));
+            ->willReturnCallback(static function (string $className) use ($entityClass): ClassMetadata {
+                self::assertSame($entityClass, $className);
+
+                return new ClassMetadata($entityClass);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($expectedId, $result): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getOneOrNullResult')
                     ->willReturnCallback(static function () use (&$params, $expectedId, $result): ?object {
                         return ($params['id'] ?? null) === $expectedId ? $result : null;
@@ -118,8 +123,11 @@ final class PageBlockRegistryTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with($entityClass)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityClass, $entityManager): EntityManagerInterface {
+                self::assertSame($entityClass, $className);
+
+                return $entityManager;
+            });
 
         return new $repositoryClass($registry);
     }

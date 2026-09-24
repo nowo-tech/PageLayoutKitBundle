@@ -30,6 +30,7 @@ use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockEditType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -118,11 +119,12 @@ final class PageBlockFormTypesTest extends TestCase
     }
 
     /**
+     * @param FormTypeInterface<mixed> $type
      * @param array<string, mixed> $input
      *
      * @return array<string, mixed>
      */
-    private function resolveOptions(object $type, array $input = []): array
+    private function resolveOptions(FormTypeInterface $type, array $input = []): array
     {
         $resolver = new OptionsResolver();
         $type->configureOptions($resolver);

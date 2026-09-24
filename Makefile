@@ -94,9 +94,11 @@ install: ensure-up
 test: ensure-up
 	$(COMPOSE) exec $(SERVICE_PHP) composer test
 
-# Run tests with coverage (no -T so coverage is shown in console with colors)
+# Run tests with coverage (no -T so coverage is shown in console with colors).
+# Capture output inside the container so composer/phpunit failures fail the target
+# (host `sh` has no pipefail; piping through host `tee` would hide non-zero exits).
 test-coverage: ensure-up
-	$(COMPOSE) exec $(SERVICE_PHP) composer test-coverage | tee coverage-php.txt
+	$(COMPOSE) exec $(SERVICE_PHP) bash -c 'set -o pipefail; composer test-coverage 2>&1 | tee coverage-php.txt'
 	./.scripts/php-coverage-percent.sh coverage-php.txt
 
 test-coverage-100: ensure-up

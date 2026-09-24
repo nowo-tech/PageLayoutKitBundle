@@ -10,8 +10,10 @@ use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Service\ResetInterface;
+use WeakMap;
 
 use function is_array;
 use function is_string;
@@ -22,8 +24,13 @@ use function sprintf;
  */
 final class PageBlockProvider implements ResetInterface
 {
-    /** @var array<string, list<PageBlockView>> */
-    private array $layoutCache = [];
+    /**
+     * Layouts memoized per main request, so the memo never outlives the request that built it
+     * even when no `kernel.reset` runs between requests. Without a request (CLI) nothing is memoized.
+     *
+     * @var WeakMap<Request, array<string, list<PageBlockView>>>
+     */
+    private WeakMap $layoutCache;
 
     public function __construct(
         private readonly PageLayoutEntryRepository $pageLayoutEntryRepository,
@@ -33,27 +40,42 @@ final class PageBlockProvider implements ResetInterface
         private readonly PageLayoutProtection $protection,
         private readonly ?LegacyPageContentProviderInterface $legacyContentProvider = null,
     ) {
+        $this->layoutCache = new WeakMap();
     }
 
     public function reset(): void
     {
-        $this->layoutCache = [];
+        $this->layoutCache = new WeakMap();
     }
 
     /** @return list<PageBlockView> */
     public function getLayout(string $pageKey, ?string $locale = null): array
     {
         $locale ??= $this->currentLocale();
-        $cacheKey = $pageKey . '|' . $locale;
+        $cacheKey    = $pageKey . '|' . $locale;
+        $mainRequest = $this->requestStack->getMainRequest();
 
-        if (isset($this->layoutCache[$cacheKey])) {
-            return $this->layoutCache[$cacheKey];
+        if (!$mainRequest instanceof Request) {
+            return $this->loadLayout($pageKey, $locale);
         }
 
+        $requestCache = $this->layoutCache[$mainRequest] ?? [];
+
+        if (!isset($requestCache[$cacheKey])) {
+            $requestCache[$cacheKey]         = $this->loadLayout($pageKey, $locale);
+            $this->layoutCache[$mainRequest] = $requestCache;
+        }
+
+        return $requestCache[$cacheKey];
+    }
+
+    /** @return list<PageBlockView> */
+    private function loadLayout(string $pageKey, string $locale): array
+    {
         $entries = $this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey);
 
         if ($entries === []) {
-            return $this->layoutCache[$cacheKey] = $this->legacyLayout($pageKey, $locale);
+            return $this->legacyLayout($pageKey, $locale);
         }
 
         $dataByKey = $this->pageBlockSqlRepository->loadDataForEntries($entries, $locale);
@@ -85,7 +107,7 @@ final class PageBlockProvider implements ResetInterface
             );
         }
 
-        return $this->layoutCache[$cacheKey] = $views;
+        return $views;
     }
 
     /** @return array{title: string, description: string} */

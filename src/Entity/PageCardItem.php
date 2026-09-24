@@ -7,6 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
 use Nowo\PageLayoutKitBundle\Repository\PageCardItemRepository;
 
@@ -42,11 +43,11 @@ class PageCardItem
     }
 
     /** @return array<string, mixed> */
-    public function toArray(string $locale): array
+    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
     {
         return array_merge(
             ['position' => $this->position],
-            $this->getTranslationOrFallback($locale)->toArray(),
+            $this->getTranslationOrFallback($locale, $pageLocales)->toArray(),
         );
     }
 

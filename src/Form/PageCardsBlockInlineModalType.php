@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Form;
 
+use Nowo\FormKitBundle\Form\FormOptionsMerger;
+use Nowo\FormKitBundle\Form\FormTypeMap;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
@@ -19,10 +21,20 @@ use function count;
 /** @extends AbstractPageLayoutFormType<null> */
 final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
 {
+    public function __construct(
+        FormOptionsMerger $formOptionsMerger,
+        FormTypeMap $formTypeMap,
+        private readonly ?PageLocales $pageLocales = null,
+    ) {
+        parent::__construct($formOptionsMerger, $formTypeMap);
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var PageCardsBlock $block */
-        $block = $options['block'];
+        $block       = $options['block'];
+        $pageLocales = $this->pageLocales;
+        $locales     = $pageLocales?->getAll() ?? PageLocales::all();
 
         $this->withBuilder($builder, function (): void {
             $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
@@ -34,20 +46,20 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
             ]);
         });
 
-        $builder->addEventListener(FormEvents::POST_SET_DATA, static function (FormEvent $formEvent) use ($block): void {
+        $builder->addEventListener(FormEvents::POST_SET_DATA, static function (FormEvent $formEvent) use ($block, $pageLocales, $locales): void {
             $panels = [];
 
-            foreach (PageLocales::all() as $locale) {
+            foreach ($locales as $locale) {
                 $lines = [];
 
                 foreach ($block->getItems() as $item) {
-                    $itemTranslation = $item->getTranslationOrFallback($locale);
+                    $itemTranslation = $item->getTranslationOrFallback($locale, $pageLocales);
                     $lines[]         = $itemTranslation->getTitle() . ' | ' . str_replace("\n", ' ', $itemTranslation->getBody());
                 }
 
                 $panels[] = new PageBlockLocalePanelData(
                     locale: $locale,
-                    title: $block->getTranslationOrFallback($locale)->getTitle(),
+                    title: $block->getTranslationOrFallback($locale, $pageLocales)->getTitle(),
                     items: implode("\n", $lines),
                 );
             }
@@ -55,8 +67,8 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
             $formEvent->getForm()->get('translations')->setData($panels);
         });
 
-        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $formEvent) use ($block): void {
-            /** @var list<PageBlockLocalePanelData> $panels */
+        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $formEvent) use ($block, $pageLocales, $locales): void {
+            /** @var list<mixed> $panels */
             $panels        = $formEvent->getForm()->get('translations')->getData() ?? [];
             $existingItems = $block->getItems()->toArray();
             $maxParsed     = 0;
@@ -71,7 +83,7 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
                     continue;
                 }
 
-                $blockTranslation = $block->getTranslation($locale) ?? $block->ensureTranslations()->getTranslation($locale);
+                $blockTranslation = $block->getTranslation($locale) ?? $block->ensureTranslations($pageLocales)->getTranslation($locale);
                 if ($blockTranslation === null) {
                     continue;
                 }
@@ -104,13 +116,13 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
 
                     if (!$item instanceof PageCardItem) {
                         $item = new PageCardItem();
-                        $item->ensureTranslations();
+                        $item->ensureTranslations($pageLocales);
                         $item->setPosition($index);
                         $block->addItem($item);
                         $existingItems[$index] = $item;
                     }
 
-                    $itemTranslation = $item->getTranslationOrFallback($locale);
+                    $itemTranslation = $item->getTranslationOrFallback($locale, $pageLocales);
                     $itemTranslation->setLocale($locale);
                     $itemTranslation->setTitle($itemData['title']);
                     $itemTranslation->setBody($itemData['body']);
@@ -119,8 +131,8 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
                 $counter = count($existingItems);
 
                 for ($index = count($parsedItems); $index < $counter; ++$index) {
-                    $existingItems[$index]->getTranslationOrFallback($locale)->setTitle('');
-                    $existingItems[$index]->getTranslationOrFallback($locale)->setBody('');
+                    $existingItems[$index]->getTranslationOrFallback($locale, $pageLocales)->setTitle('');
+                    $existingItems[$index]->getTranslationOrFallback($locale, $pageLocales)->setBody('');
                 }
             }
 
@@ -132,8 +144,8 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
                 $item     = $existingItems[$index];
                 $allEmpty = true;
 
-                foreach (PageLocales::all() as $locale) {
-                    $tr = $item->getTranslationOrFallback($locale);
+                foreach ($locales as $locale) {
+                    $tr = $item->getTranslationOrFallback($locale, $pageLocales);
 
                     if (trim($tr->getTitle()) !== '' || trim($tr->getBody()) !== '') {
                         $allEmpty = false;

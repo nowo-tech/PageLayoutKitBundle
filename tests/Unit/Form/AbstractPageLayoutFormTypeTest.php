@@ -7,7 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\Form;
 use Nowo\FormKitBundle\Form\Constraint\ConstraintDefinitionFactory;
 use Nowo\FormKitBundle\Form\FormOptionsMerger;
 use Nowo\FormKitBundle\Form\FormTypeMap;
-use Nowo\PageLayoutKitBundle\Form\AbstractPageLayoutFormType;
+use Nowo\PageLayoutKitBundle\Tests\Support\ExposedPageLayoutFormType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -82,7 +82,11 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
         self::assertFalse((bool) ($fields[2]['options']['placeholder'] ?? false));
     }
 
-    /** @param list<array{name: string, type: string, options: array<string, mixed>}> $fields */
+    /**
+     * @param list<array{name: string, type: string, options: array<string, mixed>}> $fields
+     *
+     * @return FormBuilderInterface<mixed>
+     */
     private function createBuilder(array &$fields): FormBuilderInterface
     {
         $builder = $this->createMock(FormBuilderInterface::class);
@@ -100,27 +104,8 @@ final class AbstractPageLayoutFormTypeTest extends TestCase
         return $builder;
     }
 
-    private function createType(): object
+    private function createType(): ExposedPageLayoutFormType
     {
-        return new class(new FormOptionsMerger(['page_layout_kit' => ['translation_domain' => 'form', 'defaults' => ['attr' => [], 'row_attr' => []], 'field_types' => []]], 'page_layout_kit', new ConstraintDefinitionFactory()), new FormTypeMap(['hidden' => HiddenType::class, 'textarea' => TextareaType::class, CollectionType::class => CollectionType::class])) extends AbstractPageLayoutFormType {
-            public function buildCkeditorField(FormBuilderInterface $builder, string $name, array $options): void
-            {
-                $this->withBuilder($builder, function () use ($name, $options): void {
-                    $this->addCkeditor5Field($name, $options);
-                });
-            }
-
-            public function buildHiddenLocaleField(FormBuilderInterface $builder, array $options): void
-            {
-                $this->withBuilder($builder, function () use ($options): void {
-                    $this->addHiddenLocaleField($options);
-                });
-            }
-
-            public function buildWithDefaultsField(FormBuilderInterface $builder, string $name, string $type, array $options): void
-            {
-                $this->addWithDefaults($builder, $name, $type, $options);
-            }
-        };
+        return new ExposedPageLayoutFormType(new FormOptionsMerger(['page_layout_kit' => ['translation_domain' => 'form', 'defaults' => ['attr' => [], 'row_attr' => []], 'field_types' => []]], 'page_layout_kit', new ConstraintDefinitionFactory()), new FormTypeMap(['hidden' => HiddenType::class, 'textarea' => TextareaType::class, CollectionType::class => CollectionType::class]));
     }
 }

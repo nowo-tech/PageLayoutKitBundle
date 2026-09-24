@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 
@@ -20,6 +21,10 @@ final class PageListBlockRepository extends ServiceEntityRepository
         parent::__construct($registry, PageListBlock::class);
     }
 
+    /**
+     * Block aggregates are refreshed from the database so a long-lived identity map
+     * (worker mode without reset) cannot serve stale items/translations edited elsewhere.
+     */
     public function findWithItemsAndTranslations(int $id): ?PageListBlock
     {
         return $this->createQueryBuilder('b')
@@ -30,6 +35,7 @@ final class PageListBlockRepository extends ServiceEntityRepository
             ->setParameter('id', $id)
             ->orderBy('i.position', 'ASC')
             ->getQuery()
+            ->setHint(Query::HINT_REFRESH, true)
             ->getOneOrNullResult();
     }
 }

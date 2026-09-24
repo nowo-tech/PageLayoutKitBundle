@@ -12,7 +12,7 @@ final class ConfigurationTest extends TestCase
 {
     public function testAliasAndFrameworksStayStable(): void
     {
-        self::assertSame('nowo_page_layout_kit', Configuration::ALIAS);
+        self::assertSame('nowo_page_layout_kit', (new Configuration())->getConfigTreeBuilder()->buildTree()->getName());
         self::assertContains('tailwind', Configuration::CSS_FRAMEWORKS);
         self::assertContains('custom', Configuration::CSS_FRAMEWORKS);
     }

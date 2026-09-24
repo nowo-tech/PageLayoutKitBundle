@@ -4,7 +4,7 @@
 **Namespace:** `Nowo\PageLayoutKitBundle`  
 **Bundle class:** `Nowo\PageLayoutKitBundle\NowoPageLayoutKitBundle`  
 **Config alias:** `nowo_page_layout_kit`  
-**Status:** 1.0.4 baseline (HTML sanitize allowlist)
+**Status:** 1.1.0 (FrankenPHP worker mode without kernel reset)
 
 ## Overview
 
@@ -80,8 +80,9 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | --- | --- |
 | FR-SEC-001 | Admin routes are gated by a role-based or custom access checker |
 | FR-SEC-002 | `allow_unauthenticated` may relax access only when explicitly configured |
-| FR-SEC-003 | Twig exposes whether the current user may edit inline content |
+| FR-SEC-003 | Twig exposes whether the current user may edit inline content via the `nowo_page_layout_kit_can_edit()` function (per call); the scalar Twig global of the same name is deprecated |
 | FR-SEC-004 | Configurable `html.sanitize` strategy sanitizes rich-text block HTML on persist and at public render (`none`, `strip`, `allowlist`, `service`) |
+| FR-WRK-001 | Bundle-owned services remain correct under FrankenPHP worker mode when the kernel is not rebooted and `services_resetter` does not run (request-scoped layout memo, Twig edit function, closed EntityManager recovery, `HINT_REFRESH` on layout/admin loaders) |
 
 ### Configuration and DI (`FR-CFG-*`, `FR-DI-*`)
 
@@ -127,8 +128,9 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | SC-01 | Editors can open `/admin/pages/home/layout` and reorder persisted blocks |
 | SC-02 | A host page can inject `PageBlockProvider` and render the returned blocks through Twig |
 | SC-03 | Legacy content can be migrated with `nowo:page-layout:migrate` |
-| SC-04 | `code-inventory.md` maps all 97 production files under `src/` |
+| SC-04 | `code-inventory.md` maps production files under `src/` (including worker-mode and HTML-sanitize surfaces) |
 | SC-05 | The Symfony 8 demo boots and answers on `http://localhost:8127` |
+| SC-06 | Bundle-owned public and admin flows remain correct under FrankenPHP worker mode without kernel reset (FR-WRK-001) |
 
 ## Validation
 

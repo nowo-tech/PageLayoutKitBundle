@@ -2,9 +2,9 @@
 
 **Baseline spec:** [`spec.md`](spec.md)  
 **Package:** `nowo-tech/page-layout-kit-bundle`  
-**Last audited:** 2026-08-18
+**Last audited:** 2026-09-24
 
-Maps **100%** of production files under `src/` (**97 units**).
+Maps production files under `src/` (baseline inventory kept in sync for worker-mode and HTML-sanitize surfaces).
 
 ## Bundle entry
 
@@ -72,9 +72,18 @@ Maps **100%** of production files under `src/` (**97 units**).
 | Source file | Purpose | Requirement IDs |
 | --- | --- | --- |
 | `EventSubscriber/PageLayoutKitAdminAccessSubscriber.php` | Enforces access on admin route prefixes | FR-SEC-001, FR-SEC-002 |
+| `EventSubscriber/PageLayoutKitEntityManagerRecoverySubscriber.php` | Resets a closed page-layout EntityManager on the next main request (worker mode) | FR-WRK-001 |
+| `EventSubscriber/PageBlockHtmlSanitizeSubscriber.php` | Sanitizes rich-text block HTML on Doctrine persist/update | FR-SEC-004 |
 | `Security/PageLayoutKitAccessCheckerInterface.php` | Access checker contract | FR-SEC-001 |
 | `Security/ConfigurablePageLayoutKitAccessChecker.php` | Role-based access checker | FR-SEC-001 |
 | `Security/AllowAllPageLayoutKitAccessChecker.php` | Demo-style unauthenticated access checker | FR-SEC-002 |
+| `Security/PageLayoutProtection.php` | Wires configured HTML sanitizer for persist and public render | FR-SEC-004 |
+| `Security/PageLayoutProtectionConfig.php` | Value object for HTML sanitize strategy / service id | FR-SEC-004 |
+| `Security/Html/PageLayoutHtmlSanitizerInterface.php` | HTML sanitizer contract | FR-SEC-004 |
+| `Security/Html/NullPageLayoutHtmlSanitizer.php` | No-op sanitizer (`strategy: none`) | FR-SEC-004 |
+| `Security/Html/StripPageLayoutHtmlSanitizer.php` | Strip-tags sanitizer | FR-SEC-004 |
+| `Security/Html/AllowlistPageLayoutHtmlSanitizer.php` | Allowlist sanitizer | FR-SEC-004 |
+| `Enum/HtmlSanitizeStrategy.php` | Sanitize strategy enum | FR-SEC-004 |
 
 ## Forms
 
@@ -93,14 +102,18 @@ Maps **100%** of production files under `src/` (**97 units**).
 | `Form/PageCtaBlockModalType.php` | CTA modal form | FR-ADM-002 |
 | `Form/PageCompareBlockEditType.php` | Compare edit form | FR-ADM-002 |
 | `Form/PageCompareBlockModalType.php` | Compare modal form | FR-ADM-002 |
+| `Form/PageLayoutReorderData.php` | Reorder form DTO | FR-ADM-001, FR-ADM-003 |
+| `Form/PageLayoutReorderRowData.php` | Reorder row DTO | FR-ADM-001, FR-ADM-003 |
+| `Form/PageLayoutReorderType.php` | Reorder collection form | FR-ADM-001, FR-ADM-003 |
+| `Form/PageLayoutReorderRowType.php` | Reorder row form | FR-ADM-001, FR-ADM-003 |
 
 ## Services
 
 | Source file | Purpose | Requirement IDs |
 | --- | --- | --- |
-| `Service/PageBlockProvider.php` | Resolves ordered public block views with locale fallback | FR-REN-001, FR-REN-003, FR-LEG-001 |
+| `Service/PageBlockProvider.php` | Resolves ordered public block views with locale fallback | FR-REN-001, FR-REN-003, FR-LEG-001, FR-WRK-001 |
 | `Service/PageBlockView.php` | Public block view object with template resolution | FR-REN-001, FR-REN-002 |
-| `Service/PageBlockRegistry.php` | Loads typed block aggregates by type and id | FR-ADM-002, FR-ORM-001 |
+| `Service/PageBlockRegistry.php` | Loads typed block aggregates by type and id | FR-ADM-002, FR-ORM-001, FR-WRK-001 |
 | `Service/PageBlockMigrator.php` | Converts legacy content into typed blocks and layout entries | FR-LEG-002, FR-CMP-001 |
 
 ## Repositories
@@ -131,7 +144,7 @@ Maps **100%** of production files under `src/` (**97 units**).
 
 | Source file | Purpose | Requirement IDs |
 | --- | --- | --- |
-| `Twig/PageLayoutKitExtension.php` | Publishes Twig globals for layout shell, pages, locale, and editability | FR-SEC-003, FR-TWIG-001 |
+| `Twig/PageLayoutKitExtension.php` | Publishes Twig globals/functions for layout shell, pages, locale, and editability | FR-SEC-003, FR-TWIG-001, FR-WRK-001 |
 
 ## Resources — config and assets
 

@@ -7,6 +7,7 @@ namespace Nowo\PageLayoutKitBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
 use Nowo\PageLayoutKitBundle\Repository\PageCompareBlockRepository;
 
@@ -35,9 +36,9 @@ class PageCompareBlock
     }
 
     /** @return array<string, string> */
-    public function toArray(string $locale): array
+    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
     {
-        return $this->getTranslationOrFallback($locale)->toArray();
+        return $this->getTranslationOrFallback($locale, $pageLocales)->toArray();
     }
 
     public function addTranslation(object $translation): self

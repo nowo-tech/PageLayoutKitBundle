@@ -11,10 +11,11 @@ final class PageBlockTypeTest extends TestCase
 {
     public function testCasesExposeExpectedValuesAndModalFlags(): void
     {
-        self::assertSame(
-            ['hero', 'text', 'cards', 'list', 'cta', 'compare'],
-            array_map(static fn (PageBlockType $type): string => $type->value, PageBlockType::cases()),
-        );
+        $cases = PageBlockType::cases();
+
+        foreach (['hero', 'text', 'cards', 'list', 'cta', 'compare'] as $position => $value) {
+            self::assertSame($cases[$position], PageBlockType::from($value));
+        }
 
         foreach (PageBlockType::cases() as $type) {
             self::assertTrue($type->isModalEditable());

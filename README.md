@@ -10,7 +10,7 @@
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
-This bundle is **FrankenPHP worker mode friendly**.
+This bundle is **FrankenPHP worker mode friendly**, including when the kernel is **not** reset between requests (`services_resetter` off). See [FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
 ## What is this?
 
@@ -33,7 +33,7 @@ Page Layout Kit Bundle gives Symfony applications a reusable page-layout layer b
 ## Quick start
 
 ```bash
-composer require nowo-tech/page-layout-kit-bundle:^1.0
+composer require nowo-tech/page-layout-kit-bundle:^1.1
 composer require twig/extra-bundle twig/string-extra
 ```
 
@@ -92,6 +92,7 @@ Demo default URL: `http://localhost:8127`.
 
 - [GitHub Actions CI requirements](docs/GITHUB_CI.md)
 - [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md)
+- [FrankenPHP worker mode audit](docs/FRANKENPHP-WORKER-AUDIT.md)
 
 ## Tests and coverage
 

@@ -6,15 +6,20 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\DependencyInjection;
 
 use Doctrine\ORM\Events;
 use LogicException;
+use Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\DependencyInjection\TablePrefixListener;
+use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
+use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\Html\NullPageLayoutHtmlSanitizer;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
+use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -132,6 +137,18 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         $pageLocales = $container->getDefinition(PageLocales::class);
         self::assertSame('en', $pageLocales->getArgument('$defaultLocale'));
         self::assertSame(['en', 'es'], $pageLocales->getArgument('$locales'));
+
+        foreach ([
+            PageBlockEditController::class,
+            PageCardsBlockInlineModalType::class,
+            PageListBlockInlineModalType::class,
+            PageBlockSqlRepository::class,
+            PageBlockMigrator::class,
+        ] as $serviceId) {
+            $argument = $container->getDefinition($serviceId)->getArgument('$pageLocales');
+            self::assertInstanceOf(Reference::class, $argument);
+            self::assertSame(PageLocales::class, (string) $argument);
+        }
 
         $alias = (string) $container->getAlias(PageLayoutKitAccessCheckerInterface::class);
         self::assertSame('nowo_page_layout_kit.access_checker.allow_all', $alias);

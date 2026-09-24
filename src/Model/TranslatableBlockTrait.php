@@ -30,11 +30,15 @@ trait TranslatableBlockTrait
         return null;
     }
 
-    /** @return T */
-    public function getTranslationOrFallback(string $locale): object
+    /**
+     * Omitting $pageLocales falls back to the deprecated static PageLocales binding (removed in 2.0).
+     *
+     * @return T
+     */
+    public function getTranslationOrFallback(string $locale, ?PageLocales $pageLocales = null): object
     {
         $translation = $this->getTranslation($locale)
-            ?? $this->getTranslation(PageLocales::default());
+            ?? $this->getTranslation($pageLocales?->getDefault() ?? PageLocales::default());
 
         if ($translation !== null) {
             return $translation;
@@ -51,9 +55,12 @@ trait TranslatableBlockTrait
         return new $class();
     }
 
-    public function ensureTranslations(): self
+    /**
+     * Omitting $pageLocales falls back to the deprecated static PageLocales binding (removed in 2.0).
+     */
+    public function ensureTranslations(?PageLocales $pageLocales = null): self
     {
-        foreach (PageLocales::all() as $locale) {
+        foreach ($pageLocales?->getAll() ?? PageLocales::all() as $locale) {
             if ($this->getTranslation($locale) === null) {
                 $class = $this->translationClass();
                 $this->addTranslation((new $class())->setLocale($locale));

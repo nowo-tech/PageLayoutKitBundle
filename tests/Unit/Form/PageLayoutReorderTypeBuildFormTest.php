@@ -14,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormTypeInterface;
 
 final class PageLayoutReorderTypeBuildFormTest extends TestCase
 {
@@ -50,7 +51,11 @@ final class PageLayoutReorderTypeBuildFormTest extends TestCase
         self::assertSame('width:5rem', $fields[1]['options']['attr']['style']);
     }
 
-    /** @param list<array{name: string, type: string, options: array<string, mixed>}> $fields */
+    /**
+     * @param list<array{name: string, type: string, options: array<string, mixed>}> $fields
+     *
+     * @return FormBuilderInterface<mixed>
+     */
     private function createBuilder(array &$fields): FormBuilderInterface
     {
         $builder = $this->createMock(FormBuilderInterface::class);
@@ -68,7 +73,13 @@ final class PageLayoutReorderTypeBuildFormTest extends TestCase
         return $builder;
     }
 
-    /** @param class-string<object> $typeClass */
+    /**
+     * @template T of FormTypeInterface<mixed>
+     *
+     * @param class-string<T> $typeClass
+     *
+     * @return T
+     */
     private function createType(string $typeClass): object
     {
         return new $typeClass(

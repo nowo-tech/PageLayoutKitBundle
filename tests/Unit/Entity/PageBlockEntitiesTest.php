@@ -22,6 +22,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageListItemTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 
@@ -254,7 +255,6 @@ final class PageBlockEntitiesTest extends TestCase
     {
         $block    = new PageTextBlock();
         $fallback = $block->getTranslationOrFallback('es');
-        self::assertInstanceOf(PageTextBlockTranslation::class, $fallback);
         self::assertSame('', $fallback->getTitle());
 
         $enTr   = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
@@ -262,5 +262,79 @@ final class PageBlockEntitiesTest extends TestCase
         $block2->addTranslation($enTr);
         $got = $block2->getTranslationOrFallback('fr');
         self::assertSame('EN Title', $got->getTitle());
+    }
+
+    public function testTranslatableBlockTraitUsesInjectedPageLocalesWithoutStaticBinding(): void
+    {
+        $pageLocales = new PageLocales('fr', ['fr', 'de']);
+
+        LocaleTestSupport::withoutStaticBinding(static function () use ($pageLocales): void {
+            $block = (new PageTextBlock())->ensureTranslations($pageLocales);
+            self::assertSame(['fr', 'de'], array_map(
+                static fn (PageTextBlockTranslation $translation): string => $translation->getLocale(),
+                array_values($block->getTranslations()->toArray()),
+            ));
+
+            $block->getTranslationOrFallback('fr', $pageLocales)->setTitle('FR Title');
+            self::assertSame('FR Title', $block->getTranslationOrFallback('es', $pageLocales)->getTitle());
+            self::assertSame('', $block->getTranslationOrFallback('de', $pageLocales)->getTitle());
+        });
+    }
+
+    public function testToArrayUsesInjectedPageLocalesDefaultWithoutStaticBinding(): void
+    {
+        $pageLocales = new PageLocales('fr', ['fr', 'de']);
+
+        $hero = (new PageHeroBlock())
+            ->addTranslation((new PageHeroBlockTranslation())->setLocale('en')->setTitle('EN'))
+            ->addTranslation((new PageHeroBlockTranslation())->setLocale('fr')->setTitle('FR'));
+        $text = (new PageTextBlock())
+            ->addTranslation((new PageTextBlockTranslation())->setLocale('en')->setTitle('EN'))
+            ->addTranslation((new PageTextBlockTranslation())->setLocale('fr')->setTitle('FR'));
+        $compare = (new PageCompareBlock())
+            ->addTranslation((new PageCompareBlockTranslation())->setLocale('en')->setBeforeLabel('EN'))
+            ->addTranslation((new PageCompareBlockTranslation())->setLocale('fr')->setBeforeLabel('FR'));
+        $cta = (new PageCtaBlock())
+            ->addTranslation((new PageCtaBlockTranslation())->setLocale('en')->setTitle('EN'))
+            ->addTranslation((new PageCtaBlockTranslation())->setLocale('fr')->setTitle('FR'));
+        $cards = (new PageCardsBlock())
+            ->addTranslation((new PageCardsBlockTranslation())->setLocale('en')->setTitle('EN'))
+            ->addTranslation((new PageCardsBlockTranslation())->setLocale('fr')->setTitle('FR'))
+            ->addItem((new PageCardItem())
+                ->addTranslation((new PageCardItemTranslation())->setLocale('en')->setTitle('EN'))
+                ->addTranslation((new PageCardItemTranslation())->setLocale('fr')->setTitle('FR')));
+        $list = (new PageListBlock())
+            ->addTranslation((new PageListBlockTranslation())->setLocale('en')->setTitle('EN'))
+            ->addTranslation((new PageListBlockTranslation())->setLocale('fr')->setTitle('FR'))
+            ->addItem((new PageListItem())
+                ->addTranslation((new PageListItemTranslation())->setLocale('en')->setText('EN'))
+                ->addTranslation((new PageListItemTranslation())->setLocale('fr')->setText('FR')));
+
+        $payloads = LocaleTestSupport::withoutStaticBinding(static fn (): array => [
+            'hero'    => $hero->toArray('de', $pageLocales),
+            'text'    => $text->toArray('de', $pageLocales),
+            'compare' => $compare->toArray('de', $pageLocales),
+            'cta'     => $cta->toArray('de', $pageLocales),
+            'cards'   => $cards->toArray('de', $pageLocales),
+            'list'    => $list->toArray('de', $pageLocales),
+        ]);
+
+        self::assertSame('FR', $payloads['hero']['title']);
+        self::assertSame('FR', $payloads['text']['title']);
+        self::assertSame('FR', $payloads['compare']['beforeLabel']);
+        self::assertSame('FR', $payloads['cta']['title']);
+        self::assertSame('FR', $payloads['cards']['title']);
+        self::assertSame('FR', $payloads['cards']['items'][0]['title']);
+        self::assertSame('FR', $payloads['list']['title']);
+        self::assertSame('FR', $payloads['list']['items'][0]['text']);
+    }
+
+    public function testTranslatableBlockTraitFallsBackToStaticBindingWithoutInjectedPageLocales(): void
+    {
+        $block = (new PageTextBlock())->ensureTranslations();
+        $block->getTranslationOrFallback('es')->setTitle('ES Title');
+
+        self::assertNotNull($block->getTranslation('en'));
+        self::assertSame('ES Title', $block->getTranslationOrFallback('fr')->getTitle());
     }
 }

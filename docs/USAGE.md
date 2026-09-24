@@ -73,7 +73,7 @@ Render the resolved layout by looping over the block views:
 `_wrapper.html.twig` renders:
 
 1. The public block template returned by `block.templateName()`
-2. The inline edit pencil when `nowo_page_layout_kit_can_edit` is `true`
+2. The inline edit pencil when `nowo_page_layout_kit_can_edit()` returns `true`
 
 Block templates live under the Twig namespace `@NowoPageLayoutKitBundle/blocks/`:
 

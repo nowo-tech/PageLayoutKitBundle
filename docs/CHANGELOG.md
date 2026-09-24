@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.0] - 2026-09-24](#110---2026-09-24)
 - [[1.0.6] - 2026-09-07](#106---2026-09-07)
 - [[1.0.5] - 2026-08-24](#105---2026-08-24)
 - [[1.0.4] - 2026-08-19](#104---2026-08-19)
@@ -16,6 +17,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.1.0] - 2026-09-24
+
+FrankenPHP worker mode (kernel not reset / no `services_resetter`) compatibility.
+
+### Added
+
+- **Twig function `nowo_page_layout_kit_can_edit()`**, evaluated per call; `cms/edit_button.html.twig` uses it.
+- **`PageLayoutKitEntityManagerRecoverySubscriber`:** resets the page layout entity manager at the start of a main request when a previous request closed it (FrankenPHP worker mode without `services_resetter`).
+- **Docs:** `docs/FRANKENPHP-WORKER-AUDIT.md` (scenario A/B audit and remediation notes).
+- **QA:** PHPStan FrankenPHP classic + worker rulesets in `phpstan.neon.dist` (`nowo-tech/phpstan-frankenphp`).
+
+### Changed
+
+- **`PageBlockProvider`:** the layout memo is keyed by the current main request (`WeakMap`), so it never outlives the request even when `reset()` is not called; nothing is memoized without a request (CLI).
+- **`PageLayoutEntryRepository::findEnabledByPageKey()`** and admin block loaders (`findWithTranslations` / `findWithItemsAndTranslations`) refresh from the database (`HINT_REFRESH`), so a long-lived identity map cannot serve stale layout or block data.
+- **Make:** `test-coverage` preserves PHPUnit exit status when teeing coverage output (avoids green `release-check` on failing tests).
+
+### Deprecated
+
+- Twig global `nowo_page_layout_kit_can_edit` (frozen per Twig environment in worker mode without reset, and on Twig < 3.14 even with reset).
+- **`PageLocales::bind()`, `PageLocales::default()` and `PageLocales::all()`** are deprecated since 1.1.0 (static binding, removed in 2.0). Inject the `PageLocales` service and use `getDefault()` / `getAll()`. `PageBlockSqlRepository`, `PageBlockMigrator`, `PageBlockEditController`, `PageCardsBlockInlineModalType` and `PageListBlockInlineModalType` accept an optional trailing `?PageLocales $pageLocales` argument (wired by the bundle); `TranslatableBlockTrait::getTranslationOrFallback()` / `ensureTranslations()` and the block entities' `toArray()` accept an optional trailing `?PageLocales`. Without it they fall back to the static binding, which `NowoPageLayoutKitBundle::boot()` still sets for third-party callers; bundle code always passes the injected service.
+
+### Fixed
+
+- Worker-mode issues W-01…W-03 from `docs/FRANKENPHP-WORKER-AUDIT.md`.
+- Fixed PHPStan findings in `src/` and `tests/` (level 8); the two `PageLocales` static-binding worker findings (`frankenphp.worker.noMutableStaticProperty`) remain by design until the static API is removed in 2.0.
+
+[1.1.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.1.0
 
 ## [1.0.6] - 2026-09-07
 

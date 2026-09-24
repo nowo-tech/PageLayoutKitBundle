@@ -10,6 +10,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Single layout entry row (hidden id + position integer).
+ *
+ * @extends AbstractPageLayoutFormType<PageLayoutReorderRowData>
  */
 final class PageLayoutReorderRowType extends AbstractPageLayoutFormType
 {

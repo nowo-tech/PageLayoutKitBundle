@@ -18,6 +18,7 @@ use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormTypeInterface;
 
 final class PageBlockModalTypeBuildFormTest extends TestCase
 {
@@ -57,7 +58,11 @@ final class PageBlockModalTypeBuildFormTest extends TestCase
         self::assertTrue($fields[0]['options']['entry_options']['include_meta']);
     }
 
-    /** @param list<array{name: string, type: string, options: array<string, mixed>}> $fields */
+    /**
+     * @param list<array{name: string, type: string, options: array<string, mixed>}> $fields
+     *
+     * @return FormBuilderInterface<mixed>
+     */
     private function createBuilder(array &$fields): FormBuilderInterface
     {
         $builder = $this->createMock(FormBuilderInterface::class);
@@ -75,7 +80,13 @@ final class PageBlockModalTypeBuildFormTest extends TestCase
         return $builder;
     }
 
-    /** @param class-string<object> $typeClass */
+    /**
+     * @template T of FormTypeInterface<mixed>
+     *
+     * @param class-string<T> $typeClass
+     *
+     * @return T
+     */
     private function createType(string $typeClass): object
     {
         return new $typeClass(

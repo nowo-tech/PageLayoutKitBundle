@@ -21,6 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -97,6 +98,7 @@ final class PageLayoutControllerTest extends TestCase
 
         $response = $controller->layout('home', $request);
 
+        self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('/generated/admin_page_layout/home', $response->getTargetUrl());
         self::assertSame(PageLayoutReorderType::class, $formCalls[0]['type']);
         self::assertSame('/generated/admin_page_layout/home', $formCalls[0]['options']['action']);
@@ -162,6 +164,10 @@ final class PageLayoutControllerTest extends TestCase
         return $container;
     }
 
+    /**
+     * @param FormInterface<mixed>|null $form
+     * @param list<array{type: string, data: mixed, options: array<string, mixed>}> $calls
+     */
     private function createFormFactory(?FormInterface $form = null, array &$calls = []): FormFactoryInterface
     {
         $factory = $this->createMock(FormFactoryInterface::class);
@@ -184,12 +190,17 @@ final class PageLayoutControllerTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with(PageLayoutEntry::class)
-            ->willReturn(new ClassMetadata(PageLayoutEntry::class));
+            ->willReturnCallback(static function (string $className): ClassMetadata {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return new ClassMetadata(PageLayoutEntry::class);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getResult')
                     ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
                         if (($params['enabled'] ?? null) !== true) {
@@ -217,8 +228,11 @@ final class PageLayoutControllerTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with(PageLayoutEntry::class)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
+                self::assertSame(PageLayoutEntry::class, $className);
+
+                return $entityManager;
+            });
 
         return new PageLayoutEntryRepository($registry);
     }

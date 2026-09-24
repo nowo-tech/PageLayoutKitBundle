@@ -29,8 +29,6 @@ final class PageLayoutKitAdminAccessSubscriberTest extends TestCase
 
         $subscriber = new PageLayoutKitAdminAccessSubscriber($checker);
         $subscriber->onKernelController($this->createEvent('app_home'));
-
-        self::assertTrue(true);
     }
 
     public function testIgnoresNonStringRoutes(): void
@@ -40,8 +38,6 @@ final class PageLayoutKitAdminAccessSubscriberTest extends TestCase
 
         $subscriber = new PageLayoutKitAdminAccessSubscriber($checker);
         $subscriber->onKernelController($this->createEvent(123));
-
-        self::assertTrue(true);
     }
 
     public function testAllowsAuthorizedAdminRoutes(): void
@@ -51,8 +47,6 @@ final class PageLayoutKitAdminAccessSubscriberTest extends TestCase
 
         $subscriber = new PageLayoutKitAdminAccessSubscriber($checker);
         $subscriber->onKernelController($this->createEvent('admin_page_layout_index'));
-
-        self::assertTrue(true);
     }
 
     public function testDeniesUnauthorizedAdminRoutes(): void

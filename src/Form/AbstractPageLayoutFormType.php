@@ -19,8 +19,6 @@ use function array_key_exists;
  * Page layout kit product forms — FormKit profile page_layout_kit.
  *
  * @template TData
- *
- * @extends FormKitAbstractType<mixed>
  */
 #[FormKitConfig('page_layout_kit')]
 abstract class AbstractPageLayoutFormType extends FormKitAbstractType

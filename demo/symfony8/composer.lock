@@ -1042,7 +1042,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/page-layout-kit-bundle",
-                "reference": "65d3a63c51120a6ed4cdbefeabd09e1228e9e629"
+                "reference": "99a97be9a505f676d8c5d0f275e46b701dff3ae2"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",

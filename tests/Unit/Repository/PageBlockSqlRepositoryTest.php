@@ -10,6 +10,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
+use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -107,6 +108,31 @@ final class PageBlockSqlRepositoryTest extends TestCase
         self::assertSame('es', $queries[0][1]['fallback']);
     }
 
+    public function testLoadDataForEntriesUsesInjectedPageLocalesWithoutStaticBinding(): void
+    {
+        $queries    = [];
+        $connection = $this->createStub(Connection::class);
+        $connection->method('fetchAllAssociative')
+            ->willReturnCallback(static function (string $sql, array $params) use (&$queries): array {
+                $queries[] = $params;
+
+                return [];
+            });
+
+        $entityManager = $this->createStub(EntityManagerInterface::class);
+        $entityManager->method('getConnection')->willReturn($connection);
+
+        $repository = new PageBlockSqlRepository($entityManager, new PageLocales('fr', ['fr', 'de']));
+        $data       = LocaleTestSupport::withoutStaticBinding(static fn (): array => $repository->loadDataForEntries([
+            (new PageLayoutEntry())->setPageKey('home')->setBlockType(PageBlockType::Hero)->setBlockId(10)->setPosition(0),
+        ], 'de'));
+
+        self::assertSame([], $data);
+        self::assertCount(1, $queries);
+        self::assertSame('de', $queries[0]['locale']);
+        self::assertSame('fr', $queries[0]['fallback']);
+    }
+
     public function testLoadDataForEntriesReturnsEmptyWhenNoEntries(): void
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
@@ -153,7 +179,11 @@ final class PageBlockSqlRepositoryTest extends TestCase
         self::assertSame([], $this->invokeEmptyLoader('loadCompareBlocks'));
     }
 
-    /** @param non-empty-string $methodName */
+    /**
+     * @param non-empty-string $methodName
+     *
+     * @return array<int, array<string, mixed>>
+     */
     private function invokeEmptyLoader(string $methodName): array
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
 
@@ -20,6 +21,10 @@ final class PageCompareBlockRepository extends ServiceEntityRepository
         parent::__construct($registry, PageCompareBlock::class);
     }
 
+    /**
+     * Block aggregates are refreshed from the database so a long-lived identity map
+     * (worker mode without reset) cannot serve stale translations edited elsewhere.
+     */
     public function findWithTranslations(int $id): ?PageCompareBlock
     {
         return $this->createQueryBuilder('b')
@@ -27,6 +32,7 @@ final class PageCompareBlockRepository extends ServiceEntityRepository
             ->andWhere('b.id = :id')
             ->setParameter('id', $id)
             ->getQuery()
+            ->setHint(Query::HINT_REFRESH, true)
             ->getOneOrNullResult();
     }
 }

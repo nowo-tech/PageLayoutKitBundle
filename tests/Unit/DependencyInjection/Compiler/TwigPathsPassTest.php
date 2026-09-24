@@ -6,6 +6,7 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\DependencyInjection\Compiler;
 
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
@@ -13,11 +14,11 @@ final class TwigPathsPassTest extends TestCase
 {
     public function testProcessSkipsWhenNoTwigLoaderCanBeResolved(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $container = new ContainerBuilder();
 
         (new TwigPathsPass())->process($container);
-
-        self::assertTrue(true);
     }
 
     public function testProcessPrependsOverrideAndAddsViewsPathWhenAliasChainResolves(): void

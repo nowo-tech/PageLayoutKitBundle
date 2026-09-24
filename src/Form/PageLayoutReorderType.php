@@ -11,6 +11,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * CSRF-protected reorder form for layout admin (REQ-TWIG-005).
+ *
+ * @extends AbstractPageLayoutFormType<PageLayoutReorderData>
  */
 final class PageLayoutReorderType extends AbstractPageLayoutFormType
 {

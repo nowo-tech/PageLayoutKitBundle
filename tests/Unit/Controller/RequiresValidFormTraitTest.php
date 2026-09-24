@@ -13,6 +13,8 @@ final class RequiresValidFormTraitTest extends TestCase
 {
     public function testRequireValidFormAcceptsSubmittedValidForms(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $form = $this->createConfiguredMock(FormInterface::class, [
             'isSubmitted' => true,
             'isValid'     => true,
@@ -21,6 +23,7 @@ final class RequiresValidFormTraitTest extends TestCase
         $controller = new class {
             use RequiresValidFormTrait;
 
+            /** @param FormInterface<mixed> $form */
             public function assertValid(FormInterface $form): void
             {
                 $this->requireValidForm($form);
@@ -33,7 +36,6 @@ final class RequiresValidFormTraitTest extends TestCase
         };
 
         $controller->assertValid($form);
-        self::assertTrue(true);
     }
 
     public function testRequireValidFormRejectsInvalidSubmission(): void
@@ -46,6 +48,7 @@ final class RequiresValidFormTraitTest extends TestCase
         $controller = new class {
             use RequiresValidFormTrait;
 
+            /** @param FormInterface<mixed> $form */
             public function assertValid(FormInterface $form): void
             {
                 $this->requireValidForm($form, 'Custom message');
@@ -73,6 +76,7 @@ final class RequiresValidFormTraitTest extends TestCase
         $controller = new class {
             use RequiresValidFormTrait;
 
+            /** @param FormInterface<mixed> $form */
             public function assertCsrf(FormInterface $form): void
             {
                 $this->requireValidCsrfForm($form);

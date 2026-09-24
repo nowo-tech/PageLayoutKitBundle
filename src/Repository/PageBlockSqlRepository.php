@@ -19,6 +19,7 @@ final readonly class PageBlockSqlRepository
 
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private ?PageLocales $pageLocales = null,
     ) {
     }
 
@@ -29,7 +30,7 @@ final readonly class PageBlockSqlRepository
      */
     public function loadDataForEntries(array $entries, string $locale): array
     {
-        /** @var array<string, list<int>> $idsByType */
+        /** @var array<value-of<PageBlockType>, list<int>> $idsByType */
         $idsByType = [];
 
         foreach ($entries as $entry) {
@@ -62,6 +63,11 @@ final readonly class PageBlockSqlRepository
         return $this->entityManager;
     }
 
+    private function defaultLocale(): string
+    {
+        return $this->pageLocales?->getDefault() ?? PageLocales::default();
+    }
+
     /**
      * @param list<int> $ids
      *
@@ -75,7 +81,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('heroId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -114,7 +120,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('textId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -151,7 +157,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('cardsId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -192,7 +198,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('listId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -233,7 +239,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('ctaId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -268,7 +274,7 @@ final readonly class PageBlockSqlRepository
 
         [$inClause, $params] = $this->namedInClause('compareId', $ids, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -300,7 +306,7 @@ final readonly class PageBlockSqlRepository
     {
         [$inClause, $params] = $this->namedInClause('cardBlockId', $blockIds, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL
@@ -342,7 +348,7 @@ final readonly class PageBlockSqlRepository
     {
         [$inClause, $params] = $this->namedInClause('listBlockId', $blockIds, [
             'locale'   => $locale,
-            'fallback' => PageLocales::default(),
+            'fallback' => $this->defaultLocale(),
         ]);
 
         $sql = <<<SQL

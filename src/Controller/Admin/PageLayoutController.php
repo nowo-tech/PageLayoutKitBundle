@@ -63,11 +63,11 @@ final class PageLayoutController extends AbstractController
     /**
      * @param list<PageLayoutEntry> $entries
      *
-     * @return FormInterface<PageLayoutReorderData>
+     * @return FormInterface<PageLayoutReorderData|null>
      */
     private function createReorderForm(string $pageKey, array $entries): FormInterface
     {
-        /** @var FormInterface<PageLayoutReorderData> $form */
+        /** @var FormInterface<PageLayoutReorderData|null> $form */
         $form = $this->formFactory->create(
             PageLayoutReorderType::class,
             PageLayoutReorderData::fromEntries($entries),
@@ -82,7 +82,7 @@ final class PageLayoutController extends AbstractController
 
     /**
      * @param list<PageLayoutEntry> $entries
-     * @param FormInterface<PageLayoutReorderData> $reorderForm
+     * @param FormInterface<PageLayoutReorderData|null> $reorderForm
      */
     private function reorder(Request $request, array $entries, FormInterface $reorderForm): void
     {

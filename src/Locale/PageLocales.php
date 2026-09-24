@@ -7,7 +7,10 @@ namespace Nowo\PageLayoutKitBundle\Locale;
 use RuntimeException;
 
 /**
- * Config-backed locale catalog for page blocks (bound in NowoPageLayoutKitBundle::boot()).
+ * Config-backed locale catalog for page blocks.
+ *
+ * Inject this service and use getDefault()/getAll(). The static accessors are kept for backward
+ * compatibility (bound in NowoPageLayoutKitBundle::boot()) and will be removed in 2.0.
  */
 final class PageLocales
 {
@@ -22,17 +25,27 @@ final class PageLocales
     ) {
     }
 
+    /**
+     * @deprecated since 1.1.0, inject the PageLocales service instead; will be removed in 2.0
+     */
     public static function bind(self $instance): void
     {
         self::$instance = $instance;
     }
 
+    /**
+     * @deprecated since 1.1.0, inject the PageLocales service and use getDefault() instead; will be removed in 2.0
+     */
     public static function default(): string
     {
         return self::instance()->defaultLocale;
     }
 
-    /** @return list<string> */
+    /**
+     * @deprecated since 1.1.0, inject the PageLocales service and use getAll() instead; will be removed in 2.0
+     *
+     * @return list<string>
+     */
     public static function all(): array
     {
         return self::instance()->locales;

@@ -26,6 +26,7 @@ use Nowo\PageLayoutKitBundle\Form\PageCtaBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
+use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageCardsBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageCompareBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageCtaBlockRepository;
@@ -33,12 +34,14 @@ use Nowo\PageLayoutKitBundle\Repository\PageHeroBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
+use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,11 +53,17 @@ use Twig\Environment;
 
 final class PageBlockEditControllerTest extends TestCase
 {
+    private function pageLocales(): PageLocales
+    {
+        return new PageLocales('es', ['es', 'en']);
+    }
+
     public function testEditModalThrowsNotFoundWhenRegistryMissesBlock(): void
     {
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer());
 
@@ -73,6 +82,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::Hero->value => [5 => $block]]),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, formCalls: $formCalls));
 
@@ -103,6 +113,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::Text->value => [7 => $block]]),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, request: $request, formCalls: $formCalls));
 
@@ -133,11 +144,13 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::Cta->value => [9 => $block]]),
             $entityManager,
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, request: $request, formCalls: $formCalls));
 
         $response = $controller->update('cta', 9, $request);
 
+        self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('/admin/layout/home', $response->getTargetUrl());
         self::assertSame(['Bloque actualizado.'], $session->getFlashBag()->get('success'));
         self::assertSame(PageCtaBlockModalType::class, $formCalls[0]['type']);
@@ -161,11 +174,13 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::Compare->value => [12 => $block]]),
             $entityManager,
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, request: $request));
 
         $response = $controller->update('compare', 12, $request);
 
+        self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('/generated/home', $response->getTargetUrl());
     }
 
@@ -182,6 +197,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, request: $request));
 
@@ -196,6 +212,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer());
 
@@ -210,6 +227,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::List->value => [3 => $this->withId(new PageListBlock(), 3)]]),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer());
 
@@ -225,6 +243,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer(form: $form, formCalls: $formCalls));
 
@@ -272,6 +291,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller = new PageBlockEditController(
             $this->createRegistry(),
             $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
         );
         $controller->setContainer($this->createControllerContainer());
 
@@ -281,12 +301,42 @@ final class PageBlockEditControllerTest extends TestCase
         $method->invoke($controller, $hero);
 
         self::assertNotNull($cards->getTranslation('es'));
-        self::assertNotNull($cards->getItems()->first()->getTranslation('en'));
+        $cardItem = $cards->getItems()->first();
+        self::assertInstanceOf(PageCardItem::class, $cardItem);
+        self::assertNotNull($cardItem->getTranslation('en'));
         self::assertNotNull($list->getTranslation('en'));
-        self::assertNotNull($list->getItems()->first()->getTranslation('es'));
+        $listItem = $list->getItems()->first();
+        self::assertInstanceOf(PageListItem::class, $listItem);
+        self::assertNotNull($listItem->getTranslation('es'));
         self::assertNotNull($hero->getTranslation('es'));
     }
 
+    public function testEnsureBlockTranslationsUsesInjectedPageLocalesWithoutStaticBinding(): void
+    {
+        $cards = new PageCardsBlock();
+        $cards->addItem(new PageCardItem());
+
+        $controller = new PageBlockEditController(
+            $this->createRegistry(),
+            $this->createStub(EntityManagerInterface::class),
+            new PageLocales('fr', ['fr']),
+        );
+
+        $method = new ReflectionMethod(PageBlockEditController::class, 'ensureBlockTranslations');
+        LocaleTestSupport::withoutStaticBinding(static fn (): mixed => $method->invoke($controller, $cards));
+
+        self::assertNotNull($cards->getTranslation('fr'));
+        self::assertNull($cards->getTranslation('es'));
+        $cardItem = $cards->getItems()->first();
+        self::assertInstanceOf(PageCardItem::class, $cardItem);
+        self::assertNotNull($cardItem->getTranslation('fr'));
+        self::assertNull($cardItem->getTranslation('en'));
+    }
+
+    /**
+     * @param FormInterface<mixed>|null $form
+     * @param list<array{type: string, data: mixed, options: array<string, mixed>}> $formCalls
+     */
     private function createControllerContainer(
         ?FormInterface $form = null,
         ?Request $request = null,
@@ -358,12 +408,17 @@ final class PageBlockEditControllerTest extends TestCase
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getClassMetadata')
-            ->with($entityClass)
-            ->willReturn(new ClassMetadata($entityClass));
+            ->willReturnCallback(static function (string $className) use ($entityClass): ClassMetadata {
+                self::assertSame($entityClass, $className);
+
+                return new ClassMetadata($entityClass);
+            });
         $entityManager->method('createQueryBuilder')
             ->willReturnCallback(function () use (&$resultsById): QueryBuilder {
+                /** @var array<string, mixed> $params */
                 $params = [];
                 $query  = $this->createMock(Query::class);
+                $query->method('setHint')->willReturnSelf();
                 $query->method('getOneOrNullResult')
                     ->willReturnCallback(static function () use (&$params, $resultsById): ?object {
                         $id = $params['id'] ?? null;
@@ -393,12 +448,22 @@ final class PageBlockEditControllerTest extends TestCase
 
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')
-            ->with($entityClass)
-            ->willReturn($entityManager);
+            ->willReturnCallback(static function (string $className) use ($entityClass, $entityManager): EntityManagerInterface {
+                self::assertSame($entityClass, $className);
+
+                return $entityManager;
+            });
 
         return new $repositoryClass($registry);
     }
 
+    /**
+     * @template T of object
+     *
+     * @param T $block
+     *
+     * @return T
+     */
     private function withId(object $block, int $id): object
     {
         $property = new ReflectionProperty($block, 'id');

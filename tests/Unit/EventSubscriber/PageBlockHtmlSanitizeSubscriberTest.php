@@ -77,7 +77,7 @@ final class PageBlockHtmlSanitizeSubscriberTest extends TestCase
 
         $this->runPersist($entity);
 
-        self::assertInstanceOf(stdClass::class, $entity);
+        self::assertEquals(new stdClass(), $entity);
     }
 
     private function runPersist(object $entity): void

@@ -38,6 +38,7 @@ final readonly class PageBlockMigrator
         private EntityManagerInterface $entityManager,
         private PageLayoutEntryRepository $pageLayoutEntryRepository,
         private ?LegacyPageContentProviderInterface $legacyContentProvider = null,
+        private ?PageLocales $pageLocales = null,
     ) {
     }
 
@@ -190,10 +191,10 @@ final readonly class PageBlockMigrator
         }
 
         $content       = [];
-        $defaultLocale = PageLocales::default();
+        $defaultLocale = $this->defaultLocale();
         $defaultData   = $provider->contentForPage($pageKey, $defaultLocale);
 
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $stored           = $provider->contentForPage($pageKey, $locale);
             $content[$locale] = $stored !== [] ? $stored : $defaultData;
         }
@@ -206,7 +207,7 @@ final readonly class PageBlockMigrator
     {
         $pageTextBlock = (new PageTextBlock())->setSectionKey($sectionKey);
 
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped      = $mapper($locales[$locale] ?? []);
             $translation = new PageTextBlockTranslation()
                 ->setLocale($locale)
@@ -229,9 +230,9 @@ final readonly class PageBlockMigrator
     private function createCardsBlock(string $sectionKey, array $locales, callable $mapper): PageCardsBlock
     {
         $pageCardsBlock = (new PageCardsBlock())->setSectionKey($sectionKey);
-        $reference      = $mapper($locales[PageLocales::default()] ?? []);
+        $reference      = $mapper($locales[$this->defaultLocale()] ?? []);
 
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
             $pageCardsBlock->addTranslation(
                 new PageCardsBlockTranslation()
@@ -243,7 +244,7 @@ final readonly class PageBlockMigrator
         foreach ($reference['items'] as $position => $itemData) {
             $item = (new PageCardItem())->setPosition($position);
 
-            foreach (PageLocales::all() as $locale) {
+            foreach ($this->locales() as $locale) {
                 $mapped     = $mapper($locales[$locale] ?? []);
                 $localeItem = $mapped['items'][$position] ?? ['title' => '', 'body' => ''];
                 $item->addTranslation(
@@ -269,9 +270,9 @@ final readonly class PageBlockMigrator
     private function createListBlock(string $sectionKey, array $locales, callable $mapper): PageListBlock
     {
         $pageListBlock = (new PageListBlock())->setSectionKey($sectionKey);
-        $reference     = $mapper($locales[PageLocales::default()] ?? []);
+        $reference     = $mapper($locales[$this->defaultLocale()] ?? []);
 
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
             $pageListBlock->addTranslation(
                 new PageListBlockTranslation()
@@ -283,7 +284,7 @@ final readonly class PageBlockMigrator
         foreach ($reference['items'] as $position => $text) {
             $item = (new PageListItem())->setPosition($position);
 
-            foreach (PageLocales::all() as $locale) {
+            foreach ($this->locales() as $locale) {
                 $mapped = $mapper($locales[$locale] ?? []);
                 $item->addTranslation(
                     new PageListItemTranslation()
@@ -305,7 +306,7 @@ final readonly class PageBlockMigrator
     {
         $pageCtaBlock = (new PageCtaBlock())->setSectionKey($sectionKey);
 
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
             $pageCtaBlock->addTranslation(
                 new PageCtaBlockTranslation()
@@ -326,7 +327,7 @@ final readonly class PageBlockMigrator
      */
     private function fillHeroTranslations(PageHeroBlock $pageHeroBlock, array $locales, callable $mapper): void
     {
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
             $pageHeroBlock->addTranslation(
                 new PageHeroBlockTranslation()
@@ -348,7 +349,7 @@ final readonly class PageBlockMigrator
      */
     private function fillCompareTranslations(PageCompareBlock $pageCompareBlock, array $locales, callable $mapper): void
     {
-        foreach (PageLocales::all() as $locale) {
+        foreach ($this->locales() as $locale) {
             $mapped = $mapper($locales[$locale] ?? []);
             $pageCompareBlock->addTranslation(
                 new PageCompareBlockTranslation()
@@ -359,6 +360,17 @@ final readonly class PageBlockMigrator
                     ->setAfterText($mapped['afterText']),
             );
         }
+    }
+
+    private function defaultLocale(): string
+    {
+        return $this->pageLocales?->getDefault() ?? PageLocales::default();
+    }
+
+    /** @return list<string> */
+    private function locales(): array
+    {
+        return $this->pageLocales?->getAll() ?? PageLocales::all();
     }
 
     /** @param array<string, mixed> $data
