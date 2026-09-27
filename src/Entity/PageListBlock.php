@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Model\TranslatableBlockTrait;
 use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
+use SortDirection;
 
 #[ORM\Entity(repositoryClass: PageListBlockRepository::class)]
 #[ORM\Table(name: 'content_page_list_block')]
@@ -35,7 +36,7 @@ class PageListBlock
 
     /** @var Collection<int, PageListItem> */
     #[ORM\OneToMany(targetEntity: PageListItem::class, mappedBy: 'pageListBlock', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[ORM\OrderBy(['position' => SortDirection::Ascending])]
     private Collection $items;
 
     public function __construct()

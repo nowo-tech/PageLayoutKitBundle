@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
+use SortDirection;
 
 /**
  * Doctrine repository for cards page blocks.
@@ -33,7 +34,7 @@ final class PageCardsBlockRepository extends ServiceEntityRepository
             ->leftJoin('i.translations', 'it')->addSelect('it')
             ->andWhere('b.id = :id')
             ->setParameter('id', $id)
-            ->orderBy('i.position', 'ASC')
+            ->orderBy('i.position', SortDirection::Ascending)
             ->getQuery()
             ->setHint(Query::HINT_REFRESH, true)
             ->getOneOrNullResult();

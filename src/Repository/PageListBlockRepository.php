@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
+use SortDirection;
 
 /**
  * Doctrine repository for list page blocks.
@@ -33,7 +34,7 @@ final class PageListBlockRepository extends ServiceEntityRepository
             ->leftJoin('i.translations', 'it')->addSelect('it')
             ->andWhere('b.id = :id')
             ->setParameter('id', $id)
-            ->orderBy('i.position', 'ASC')
+            ->orderBy('i.position', SortDirection::Ascending)
             ->getQuery()
             ->setHint(Query::HINT_REFRESH, true)
             ->getOneOrNullResult();

@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use SortDirection;
 
 /**
  * Doctrine repository for CMS page layout entries.
@@ -34,7 +35,7 @@ final class PageLayoutEntryRepository extends ServiceEntityRepository
             ->andWhere('e.enabled = :enabled')
             ->setParameter('pageKey', $pageKey)
             ->setParameter('enabled', true)
-            ->orderBy('e.position', 'ASC')
+            ->orderBy('e.position', SortDirection::Ascending)
             ->getQuery()
             ->setHint(Query::HINT_REFRESH, true)
             ->getResult();
