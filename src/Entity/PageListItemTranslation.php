@@ -52,6 +52,7 @@ class PageListItemTranslation implements LocaleAwareTranslationInterface
 
     public function setTranslatable(PageListItem $translatable): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->translatable = $translatable;
 
         return $this;
@@ -64,6 +65,7 @@ class PageListItemTranslation implements LocaleAwareTranslationInterface
 
     public function setLocale(string $locale): static
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -76,6 +78,7 @@ class PageListItemTranslation implements LocaleAwareTranslationInterface
 
     public function setText(string $text): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->text = $text;
 
         return $this;

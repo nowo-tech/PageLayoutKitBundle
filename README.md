@@ -66,6 +66,7 @@ Admin reorder UI: `/admin/pages/home/layout` and `/admin/pages/contact/layout`.
 make up
 make test
 make phpstan
+make igor
 make -C demo/symfony8 up
 make demo-smoke
 ```

@@ -79,6 +79,7 @@ class PageListItem
 
     public function setBlock(PageListBlock $pageListBlock): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageListBlock = $pageListBlock;
 
         return $this;
@@ -91,6 +92,7 @@ class PageListItem
 
     public function setPosition(int $position): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->position = $position;
 
         return $this;

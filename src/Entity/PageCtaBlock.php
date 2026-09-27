@@ -75,6 +75,7 @@ class PageCtaBlock
 
     public function setSectionKey(?string $sectionKey): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->sectionKey = $sectionKey;
 
         return $this;

@@ -88,6 +88,7 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
                     continue;
                 }
 
+                // @igor-ignore - Not shared worker service state.
                 $blockTranslation->setTitle($panel->title);
 
                 $rawItems    = trim($panel->items);
@@ -123,8 +124,11 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
                     }
 
                     $itemTranslation = $item->getTranslationOrFallback($locale, $pageLocales);
+                    // @igor-ignore - Not shared worker service state.
                     $itemTranslation->setLocale($locale);
+                    // @igor-ignore - Not shared worker service state.
                     $itemTranslation->setTitle($itemData['title']);
+                    // @igor-ignore - Not shared worker service state.
                     $itemTranslation->setBody($itemData['body']);
                 }
 

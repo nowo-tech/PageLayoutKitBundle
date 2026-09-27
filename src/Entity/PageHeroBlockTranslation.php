@@ -76,6 +76,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTranslatable(PageHeroBlock $translatable): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->translatable = $translatable;
 
         return $this;
@@ -88,6 +89,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setLocale(string $locale): static
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -100,6 +102,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setPageTitle(string $pageTitle): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageTitle = $pageTitle;
 
         return $this;
@@ -112,6 +115,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setPageDescription(string $pageDescription): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageDescription = $pageDescription;
 
         return $this;
@@ -124,6 +128,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setEyebrow(string $eyebrow): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->eyebrow = $eyebrow;
 
         return $this;
@@ -136,6 +141,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTitle(string $title): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->title = $title;
 
         return $this;
@@ -148,6 +154,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setSubtitle(string $subtitle): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->subtitle = $subtitle;
 
         return $this;
@@ -160,6 +167,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setCtaPrimary(string $ctaPrimary): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->ctaPrimary = $ctaPrimary;
 
         return $this;
@@ -172,6 +180,7 @@ class PageHeroBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setCtaSecondary(string $ctaSecondary): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->ctaSecondary = $ctaSecondary;
 
         return $this;

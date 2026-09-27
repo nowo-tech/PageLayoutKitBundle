@@ -64,6 +64,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTranslatable(PageCompareBlock $translatable): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->translatable = $translatable;
 
         return $this;
@@ -76,6 +77,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setLocale(string $locale): static
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -88,6 +90,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setBeforeLabel(string $beforeLabel): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->beforeLabel = $beforeLabel;
 
         return $this;
@@ -100,6 +103,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setBeforeText(string $beforeText): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->beforeText = $beforeText;
 
         return $this;
@@ -112,6 +116,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setAfterLabel(string $afterLabel): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->afterLabel = $afterLabel;
 
         return $this;
@@ -124,6 +129,7 @@ class PageCompareBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setAfterText(string $afterText): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->afterText = $afterText;
 
         return $this;

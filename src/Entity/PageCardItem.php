@@ -79,6 +79,7 @@ class PageCardItem
 
     public function setBlock(PageCardsBlock $pageCardsBlock): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageCardsBlock = $pageCardsBlock;
 
         return $this;
@@ -91,6 +92,7 @@ class PageCardItem
 
     public function setPosition(int $position): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->position = $position;
 
         return $this;

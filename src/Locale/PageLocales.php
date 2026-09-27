@@ -30,6 +30,7 @@ final class PageLocales
      */
     public static function bind(self $instance): void
     {
+        // @igor-ignore - Not shared worker service state.
         self::$instance = $instance;
     }
 

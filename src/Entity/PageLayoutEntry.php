@@ -47,6 +47,7 @@ class PageLayoutEntry
 
     public function setPageKey(string $pageKey): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageKey = $pageKey;
 
         return $this;
@@ -59,6 +60,7 @@ class PageLayoutEntry
 
     public function setBlockType(PageBlockType $pageBlockType): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->pageBlockType = $pageBlockType;
 
         return $this;
@@ -71,6 +73,7 @@ class PageLayoutEntry
 
     public function setBlockId(int $blockId): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->blockId = $blockId;
 
         return $this;
@@ -83,6 +86,7 @@ class PageLayoutEntry
 
     public function setPosition(int $position): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->position = $position;
 
         return $this;
@@ -95,6 +99,7 @@ class PageLayoutEntry
 
     public function setEnabled(bool $enabled): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->enabled = $enabled;
 
         return $this;

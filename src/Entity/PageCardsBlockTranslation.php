@@ -51,6 +51,7 @@ class PageCardsBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTranslatable(PageCardsBlock $translatable): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->translatable = $translatable;
 
         return $this;
@@ -63,6 +64,7 @@ class PageCardsBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setLocale(string $locale): static
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -75,6 +77,7 @@ class PageCardsBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTitle(string $title): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->title = $title;
 
         return $this;

@@ -56,6 +56,7 @@ class PageCtaBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTranslatable(PageCtaBlock $translatable): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->translatable = $translatable;
 
         return $this;
@@ -68,6 +69,7 @@ class PageCtaBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setLocale(string $locale): static
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -80,6 +82,7 @@ class PageCtaBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setTitle(string $title): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->title = $title;
 
         return $this;
@@ -92,6 +95,7 @@ class PageCtaBlockTranslation implements LocaleAwareTranslationInterface
 
     public function setBody(string $body): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->body = $body;
 
         return $this;
