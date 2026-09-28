@@ -10,7 +10,7 @@ nowo_page_layout_kit:
         css_framework: tailwind
     html:
         sanitize:
-            strategy: none
+            strategy: allowlist
     doctrine:
         table_prefix: ''
 

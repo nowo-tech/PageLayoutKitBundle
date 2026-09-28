@@ -67,12 +67,12 @@ Several default public block templates render editor-authored HTML with `|raw`, 
 
 | Strategy | Behaviour |
 | -------- | --------- |
-| `none` (default) | Trusted editors only; HTML stored/rendered as-is |
-| `allowlist` | DOM allowlist on persist + public render (recipe `when@prod`) |
+| `none` | Trusted editors only; HTML stored/rendered as-is (opt-in) |
+| `allowlist` (default) | DOM allowlist on persist + public render |
 | `strip` | Remove all tags |
 | `service` | Host `PageLayoutHtmlSanitizerInterface` |
 
-Flex recipe sets `when@prod: strategy: allowlist`. Demo/dev may keep `none`.
+Flex recipe and PHP defaults use `strategy: allowlist`. Set `none` only for fully trusted staff editors. Demo/dev may still opt into `none`.
 
 Additional guidance:
 

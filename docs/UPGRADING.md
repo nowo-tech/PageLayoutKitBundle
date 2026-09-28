@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+## To 1.2.0
+
+From **1.1.1** — default HTML sanitize allowlist; Doctrine `SortDirection`.
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+php bin/console cache:clear
+```
+
+- Default `html.sanitize.strategy` is **`allowlist`**. Hosts that need unsanitized `|raw` CMS HTML must set `strategy: none` explicitly.
+- Ensure `doctrine/orm` is `^3.7` (SortDirection).
+
 ## To 1.1.1
 
 From **1.1.0** — REQ-CS-008 Igor FrankenPHP worker audit (igor-php require-dev, igor.json, make igor).
