@@ -390,13 +390,18 @@ final readonly class PageBlockMigrator
         return $items;
     }
 
+    private static function blockId(object $block): mixed
+    {
+        return method_exists($block, 'getId') ? $block->getId() : null;
+    }
+
     private function addLayout(string $pageKey, PageBlockType $pageBlockType, object $block, int $position): void
     {
-        $id = method_exists($block, 'getId') ? $block->getId() : null;
+        $id = self::blockId($block);
 
         if ($id === null) {
             $this->entityManager->flush();
-            $id = $block->getId();
+            $id = self::blockId($block);
         }
 
         $pageLayoutEntry = new PageLayoutEntry()
