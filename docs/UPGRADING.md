@@ -3,6 +3,16 @@
 
 ## Unreleased
 
+## To 1.2.1
+
+From **1.2.0** — internal fix and dependency refresh.
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+- No breaking changes. No application upgrade steps.
+
 ## To 1.2.0
 
 From **1.1.1** — default HTML sanitize allowlist; Doctrine `SortDirection`.

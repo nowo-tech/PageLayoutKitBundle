@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.2.1] - 2026-10-09](#121---2026-10-09)
+  - [Fixed](#fixed)
+  - [Dependencies](#dependencies)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
 - [[1.1.1] - 2026-09-27](#111---2026-09-27)
 - [[1.1.0] - 2026-09-24](#110---2026-09-24)
@@ -19,6 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-10-09
+
+### Fixed
+
+- `PageBlockMigrator`: block id lookups after `flush()` go through a guarded helper (PHPStan 2.3 `method.notFound`); behaviour unchanged.
+
+### Dependencies
+
+- Dependabot: `symfony/security-bundle` lockfile bump.
+- Composer refresh: `nowo-tech/form-kit-bundle` 2.6.1, `nowo-tech/ui-kit-bundle` 1.9.1; dev tooling `phpstan/phpstan` 2.3.1, `phpstan/phpstan-symfony` 2.1.0, `rector/rector` 2.7.0.
+- Demo: Symfony 8.1.8, `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, `twig/twig` 3.30.0; regenerated `config/reference.php`.
+
+[1.2.1]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.2.1
 
 ## [1.2.0] - 2026-09-28
 
