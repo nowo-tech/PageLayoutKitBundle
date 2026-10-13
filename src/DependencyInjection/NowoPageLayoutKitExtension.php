@@ -82,6 +82,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $container->setParameter('nowo_page_layout_kit.security.allow_unauthenticated', $config['security']['allow_unauthenticated']);
         $container->setParameter('nowo_page_layout_kit.web_ui.layout_template', $config['web_ui']['layout_template']);
         $container->setParameter('nowo_page_layout_kit.web_ui.css_framework', $config['web_ui']['css_framework']);
+        $container->setParameter('nowo_page_layout_kit.web_ui.page_routes', $config['web_ui']['page_routes']);
 
         $container->getDefinition(PageLocales::class)
             ->setArgument('$defaultLocale', $config['default_locale'])

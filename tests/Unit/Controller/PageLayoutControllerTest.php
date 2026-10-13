@@ -15,6 +15,7 @@ use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -28,8 +29,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 final class PageLayoutControllerTest extends TestCase
@@ -63,6 +66,68 @@ final class PageLayoutControllerTest extends TestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('render:@NowoPageLayoutKitBundle/admin/layout/index.html.twig:Layout: home', $response->getContent());
+    }
+
+    public function testLayoutPassesResolvedViewPageUrlOrNull(): void
+    {
+        $urls = $this->createMock(UrlGeneratorInterface::class);
+        $urls->method('generate')->willReturnCallback(static fn (string $route): string => match ($route) {
+            'app_home' => '/',
+            default    => throw new RouteNotFoundException($route),
+        });
+        $resolver = new PublicPageUrlResolver($urls, ['home' => 'app_home']);
+
+        foreach (['home' => '/', 'contact' => null] as $pageKey => $expected) {
+            $controller = new PageLayoutController(
+                $this->createRepository([$pageKey => []]),
+                $this->createMock(EntityManagerInterface::class),
+                $this->createFormFactory(),
+                $resolver,
+            );
+            $container = $this->createControllerContainer([$pageKey]);
+            $captured  = [];
+            $twig      = $this->createMock(Environment::class);
+            $twig->method('render')->willReturnCallback(static function (string $view, array $parameters) use (&$captured): string {
+                $captured = $parameters;
+
+                return '';
+            });
+            $container->set('twig', $twig);
+            $controller->setContainer($container);
+
+            $controller->layout($pageKey, Request::create('/admin/pages/' . $pageKey . '/layout'));
+
+            self::assertArrayHasKey('view_page_url', $captured);
+            self::assertSame($expected, $captured['view_page_url'], $pageKey);
+        }
+    }
+
+    public function testReorderFlashIsTranslated(): void
+    {
+        $entry = $this->createEntry(10, 1);
+        $form  = $this->createConfiguredMock(FormInterface::class, [
+            'isSubmitted' => true,
+            'isValid'     => true,
+            'getData'     => PageLayoutReorderData::fromEntries([$entry]),
+        ]);
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->expects(self::once())->method('trans')->with('admin.flash.reordered', [], 'NowoPageLayoutKitBundle')->willReturn('Orden actualizado.');
+
+        $request = Request::create('/admin/pages/home/layout', 'POST');
+        $session = new Session(new MockArraySessionStorage());
+        $request->setSession($session);
+
+        $controller = new PageLayoutController(
+            $this->createRepository(['home' => [$entry]]),
+            $this->createMock(EntityManagerInterface::class),
+            $this->createFormFactory($form),
+            null,
+            $translator,
+        );
+        $controller->setContainer($this->createControllerContainer(['home'], $request));
+        $controller->layout('home', $request);
+
+        self::assertSame(['Orden actualizado.'], $session->getFlashBag()->get('success'));
     }
 
     public function testLayoutReordersEntriesOnPostRequests(): void

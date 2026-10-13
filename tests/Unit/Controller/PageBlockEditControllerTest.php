@@ -34,11 +34,13 @@ use Nowo\PageLayoutKitBundle\Repository\PageHeroBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
+use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -48,7 +50,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 final class PageBlockEditControllerTest extends TestCase
@@ -68,7 +72,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller->setContainer($this->createControllerContainer());
 
         $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage('Bloque no encontrado.');
+        $this->expectExceptionMessage('Page block not found.');
 
         $controller->editModal('hero', 15, Request::create('/admin/page-blocks/hero/15/edit-modal', 'GET'));
     }
@@ -152,36 +156,113 @@ final class PageBlockEditControllerTest extends TestCase
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('/admin/layout/home', $response->getTargetUrl());
-        self::assertSame(['Bloque actualizado.'], $session->getFlashBag()->get('success'));
+        self::assertSame(['Block updated.'], $session->getFlashBag()->get('success'));
         self::assertSame(PageCtaBlockModalType::class, $formCalls[0]['type']);
     }
 
-    public function testUpdateFallsBackToGeneratedHomeUrlWithoutReferer(): void
+    public function testUpdateFallsBackToPublicPageUrlWithoutReferer(): void
+    {
+        $response = $this->updateWithoutReferer(static fn (string $route): string => match ($route) {
+            'home'                     => '/generated/home',
+            'admin_page_blocks_update' => '/update',
+            default                    => throw new RouteNotFoundException($route),
+        });
+
+        self::assertSame('/generated/home', $response->getTargetUrl());
+    }
+
+    public function testUpdateFallsBackToLayoutAdminWhenHostHasNoPublicRoute(): void
+    {
+        // Regression: the bundle used to call generateUrl('home') and 500 when the host had no "home" route.
+        $response = $this->updateWithoutReferer(static fn (string $route, array $parameters = []): string => match ($route) {
+            'admin_page_layout'        => '/admin/pages/' . $parameters['pageKey'] . '/layout',
+            'admin_page_blocks_update' => '/update',
+            default                    => throw new RouteNotFoundException($route),
+        });
+
+        self::assertSame('/admin/pages/home/layout', $response->getTargetUrl());
+    }
+
+    public function testUpdateFlashIsTranslated(): void
+    {
+        $block = $this->withId(new PageCtaBlock(), 9);
+        $form  = $this->createConfiguredMock(FormInterface::class, ['isSubmitted' => true, 'isValid' => true]);
+
+        $request = Request::create('/admin/page-blocks/cta/9', 'POST');
+        $request->headers->set('Referer', '/back');
+        $session = new Session(new MockArraySessionStorage());
+        $request->setSession($session);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->expects(self::once())->method('trans')
+            ->with('admin.flash.block_updated', [], 'NowoPageLayoutKitBundle')
+            ->willReturn('Bloque actualizado.');
+
+        $controller = new PageBlockEditController(
+            $this->createRegistry([PageBlockType::Cta->value => [9 => $block]]),
+            $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
+            null,
+            $translator,
+        );
+        $controller->setContainer($this->createControllerContainer(form: $form, request: $request));
+
+        $controller->update('cta', 9, $request);
+
+        self::assertSame(['Bloque actualizado.'], $session->getFlashBag()->get('success'));
+    }
+
+    public function testUnknownBlockTypeIsNotFound(): void
+    {
+        $controller = new PageBlockEditController(
+            $this->createRegistry(),
+            $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
+        );
+        $controller->setContainer($this->createControllerContainer());
+
+        foreach (['editModal', 'update', 'edit'] as $action) {
+            try {
+                match ($action) {
+                    'editModal' => $controller->editModal('evil', 1, Request::create('/')),
+                    'update'    => $controller->update('evil', 1, Request::create('/', 'POST')),
+                    'edit'      => $controller->edit('evil', 1),
+                };
+                self::fail($action . ' must 404 on an unknown block type');
+            } catch (NotFoundHttpException $e) {
+                self::assertSame('Unknown page block type.', $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * @param callable(string, array<string, mixed>=): string $generate
+     */
+    private function updateWithoutReferer(callable $generate): RedirectResponse
     {
         $block = $this->withId(new PageCompareBlock(), 12);
-        $form  = $this->createConfiguredMock(FormInterface::class, [
-            'isSubmitted' => true,
-            'isValid'     => true,
-        ]);
-        $form->expects(self::once())->method('handleRequest');
-
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::once())->method('flush');
+        $form  = $this->createConfiguredMock(FormInterface::class, ['isSubmitted' => true, 'isValid' => true]);
 
         $request = Request::create('/admin/page-blocks/compare/12', 'POST');
         $request->setSession(new Session(new MockArraySessionStorage()));
 
+        $urls = $this->createMock(UrlGeneratorInterface::class);
+        $urls->method('generate')->willReturnCallback($generate);
+
         $controller = new PageBlockEditController(
             $this->createRegistry([PageBlockType::Compare->value => [12 => $block]]),
-            $entityManager,
+            $this->createMock(EntityManagerInterface::class),
             $this->pageLocales(),
+            new PublicPageUrlResolver($urls),
         );
-        $controller->setContainer($this->createControllerContainer(form: $form, request: $request));
+        $container = $this->createControllerContainer(form: $form, request: $request);
+        $container->set('router', $urls);
+        $controller->setContainer($container);
 
         $response = $controller->update('compare', 12, $request);
-
         self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertSame('/generated/home', $response->getTargetUrl());
+
+        return $response;
     }
 
     public function testUpdateThrowsNotFoundWhenRegistryMissesBlock(): void
@@ -202,7 +283,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller->setContainer($this->createControllerContainer(form: $form, request: $request));
 
         $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage('Bloque no encontrado.');
+        $this->expectExceptionMessage('Page block not found.');
 
         $controller->update('hero', 404, $request);
     }
@@ -217,7 +298,7 @@ final class PageBlockEditControllerTest extends TestCase
         $controller->setContainer($this->createControllerContainer());
 
         $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage('Bloque no encontrado.');
+        $this->expectExceptionMessage('Page block not found.');
 
         $controller->edit('hero', 404);
     }
@@ -233,7 +314,7 @@ final class PageBlockEditControllerTest extends TestCase
 
         $response = $controller->edit('list', 3);
 
-        self::assertSame('render:@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig:Editar bloque', $response->getContent());
+        self::assertSame('render:@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig:Edit block', $response->getContent());
     }
 
     public function testCreateBlockFormSelectsTheExpectedFormTypeForEveryBlockKind(): void
@@ -378,6 +459,7 @@ final class PageBlockEditControllerTest extends TestCase
             $requestStack->push($request);
         }
         $container->set('request_stack', $requestStack);
+        $container->set('parameter_bag', new ParameterBag(['nowo_page_layout_kit.pages' => ['home', 'contact']]));
 
         return $container;
     }

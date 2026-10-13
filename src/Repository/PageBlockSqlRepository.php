@@ -5,7 +5,24 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\PageLayoutKitBundle\DependencyInjection\TablePrefixListener;
+use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
+use Nowo\PageLayoutKitBundle\Entity\PageCardItemTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCardsBlockTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCompareBlockTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageCtaBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageCtaBlockTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageListBlockTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageListItem;
+use Nowo\PageLayoutKitBundle\Entity\PageListItemTranslation;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\Concerns\RunsDocumentedSql;
@@ -63,6 +80,16 @@ final readonly class PageBlockSqlRepository
         return $this->entityManager;
     }
 
+    /**
+     * Physical table of a bundle entity, including `doctrine.table_prefix` applied by {@see TablePrefixListener}.
+     *
+     * @param class-string $entityClass
+     */
+    private function tableName(string $entityClass): string
+    {
+        return $this->entityManager->getClassMetadata($entityClass)->getTableName();
+    }
+
     private function defaultLocale(): string
     {
         return $this->pageLocales?->getDefault() ?? PageLocales::default();
@@ -84,6 +111,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageHeroBlock::class);
+        $translationTable = $this->tableName(PageHeroBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads hero blocks by id with active-locale translation or fallback
             -- Returns rows with block_id and translated SEO/hero fields ready to render
@@ -96,10 +126,10 @@ final readonly class PageBlockSqlRepository
                 COALESCE(t.subtitle, t_fb.subtitle, '') AS subtitle,
                 COALESCE(t.cta_primary, t_fb.cta_primary, '') AS ctaPrimary,
                 COALESCE(t.cta_secondary, t_fb.cta_secondary, '') AS ctaSecondary
-            FROM content_page_hero_block b
-            LEFT JOIN content_page_hero_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_hero_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -123,6 +153,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageTextBlock::class);
+        $translationTable = $this->tableName(PageTextBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads text blocks by id with active-locale translation or fallback
             -- Returns rows with block_id, section_key, and translated title/body fields
@@ -133,10 +166,10 @@ final readonly class PageBlockSqlRepository
                 COALESCE(t.page_description, t_fb.page_description, '') AS pageDescription,
                 COALESCE(t.title, t_fb.title, '') AS title,
                 COALESCE(t.body, t_fb.body, '') AS body
-            FROM content_page_text_block b
-            LEFT JOIN content_page_text_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_text_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -160,6 +193,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageCardsBlock::class);
+        $translationTable = $this->tableName(PageCardsBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads card blocks by id with translated title
             -- Returns rows with block_id, section_key, and block title
@@ -167,10 +203,10 @@ final readonly class PageBlockSqlRepository
                 b.id AS block_id,
                 b.section_key AS sectionKey,
                 COALESCE(t.title, t_fb.title, '') AS title
-            FROM content_page_cards_block b
-            LEFT JOIN content_page_cards_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_cards_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -201,6 +237,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageListBlock::class);
+        $translationTable = $this->tableName(PageListBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads list blocks by id with translated title
             -- Returns rows with block_id, section_key, and block title
@@ -208,10 +247,10 @@ final readonly class PageBlockSqlRepository
                 b.id AS block_id,
                 b.section_key AS sectionKey,
                 COALESCE(t.title, t_fb.title, '') AS title
-            FROM content_page_list_block b
-            LEFT JOIN content_page_list_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_list_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -242,6 +281,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageCtaBlock::class);
+        $translationTable = $this->tableName(PageCtaBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads CTA blocks by id with active-locale translation or fallback
             -- Returns rows with block_id, section_key, and translated title/body
@@ -250,10 +292,10 @@ final readonly class PageBlockSqlRepository
                 b.section_key AS sectionKey,
                 COALESCE(t.title, t_fb.title, '') AS title,
                 COALESCE(t.body, t_fb.body, '') AS body
-            FROM content_page_cta_block b
-            LEFT JOIN content_page_cta_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_cta_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -277,6 +319,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $blockTable       = $this->tableName(PageCompareBlock::class);
+        $translationTable = $this->tableName(PageCompareBlockTranslation::class);
+
         $sql = <<<SQL
             -- Loads compare blocks by id with active-locale translation or fallback
             -- Returns rows with block_id and translated before/after texts
@@ -286,10 +331,10 @@ final readonly class PageBlockSqlRepository
                 COALESCE(t.before_text, t_fb.before_text, '') AS beforeText,
                 COALESCE(t.after_label, t_fb.after_label, '') AS afterLabel,
                 COALESCE(t.after_text, t_fb.after_text, '') AS afterText
-            FROM content_page_compare_block b
-            LEFT JOIN content_page_compare_block_translation t
+            FROM {$blockTable} b
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = b.id AND t.locale = :locale
-            LEFT JOIN content_page_compare_block_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = b.id AND t_fb.locale = :fallback
             WHERE b.id IN ({$inClause})
             SQL;
@@ -309,6 +354,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $itemTable        = $this->tableName(PageCardItem::class);
+        $translationTable = $this->tableName(PageCardItemTranslation::class);
+
         $sql = <<<SQL
             -- Loads card items for card blocks with active-locale translation or fallback
             -- Returns rows with block_id, position, and each card title/body ordered
@@ -317,10 +365,10 @@ final readonly class PageBlockSqlRepository
                 i.position,
                 COALESCE(t.title, t_fb.title, '') AS title,
                 COALESCE(t.body, t_fb.body, '') AS body
-            FROM content_page_card_item i
-            LEFT JOIN content_page_card_item_translation t
+            FROM {$itemTable} i
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = i.id AND t.locale = :locale
-            LEFT JOIN content_page_card_item_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = i.id AND t_fb.locale = :fallback
             WHERE i.block_id IN ({$inClause})
             ORDER BY i.block_id ASC, i.position ASC, i.id ASC
@@ -351,6 +399,9 @@ final readonly class PageBlockSqlRepository
             'fallback' => $this->defaultLocale(),
         ]);
 
+        $itemTable        = $this->tableName(PageListItem::class);
+        $translationTable = $this->tableName(PageListItemTranslation::class);
+
         $sql = <<<SQL
             -- Loads list items for list blocks with active-locale translation or fallback
             -- Returns rows with block_id, position, and each item text ordered
@@ -358,10 +409,10 @@ final readonly class PageBlockSqlRepository
                 i.block_id AS block_id,
                 i.position,
                 COALESCE(t.text, t_fb.text, '') AS text
-            FROM content_page_list_item i
-            LEFT JOIN content_page_list_item_translation t
+            FROM {$itemTable} i
+            LEFT JOIN {$translationTable} t
                 ON t.translatable_id = i.id AND t.locale = :locale
-            LEFT JOIN content_page_list_item_translation t_fb
+            LEFT JOIN {$translationTable} t_fb
                 ON t_fb.translatable_id = i.id AND t_fb.locale = :fallback
             WHERE i.block_id IN ({$inClause})
             ORDER BY i.block_id ASC, i.position ASC, i.id ASC

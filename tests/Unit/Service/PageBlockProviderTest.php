@@ -20,6 +20,7 @@ use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Nowo\PageLayoutKitBundle\Service\PageBlockProvider;
+use Nowo\PageLayoutKitBundle\Tests\Support\EntityTableMetadata;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 use stdClass;
@@ -256,6 +257,7 @@ final class PageBlockProviderTest extends TestCase
             });
         $sqlEntityManager = $this->createStub(EntityManagerInterface::class);
         $sqlEntityManager->method('getConnection')->willReturn($connection);
+        $sqlEntityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
         $requestStack = new RequestStack();
         $provider     = new PageBlockProvider(
@@ -438,6 +440,7 @@ final class PageBlockProviderTest extends TestCase
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
         return new PageBlockSqlRepository($entityManager);
     }

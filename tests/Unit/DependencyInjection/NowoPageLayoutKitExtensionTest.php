@@ -115,6 +115,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
                 'web_ui' => [
                     'layout_template' => '@App/layout.html.twig',
                     'css_framework'   => 'custom',
+                    'page_routes'     => ['home' => 'app_home'],
                 ],
                 'doctrine' => [
                     'table_prefix' => 'acme_',
@@ -133,6 +134,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         self::assertTrue($container->getParameter('nowo_page_layout_kit.security.allow_unauthenticated'));
         self::assertSame('@App/layout.html.twig', $container->getParameter('nowo_page_layout_kit.web_ui.layout_template'));
         self::assertSame('custom', $container->getParameter('nowo_page_layout_kit.web_ui.css_framework'));
+        self::assertSame(['home' => 'app_home'], $container->getParameter('nowo_page_layout_kit.web_ui.page_routes'));
 
         $pageLocales = $container->getDefinition(PageLocales::class);
         self::assertSame('en', $pageLocales->getArgument('$defaultLocale'));

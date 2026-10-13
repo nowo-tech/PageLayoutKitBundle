@@ -14,3 +14,4 @@ admin.action.back: Volver
 admin.action.save: Guardar
 admin.flash.saved: Guardado.
 admin.flash.reordered: Orden actualizado.
+admin.flash.block_updated: Bloque actualizado.

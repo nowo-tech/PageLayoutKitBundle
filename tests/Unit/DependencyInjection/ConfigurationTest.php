@@ -32,6 +32,7 @@ final class ConfigurationTest extends TestCase
             'web_ui' => [
                 'layout_template' => '@App/layout.html.twig',
                 'css_framework'   => 'custom',
+                'page_routes'     => ['home' => 'app_home'],
             ],
             'doctrine' => [
                 'table_prefix' => 'acme_',
@@ -47,6 +48,7 @@ final class ConfigurationTest extends TestCase
         self::assertTrue($config['security']['allow_unauthenticated']);
         self::assertSame('@App/layout.html.twig', $config['web_ui']['layout_template']);
         self::assertSame('custom', $config['web_ui']['css_framework']);
+        self::assertSame(['home' => 'app_home'], $config['web_ui']['page_routes']);
         self::assertSame('acme_', $config['doctrine']['table_prefix']);
         self::assertSame('reporting', $config['doctrine']['connection']);
         self::assertSame('allowlist', $config['html']['sanitize']['strategy']);

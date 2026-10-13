@@ -10,12 +10,14 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function in_array;
 use function sprintf;
@@ -31,6 +33,8 @@ final class PageLayoutController extends AbstractController
         private readonly PageLayoutEntryRepository $pageLayoutEntryRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly FormFactoryInterface $formFactory,
+        private readonly ?PublicPageUrlResolver $publicPageUrls = null,
+        private readonly ?TranslatorInterface $translator = null,
     ) {
     }
 
@@ -53,10 +57,11 @@ final class PageLayoutController extends AbstractController
         }
 
         return $this->render('@NowoPageLayoutKitBundle/admin/layout/index.html.twig', [
-            'page_title'   => sprintf('Layout: %s', $pageKey),
-            'page_key'     => $pageKey,
-            'entries'      => $entries,
-            'reorder_form' => $reorderForm,
+            'page_title'    => sprintf('Layout: %s', $pageKey),
+            'page_key'      => $pageKey,
+            'entries'       => $entries,
+            'reorder_form'  => $reorderForm,
+            'view_page_url' => $this->publicPageUrls?->resolve($pageKey),
         ]);
     }
 
@@ -92,6 +97,6 @@ final class PageLayoutController extends AbstractController
         $reorderForm->getData()?->applyToEntries($entries);
 
         $this->entityManager->flush();
-        $this->addFlash('success', 'Order updated.');
+        $this->addFlash('success', $this->translator?->trans('admin.flash.reordered', [], 'NowoPageLayoutKitBundle') ?? 'Order updated.');
     }
 }

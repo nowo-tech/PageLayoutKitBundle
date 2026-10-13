@@ -10,6 +10,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageBlockSqlRepository;
+use Nowo\PageLayoutKitBundle\Tests\Support\EntityTableMetadata;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -85,6 +86,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
         $repository = new PageBlockSqlRepository($entityManager);
         $data       = $repository->loadDataForEntries([
@@ -121,6 +123,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
 
         $entityManager = $this->createStub(EntityManagerInterface::class);
         $entityManager->method('getConnection')->willReturn($connection);
+        $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
         $repository = new PageBlockSqlRepository($entityManager, new PageLocales('fr', ['fr', 'de']));
         $data       = LocaleTestSupport::withoutStaticBinding(static fn (): array => $repository->loadDataForEntries([

@@ -70,3 +70,7 @@ services:
         arguments:
             $legacyContentProvider: '@?Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface'
             $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
+    Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver:
+        arguments:
+            $pageRoutes: '%nowo_page_layout_kit.web_ui.page_routes%'

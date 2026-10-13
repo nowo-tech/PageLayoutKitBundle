@@ -26,6 +26,7 @@ nowo_page_layout_kit:
     web_ui:
         layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
         css_framework: tailwind
+        page_routes: {}          # e.g. { home: app_home, contact: app_contact }
     doctrine:
         table_prefix: ''
         connection: default
@@ -73,6 +74,7 @@ The bundle enforces access on route names beginning with `admin_page_layout` and
 | --- | --- | --- |
 | `layout_template` | `@NowoPageLayoutKitBundle/admin/layout.html.twig` | Base layout used by the reorder UI. Point this to your own layout or bridge template to embed the admin screen in host chrome. |
 | `css_framework` | `tailwind` | Styling hint exposed to Twig. Allowed values: `bootstrap`, `bootstrap4`, `bootstrap5`, `tabler`, `tailwind`, `foundation`, `custom`, `none`. |
+| `page_routes` | `{}` | Public route name per page key, used for the "View page" link on the reorder screen and as redirect target after saving a block when no `Referer` is sent. Unmapped keys try a route with the same name as the page key (`home` → route `home`). When no route resolves (or it needs parameters) the link is hidden; an empty string disables it. |
 
 The reorder screen lives at `@NowoPageLayoutKitBundle/admin/layout/index.html.twig` and extends `nowo_page_layout_kit_layout`.
 
@@ -80,7 +82,7 @@ The reorder screen lives at `@NowoPageLayoutKitBundle/admin/layout/index.html.tw
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `table_prefix` | `''` | Prefix applied to all bundle entity tables through `TablePrefixListener`. |
+| `table_prefix` | `''` | Prefix applied to all bundle entity tables through `TablePrefixListener`. The batch SQL loader (`PageBlockSqlRepository`) resolves table names from Doctrine metadata, so the prefix also applies to native queries. Column names assume Symfony's default underscore naming strategy. |
 | `connection` | `default` | Connection name recorded in configuration for host alignment. The current release mainly relies on standard Doctrine mapping plus optional table prefixing. |
 
 Example:

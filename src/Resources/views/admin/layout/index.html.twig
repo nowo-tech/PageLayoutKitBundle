@@ -11,7 +11,9 @@
   <div>
     <p class="nowo-ui-lead">{{ 'admin.layout.lead'|trans({'%page%': page_key}) }}</p>
   </div>
-  <a href="{{ path('home') }}" class="{{ ui.btn('secondary', _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
+  {% if view_page_url|default(null) %}
+    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
+  {% endif %}
 </div>
 
 {{ form_start(reorder_form, {attr: {class: 'nowo-ui-form'}}) }}

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\EventSubscriber;
 
+use Doctrine\Common\EventManager;
+use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\ObjectManager;
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
@@ -16,6 +18,8 @@ use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
 use Nowo\PageLayoutKitBundle\EventSubscriber\PageBlockHtmlSanitizeSubscriber;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
+use Nowo\PageLayoutKitBundle\Tests\Support\SqliteEntityManagerFactory;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -78,6 +82,32 @@ final class PageBlockHtmlSanitizeSubscriberTest extends TestCase
         $this->runPersist($entity);
 
         self::assertEquals(new stdClass(), $entity);
+    }
+
+    #[RequiresPhpExtension('pdo_sqlite')]
+    public function testPreUpdateSanitizedHtmlIsActuallyFlushed(): void
+    {
+        $subscriber    = $this->createSubscriber();
+        $entityManager = SqliteEntityManagerFactory::create('', static function (EventManager $events) use ($subscriber): void {
+            $events->addEventListener([Events::prePersist, Events::preUpdate], $subscriber);
+        });
+
+        $block       = (new PageTextBlock())->setSectionKey('intro');
+        $translation = (new PageTextBlockTranslation())->setTranslatable($block)->setLocale('es')->setTitle('T')->setBody('<p>Safe</p>');
+        $entityManager->persist($block);
+        $entityManager->persist($translation);
+        $entityManager->flush();
+
+        // ORM 3 recomputes the change set after preUpdate, so the sanitized value set on the entity is what gets stored.
+        $translation->setBody('<p>Edited</p><script>alert(1)</script>');
+        $entityManager->flush();
+
+        $stored = (string) $entityManager->getConnection()->fetchOne(
+            'SELECT body FROM content_page_text_block_translation WHERE id = ?',
+            [$translation->getId()],
+        );
+        self::assertStringContainsString('<p>Edited</p>', $stored);
+        self::assertStringNotContainsString('script', $stored);
     }
 
     private function runPersist(object $entity): void

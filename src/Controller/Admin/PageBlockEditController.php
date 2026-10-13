@@ -20,11 +20,13 @@ use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
+use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Admin AJAX endpoints for editing composable page blocks (inline CMS modals).
@@ -35,17 +37,19 @@ final class PageBlockEditController extends AbstractController
         private readonly PageBlockRegistry $pageBlockRegistry,
         private readonly EntityManagerInterface $entityManager,
         private readonly ?PageLocales $pageLocales = null,
+        private readonly ?PublicPageUrlResolver $publicPageUrls = null,
+        private readonly ?TranslatorInterface $translator = null,
     ) {
     }
 
     #[Route('/admin/page-blocks/{type}/{id}/edit-modal', name: 'admin_page_blocks_edit_modal', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function editModal(string $type, int $id, Request $request): Response
     {
-        $pageBlockType = PageBlockType::from($type);
+        $pageBlockType = $this->blockType($type);
         $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
         if ($block === null) {
-            throw $this->createNotFoundException('Bloque no encontrado.');
+            throw $this->createNotFoundException('Page block not found.');
         }
 
         $this->ensureBlockTranslations($block);
@@ -61,11 +65,11 @@ final class PageBlockEditController extends AbstractController
     #[Route('/admin/page-blocks/{type}/{id}', name: 'admin_page_blocks_update', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function update(string $type, int $id, Request $request): Response
     {
-        $pageBlockType = PageBlockType::from($type);
+        $pageBlockType = $this->blockType($type);
         $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
         if ($block === null) {
-            throw $this->createNotFoundException('Bloque no encontrado.');
+            throw $this->createNotFoundException('Page block not found.');
         }
 
         $this->ensureBlockTranslations($block);
@@ -81,28 +85,51 @@ final class PageBlockEditController extends AbstractController
         }
 
         $this->entityManager->flush();
-        $this->addFlash('success', 'Bloque actualizado.');
+        $this->addFlash('success', $this->translate('admin.flash.block_updated', 'Block updated.'));
 
         $referer = $request->headers->get('Referer');
+        if ($referer !== null && $referer !== '') {
+            return $this->redirect($referer);
+        }
 
-        return $this->redirect($referer ?: $this->generateUrl('home'));
+        /** @var list<string> $pages */
+        $pages = $this->getParameter('nowo_page_layout_kit.pages');
+
+        // No referer: go to the first public page the host actually routes, else back to the layout admin.
+        return $this->redirect(
+            $this->publicPageUrls?->resolveFirst($pages)
+            ?? $this->generateUrl('admin_page_layout', ['pageKey' => $pages[0] ?? 'home']),
+        );
     }
 
     #[Route('/admin/page-blocks/{type}/{id}/edit', name: 'admin_page_blocks_edit', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function edit(string $type, int $id): Response
     {
-        $pageBlockType = PageBlockType::from($type);
+        $pageBlockType = $this->blockType($type);
         $block         = $this->pageBlockRegistry->get($pageBlockType, $id);
 
         if ($block === null) {
-            throw $this->createNotFoundException('Bloque no encontrado.');
+            throw $this->createNotFoundException('Page block not found.');
         }
 
         return $this->render('@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig', [
-            'page_title' => 'Editar bloque',
+            'page_title' => $this->translate('admin.blocks.edit.title', 'Edit block'),
             'block_type' => $pageBlockType,
             'block_id'   => $id,
         ]);
+    }
+
+    /**
+     * Unknown `{type}` segments are a 404, not a ValueError (500).
+     */
+    private function blockType(string $type): PageBlockType
+    {
+        return PageBlockType::tryFrom($type) ?? throw $this->createNotFoundException('Unknown page block type.');
+    }
+
+    private function translate(string $id, string $fallback): string
+    {
+        return $this->translator?->trans($id, [], 'NowoPageLayoutKitBundle') ?? $fallback;
     }
 
     /**
