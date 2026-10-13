@@ -12,7 +12,7 @@
     <p class="nowo-ui-lead">{{ 'admin.layout.lead'|trans({'%page%': page_key}) }}</p>
   </div>
   {% if view_page_url|default(null) %}
-    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
+    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
   {% endif %}
 </div>
 
@@ -44,7 +44,7 @@
           <td>{{ entry.blockType.value }}</td>
           <td>#{{ entry.blockId }}</td>
           <td>
-            <a class="{{ ui.btn('secondary', _css_fw) }}" href="{{ path('admin_page_blocks_edit', {type: entry.blockType.value, id: entry.blockId}) }}">{{ 'admin.layout.edit'|trans }}</a>
+            <a class="{{ ui.btn('secondary', null, _css_fw) }}" href="{{ path('admin_page_blocks_edit', {type: entry.blockType.value, id: entry.blockId}) }}">{{ 'admin.layout.edit'|trans }}</a>
           </td>
         </tr>
       {% else %}
@@ -54,7 +54,7 @@
   </table>
   {% if entries %}
     <div class="nowo-ui-actions mt-3">
-      <button type="submit" class="{{ ui.btn('primary', _css_fw) }}">{{ 'admin.layout.save_order'|trans }}</button>
+      <button type="submit" class="{{ ui.btn('primary', null, _css_fw) }}">{{ 'admin.layout.save_order'|trans }}</button>
     </div>
   {% endif %}
 {{ form_end(reorder_form) }}

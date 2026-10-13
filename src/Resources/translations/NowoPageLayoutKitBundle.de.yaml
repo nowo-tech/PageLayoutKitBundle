@@ -1,17 +1,19 @@
 admin.title: Seitenlayout
 admin.layout.title: 'Layout: %page%'
-admin.layout.lead: Reorder blocks for page %page%.
-admin.layout.view_page: View page
+admin.layout.lead: Blöcke der Seite %page% neu anordnen.
+admin.layout.view_page: Seite ansehen
 admin.layout.position: Position
-admin.layout.type: Type
+admin.layout.type: Typ
 admin.layout.id: ID
-admin.layout.actions: Actions
-admin.layout.edit: Edit
-admin.layout.empty: 'No migrated blocks. Run nowo:page-layout:migrate.'
-admin.layout.save_order: Save order
-admin.blocks.edit.title: Edit block
-admin.action.back: Back
-admin.action.save: Save
-admin.flash.saved: Saved.
-admin.flash.reordered: Order updated.
+admin.layout.actions: Aktionen
+admin.layout.edit: Bearbeiten
+admin.layout.empty: 'Keine migrierten Blöcke. Führen Sie nowo:page-layout:migrate aus.'
+admin.layout.save_order: Reihenfolge speichern
+admin.blocks.edit.title: Block bearbeiten
+admin.blocks.edit.lead: 'Die vollständige Bearbeitung von %type%-Blöcken ist bald verfügbar.'
+admin.blocks.edit.back_to_layout: Zurück zum Layout
+admin.action.back: Zurück
+admin.action.save: Speichern
+admin.flash.saved: Gespeichert.
+admin.flash.reordered: Reihenfolge aktualisiert.
 admin.flash.block_updated: Block aktualisiert.

@@ -1,11 +1,19 @@
-{% extends 'admin/layout.html.twig' %}
+{% extends nowo_page_layout_kit_layout %}
+{% trans_default_domain 'NowoPageLayoutKitBundle' %}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set _css_fw = nowo_page_layout_kit_css_framework|default('tailwind') %}
 
 {% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
 
 {% block admin %}
-<div class="admin-header">
-  <h1>{{ page_title }}</h1>
-  <p class="admin-lead">Edición completa de bloques {{ block_type.value }} (tarjetas y listas) — próximamente.</p>
+<div class="nowo-ui-toolbar nowo-ui-toolbar--split mb-3">
+  <p class="nowo-ui-lead">{{ 'admin.blocks.edit.lead'|trans({'%type%': block_type.value}) }}</p>
+  {% if view_page_url|default(null) %}
+    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
+  {% endif %}
 </div>
-<p><a href="{{ path('admin_page_layout', {pageKey: 'home'}) }}">Volver al layout</a></p>
+{% if back_url|default(null) %}
+  <p><a href="{{ back_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}">{{ 'admin.blocks.edit.back_to_layout'|trans }}</a></p>
+{% endif %}
 {% endblock %}

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The block edit page now extends `web_ui.layout_template` instead of a host `admin/layout.html.twig`; if you overrode `@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig`, note the new variables `page_key`, `back_url` and `view_page_url` (both URLs may be null).
+
 ## To 1.3.0
 
 From **1.2.1** — fixes - table_prefix honoured in native SQL, no hard-coded host route, 404 for unknown block types.

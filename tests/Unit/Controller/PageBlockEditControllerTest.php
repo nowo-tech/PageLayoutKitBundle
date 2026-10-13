@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
@@ -16,6 +17,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCtaBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageListItem;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
@@ -315,6 +317,85 @@ final class PageBlockEditControllerTest extends TestCase
         $response = $controller->edit('list', 3);
 
         self::assertSame('render:@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig:Edit block', $response->getContent());
+    }
+
+    public function testEditStubLinksBackToTheLayoutOfTheOwningPage(): void
+    {
+        $entry      = (new PageLayoutEntry())->setPageKey('contact');
+        $parameters = $this->renderEditStub($entry);
+
+        self::assertSame('contact', $parameters['page_key']);
+        self::assertSame('/admin/pages/contact/layout', $parameters['back_url']);
+        self::assertSame('/public/contact', $parameters['view_page_url']);
+        self::assertSame(PageBlockType::List, $parameters['block_type']);
+    }
+
+    public function testEditStubFallsBackToTheFirstConfiguredPageWhenTheBlockIsNotInAnyLayout(): void
+    {
+        $parameters = $this->renderEditStub(null);
+
+        self::assertSame('home', $parameters['page_key']);
+        self::assertSame('/admin/pages/home/layout', $parameters['back_url']);
+        self::assertSame('/public/home', $parameters['view_page_url']);
+    }
+
+    public function testEditStubHasNoLinksWhenNoPagesAreConfigured(): void
+    {
+        $parameters = $this->renderEditStub(null, []);
+
+        self::assertNull($parameters['page_key']);
+        self::assertNull($parameters['back_url']);
+        self::assertNull($parameters['view_page_url']);
+    }
+
+    /**
+     * @param list<string> $pages
+     *
+     * @return array<string, mixed>
+     */
+    private function renderEditStub(?PageLayoutEntry $entry, array $pages = ['home', 'contact']): array
+    {
+        $repository = $this->createMock(EntityRepository::class);
+        $repository->expects(self::once())->method('findOneBy')
+            ->with(['pageBlockType' => PageBlockType::List, 'blockId' => 3])
+            ->willReturn($entry);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::once())->method('getRepository')->with(PageLayoutEntry::class)->willReturn($repository);
+
+        $urls = $this->createStub(UrlGeneratorInterface::class);
+        $urls->method('generate')->willReturnCallback(static function (string $route, array $parameters = []): string {
+            if ($route === 'admin_page_layout') {
+                return '/admin/pages/' . $parameters['pageKey'] . '/layout';
+            }
+
+            return '/public/' . $route;
+        });
+
+        $controller = new PageBlockEditController(
+            $this->createRegistry([PageBlockType::List->value => [3 => $this->withId(new PageListBlock(), 3)]]),
+            $entityManager,
+            $this->pageLocales(),
+            new PublicPageUrlResolver($urls),
+        );
+
+        $captured = [];
+        $twig     = $this->createStub(Environment::class);
+        $twig->method('render')->willReturnCallback(static function (string $view, array $parameters = []) use (&$captured): string {
+            $captured = $parameters;
+
+            return $view;
+        });
+
+        $container = $this->createControllerContainer();
+        $container->set('router', $urls);
+        $container->set('twig', $twig);
+        $container->set('parameter_bag', new ParameterBag(['nowo_page_layout_kit.pages' => $pages]));
+        $controller->setContainer($container);
+
+        $response = $controller->edit('list', 3);
+        self::assertSame('@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig', $response->getContent());
+
+        return $captured;
     }
 
     public function testCreateBlockFormSelectsTheExpectedFormTypeForEveryBlockKind(): void

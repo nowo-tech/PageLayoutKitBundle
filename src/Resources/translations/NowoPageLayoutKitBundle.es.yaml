@@ -10,6 +10,8 @@ admin.layout.edit: Editar
 admin.layout.empty: 'No hay bloques migrados. Ejecuta nowo:page-layout:migrate.'
 admin.layout.save_order: Guardar orden
 admin.blocks.edit.title: Editar bloque
+admin.blocks.edit.lead: 'La edición completa de bloques %type% estará disponible próximamente.'
+admin.blocks.edit.back_to_layout: Volver al diseño
 admin.action.back: Volver
 admin.action.save: Guardar
 admin.flash.saved: Guardado.

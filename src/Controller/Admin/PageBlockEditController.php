@@ -9,6 +9,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCompareBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageCtaBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
+use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
@@ -112,11 +113,35 @@ final class PageBlockEditController extends AbstractController
             throw $this->createNotFoundException('Page block not found.');
         }
 
+        $pageKey = $this->owningPageKey($pageBlockType, $id);
+
         return $this->render('@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig', [
-            'page_title' => $this->translate('admin.blocks.edit.title', 'Edit block'),
-            'block_type' => $pageBlockType,
-            'block_id'   => $id,
+            'page_title'    => $this->translate('admin.blocks.edit.title', 'Edit block'),
+            'block_type'    => $pageBlockType,
+            'block_id'      => $id,
+            'page_key'      => $pageKey,
+            'back_url'      => $pageKey !== null ? $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]) : null,
+            'view_page_url' => $pageKey !== null ? $this->publicPageUrls?->resolve($pageKey) : null,
         ]);
+    }
+
+    /**
+     * Page key whose layout contains the block; falls back to the first configured page (null when none).
+     */
+    private function owningPageKey(PageBlockType $pageBlockType, int $id): ?string
+    {
+        $entry = $this->entityManager->getRepository(PageLayoutEntry::class)->findOneBy([
+            'pageBlockType' => $pageBlockType,
+            'blockId'       => $id,
+        ]);
+        if ($entry instanceof PageLayoutEntry && $entry->getPageKey() !== '') {
+            return $entry->getPageKey();
+        }
+
+        /** @var list<string> $pages */
+        $pages = $this->getParameter('nowo_page_layout_kit.pages');
+
+        return $pages[0] ?? null;
     }
 
     /**
