@@ -8,5 +8,9 @@ nowo_page_layout_kit:
     web_ui:
         layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
         css_framework: bootstrap5
+        # pageKey => route name for the admin "View page" link and post-save redirect (since 1.3.0).
+        page_routes:
+            home: home
+            contact: contact
     doctrine:
         table_prefix: ''
