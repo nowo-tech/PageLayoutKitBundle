@@ -1,4 +1,4 @@
-.PHONY: help up down build install shell logs test test-coverage cache-clear link-bundle update update-bundle update-deps ensure-up restart release-check database
+.PHONY: help up down build install shell logs test test-coverage cache-clear link-bundle update update-bundle update-deps ensure-up restart release-check database seed
 
 DOCKER_BIN := $(shell command -v docker 2>/dev/null)
 ifeq ($(DOCKER_BIN),)
@@ -14,6 +14,7 @@ help:
 	@echo "  Login:      /login (admin/admin)"
 	@echo "  Admin home: /admin/pages/home/layout"
 	@echo "  Admin contact: /admin/pages/contact/layout"
+	@echo "  make seed  Seed demo page blocks (run by make up; no-op when blocks exist)"
 
 up:
 	@if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi
@@ -36,6 +37,7 @@ up:
 	@echo "Installing dependencies..."
 	@$(DOCKER_COMPOSE) exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction
 	@$(MAKE) link-bundle
+	@$(MAKE) seed
 	@PORT=$$(grep "^PORT=" .env 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	[ -z "$$PORT" ] && PORT=$$(grep "^PORT=" .env.example 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	echo "Demo started at: http://localhost:$$PORT"
@@ -65,6 +67,11 @@ logs:
 
 database: ensure-up
 	$(DOCKER_COMPOSE) exec -T php sh -c "php bin/console doctrine:database:create --if-not-exists --no-interaction && php bin/console doctrine:schema:update --force --no-interaction"
+	@$(MAKE) seed
+
+# Demo page blocks (home + contact, en/es) from App\PageLayout\DemoPageContentProvider; no-op when blocks exist.
+seed: ensure-up
+	$(DOCKER_COMPOSE) exec -T php php bin/console nowo:page-layout:migrate --if-empty --no-interaction
 
 test: ensure-up link-bundle
 	$(DOCKER_COMPOSE) exec -e APP_ENV=test php sh -c "mkdir -p var/data && php bin/console doctrine:schema:update --force"

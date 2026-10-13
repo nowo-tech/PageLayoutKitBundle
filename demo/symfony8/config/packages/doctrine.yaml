@@ -2,6 +2,8 @@ doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
     orm:
+        # PageLayoutKit's batch SQL loader assumes underscore column names (docs/CONFIGURATION.md).
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         auto_mapping: true
         validate_xml_mapping: true
         mappings:

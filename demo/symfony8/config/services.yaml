@@ -6,3 +6,8 @@ services:
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
+
+    App\PageLayout\DemoPageContentProvider: ~
+
+    # Seed source for `nowo:page-layout:migrate --if-empty` (run by `make up`).
+    Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface: '@App\PageLayout\DemoPageContentProvider'
