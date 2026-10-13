@@ -1,7 +1,17 @@
 # Upgrading
 
-
 ## Unreleased
+
+## To 1.3.0
+
+From **1.2.1** — fixes - table_prefix honoured in native SQL, no hard-coded host route, 404 for unknown block types.
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+- Hosts using `doctrine.table_prefix` now get block content (the native queries used to fail).
+- The admin "View page" link uses the new `web_ui.page_routes` map (or a route named like the page key) and is hidden when no route exists, instead of requiring a host route named `home`.
 
 ## To 1.2.1
 
@@ -39,7 +49,6 @@ php bin/console cache:clear
 This document describes how to upgrade **Page Layout Kit Bundle** between released versions.
 
 ## Table of contents
-
 
 - [From 1.0.6 to 1.1.0](#from-106-to-110)
 - [From 1.0.5 to 1.0.6](#from-105-to-106)

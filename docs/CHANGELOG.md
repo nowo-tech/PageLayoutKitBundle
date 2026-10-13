@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.3.0] - 2026-10-13](#130---2026-10-13)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
   - [Fixed](#fixed)
   - [Dependencies](#dependencies)
@@ -23,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-13
+
 ### Added
 
 - `web_ui.page_routes` (pageKey => route name) for the admin "View page" link and the post-save redirect; unmapped page keys try a route named like the key.
@@ -33,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The layout admin and block save no longer require a host route named `home` (500 before): the "View page" link is hidden when no route resolves, and saving without a `Referer` redirects to the first resolvable public page or back to the layout admin.
 - Unknown `{type}` in `/admin/page-blocks/{type}/{id}` routes returns 404 instead of a 500 (`PageBlockType::tryFrom`).
 - Admin flash messages ("Block updated.", "Order updated.") and the block edit page title are translated (7 locales) instead of hard-coded Spanish/English.
+
+[1.3.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.3.0
 
 ## [1.2.1] - 2026-10-09
 
