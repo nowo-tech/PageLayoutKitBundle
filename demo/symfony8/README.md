@@ -39,7 +39,7 @@ make -C demo/symfony8 down
 
 - Bundle config: `config/packages/nowo_page_layout_kit.yaml`
 - Routes import: `config/routes/nowo_page_layout_kit.yaml`
-- Security: in-memory `ROLE_ADMIN` demo user with HTTP Basic
+- Security: in-memory `ROLE_ADMIN` demo user (`admin` / `admin`) with form login at `/login` (CSRF-protected, logout at `/logout`); `/admin/` requires `ROLE_ADMIN`
 - Doctrine: underscore naming strategy (the bundle's batch SQL loader expects underscore column names)
 - Database: MySQL 8 (`mysql` service, not published to the host; DSN via `DATABASE_URL`)
 
