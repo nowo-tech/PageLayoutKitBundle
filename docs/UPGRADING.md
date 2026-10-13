@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+- Page layout kit form types no longer render FormKit's convention `{form}.{field}.help` / `.placeholder` keys implicitly. If your app translated any of those keys in its own `NowoPageLayoutKitBundle` catalogue, pass `help` / `placeholder` explicitly through a form type extension. The block edit field labels are now shipped by the bundle; app overrides of the same keys keep working.
+
 ## To 1.4.0
 
 From **1.3.0** — translated block edit stub with resolved links; real translations for all locales.

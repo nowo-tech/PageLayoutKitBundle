@@ -17,3 +17,23 @@ admin.action.save: Salva
 admin.flash.saved: Salvato.
 admin.flash.reordered: Ordine aggiornato.
 admin.flash.block_updated: Blocco aggiornato.
+page_block_locale_panel.title.label: Titolo
+page_block_locale_panel.items.label: Elementi
+page_block_locale_panel.items.help: 'Un elemento per riga. Schede: Titolo | Testo.'
+page_compare_block_edit.before_label.label: Prima — etichetta
+page_compare_block_edit.before_text.label: Prima — testo
+page_compare_block_edit.after_label.label: Dopo — etichetta
+page_compare_block_edit.after_text.label: Dopo — testo
+page_cta_block_edit.title.label: Titolo
+page_cta_block_edit.body.label: Testo
+page_hero_block_edit.page_title.label: Titolo della pagina
+page_hero_block_edit.page_description.label: Descrizione della pagina (meta)
+page_hero_block_edit.eyebrow.label: Occhiello
+page_hero_block_edit.title.label: Titolo
+page_hero_block_edit.subtitle.label: Sottotitolo
+page_hero_block_edit.cta_primary.label: Testo del pulsante principale
+page_hero_block_edit.cta_secondary.label: Testo del pulsante secondario
+page_text_block_edit.page_title.label: Titolo della pagina
+page_text_block_edit.page_description.label: Descrizione della pagina (meta)
+page_text_block_edit.title.label: Titolo
+page_text_block_edit.body.label: Testo

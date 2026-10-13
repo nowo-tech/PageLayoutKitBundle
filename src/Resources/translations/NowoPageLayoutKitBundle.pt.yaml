@@ -17,3 +17,23 @@ admin.action.save: Guardar
 admin.flash.saved: Guardado.
 admin.flash.reordered: Ordem atualizada.
 admin.flash.block_updated: Bloco atualizado.
+page_block_locale_panel.title.label: Título
+page_block_locale_panel.items.label: Itens
+page_block_locale_panel.items.help: 'Um item por linha. Cartões: Título | Texto.'
+page_compare_block_edit.before_label.label: Antes — rótulo
+page_compare_block_edit.before_text.label: Antes — texto
+page_compare_block_edit.after_label.label: Depois — rótulo
+page_compare_block_edit.after_text.label: Depois — texto
+page_cta_block_edit.title.label: Título
+page_cta_block_edit.body.label: Texto
+page_hero_block_edit.page_title.label: Título da página
+page_hero_block_edit.page_description.label: Descrição da página (meta)
+page_hero_block_edit.eyebrow.label: Antetítulo
+page_hero_block_edit.title.label: Título
+page_hero_block_edit.subtitle.label: Subtítulo
+page_hero_block_edit.cta_primary.label: Texto do botão principal
+page_hero_block_edit.cta_secondary.label: Texto do botão secundário
+page_text_block_edit.page_title.label: Título da página
+page_text_block_edit.page_description.label: Descrição da página (meta)
+page_text_block_edit.title.label: Título
+page_text_block_edit.body.label: Texto

@@ -18,6 +18,7 @@ final class PageBlockLocalePanelType extends AbstractPageLayoutFormType
             $this->addTextField('title');
             $this->addTextareaField('items', [
                 'required' => false,
+                'help'     => 'page_block_locale_panel.items.help',
                 'attr'     => ['rows' => 10],
             ]);
         });

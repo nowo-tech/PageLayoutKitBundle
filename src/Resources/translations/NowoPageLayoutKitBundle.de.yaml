@@ -17,3 +17,23 @@ admin.action.save: Speichern
 admin.flash.saved: Gespeichert.
 admin.flash.reordered: Reihenfolge aktualisiert.
 admin.flash.block_updated: Block aktualisiert.
+page_block_locale_panel.title.label: Titel
+page_block_locale_panel.items.label: Einträge
+page_block_locale_panel.items.help: 'Ein Eintrag pro Zeile. Karten: Titel | Text.'
+page_compare_block_edit.before_label.label: Vorher — Beschriftung
+page_compare_block_edit.before_text.label: Vorher — Inhalt
+page_compare_block_edit.after_label.label: Nachher — Beschriftung
+page_compare_block_edit.after_text.label: Nachher — Inhalt
+page_cta_block_edit.title.label: Titel
+page_cta_block_edit.body.label: Inhalt
+page_hero_block_edit.page_title.label: Seitentitel
+page_hero_block_edit.page_description.label: Seitenbeschreibung (Meta)
+page_hero_block_edit.eyebrow.label: Dachzeile
+page_hero_block_edit.title.label: Titel
+page_hero_block_edit.subtitle.label: Untertitel
+page_hero_block_edit.cta_primary.label: Text der primären Schaltfläche
+page_hero_block_edit.cta_secondary.label: Text der sekundären Schaltfläche
+page_text_block_edit.page_title.label: Seitentitel
+page_text_block_edit.page_description.label: Seitenbeschreibung (Meta)
+page_text_block_edit.title.label: Titel
+page_text_block_edit.body.label: Inhalt

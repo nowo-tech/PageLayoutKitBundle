@@ -17,3 +17,23 @@ admin.action.save: Save
 admin.flash.saved: Saved.
 admin.flash.reordered: Order updated.
 admin.flash.block_updated: Block updated.
+page_block_locale_panel.title.label: Title
+page_block_locale_panel.items.label: Items
+page_block_locale_panel.items.help: 'One item per line. Cards: Title | Text.'
+page_compare_block_edit.before_label.label: Before — label
+page_compare_block_edit.before_text.label: Before — text
+page_compare_block_edit.after_label.label: After — label
+page_compare_block_edit.after_text.label: After — text
+page_cta_block_edit.title.label: Title
+page_cta_block_edit.body.label: Text
+page_hero_block_edit.page_title.label: Page title
+page_hero_block_edit.page_description.label: Page description (meta)
+page_hero_block_edit.eyebrow.label: Eyebrow
+page_hero_block_edit.title.label: Title
+page_hero_block_edit.subtitle.label: Subtitle
+page_hero_block_edit.cta_primary.label: Primary button text
+page_hero_block_edit.cta_secondary.label: Secondary button text
+page_text_block_edit.page_title.label: Page title
+page_text_block_edit.page_description.label: Page description (meta)
+page_text_block_edit.title.label: Title
+page_text_block_edit.body.label: Text

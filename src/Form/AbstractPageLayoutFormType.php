@@ -32,6 +32,25 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
         ]);
     }
 
+    /**
+     * Page layout kit forms only show help / placeholder copy that is passed explicitly: FormKit's
+     * convention keys ({form}.{field}.help / .placeholder) are not shipped in the catalogues, and an
+     * untranslated key would be rendered verbatim (e.g. "page_layout_reorder.rows.help").
+     *
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed> $options
+     */
+    #[Override]
+    protected function addField(FormBuilderInterface $builder, string $name, string $typeSnakeCase, array $options = []): void
+    {
+        $options += ['help' => false];
+        if (!isset($options['attr']['placeholder'])) {
+            $options += ['placeholder' => false];
+        }
+
+        parent::addField($builder, $name, $typeSnakeCase, $options);
+    }
+
     /** @param array<string, mixed> $options */
     protected function addCkeditor5Field(string $name, array $options = []): void
     {
@@ -54,6 +73,8 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
             'entry_type'   => $entryType,
             'allow_add'    => false,
             'allow_delete' => false,
+            // Rendered as locale tabs; the collection itself has no visible label.
+            'label' => false,
             ...$options,
         ]);
     }

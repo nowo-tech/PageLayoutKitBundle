@@ -17,3 +17,23 @@ admin.action.save: Opslaan
 admin.flash.saved: Opgeslagen.
 admin.flash.reordered: Volgorde bijgewerkt.
 admin.flash.block_updated: Blok bijgewerkt.
+page_block_locale_panel.title.label: Titel
+page_block_locale_panel.items.label: Onderdelen
+page_block_locale_panel.items.help: 'Eén onderdeel per regel. Kaarten: Titel | Tekst.'
+page_compare_block_edit.before_label.label: Voor — label
+page_compare_block_edit.before_text.label: Voor — tekst
+page_compare_block_edit.after_label.label: Na — label
+page_compare_block_edit.after_text.label: Na — tekst
+page_cta_block_edit.title.label: Titel
+page_cta_block_edit.body.label: Tekst
+page_hero_block_edit.page_title.label: Paginatitel
+page_hero_block_edit.page_description.label: Paginabeschrijving (meta)
+page_hero_block_edit.eyebrow.label: Bovenkop
+page_hero_block_edit.title.label: Titel
+page_hero_block_edit.subtitle.label: Ondertitel
+page_hero_block_edit.cta_primary.label: Tekst primaire knop
+page_hero_block_edit.cta_secondary.label: Tekst secundaire knop
+page_text_block_edit.page_title.label: Paginatitel
+page_text_block_edit.page_description.label: Paginabeschrijving (meta)
+page_text_block_edit.title.label: Titel
+page_text_block_edit.body.label: Tekst

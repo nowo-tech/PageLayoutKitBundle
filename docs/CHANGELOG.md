@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Translations:** the layout reorder form no longer shows the raw key `page_layout_reorder.rows.help` (visible when a page has no blocks), and the block edit modals (hero, text, CTA, compare, cards, list) no longer show raw `page_*_block_edit.*.label` / `.help` / `.placeholder` keys. `AbstractPageLayoutFormType` now renders help / placeholder only when a field passes them explicitly, translations collections render without a label (they are shown as locale tabs), and the field labels plus the cards/list items help ship in all seven locales. New regression test renders every bundle form and checks each label / help / placeholder key against every catalogue.
+
 ## [1.4.0] - 2026-10-13
 
 ### Fixed

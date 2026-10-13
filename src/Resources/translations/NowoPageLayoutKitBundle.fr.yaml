@@ -17,3 +17,23 @@ admin.action.save: Enregistrer
 admin.flash.saved: Enregistré.
 admin.flash.reordered: Ordre mis à jour.
 admin.flash.block_updated: Bloc mis à jour.
+page_block_locale_panel.title.label: Titre
+page_block_locale_panel.items.label: Éléments
+page_block_locale_panel.items.help: 'Un élément par ligne. Cartes : Titre | Texte.'
+page_compare_block_edit.before_label.label: Avant — libellé
+page_compare_block_edit.before_text.label: Avant — texte
+page_compare_block_edit.after_label.label: Après — libellé
+page_compare_block_edit.after_text.label: Après — texte
+page_cta_block_edit.title.label: Titre
+page_cta_block_edit.body.label: Texte
+page_hero_block_edit.page_title.label: Titre de la page
+page_hero_block_edit.page_description.label: Description de la page (méta)
+page_hero_block_edit.eyebrow.label: Surtitre
+page_hero_block_edit.title.label: Titre
+page_hero_block_edit.subtitle.label: Sous-titre
+page_hero_block_edit.cta_primary.label: Texte du bouton principal
+page_hero_block_edit.cta_secondary.label: Texte du bouton secondaire
+page_text_block_edit.page_title.label: Titre de la page
+page_text_block_edit.page_description.label: Description de la page (méta)
+page_text_block_edit.title.label: Titre
+page_text_block_edit.body.label: Texte
