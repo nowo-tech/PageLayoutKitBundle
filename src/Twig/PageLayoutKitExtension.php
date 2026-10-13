@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Twig;
 
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
+use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
@@ -14,6 +15,11 @@ use Twig\TwigFunction;
  */
 final class PageLayoutKitExtension extends AbstractExtension implements GlobalsInterface
 {
+    /** Form themes of optional bundles, applied to the block edit modal when installed. */
+    private const array OPTIONAL_MODAL_FORM_THEMES = [
+        '@NowoCkeditor5EditorBundle/Form/ckeditor5_editor_theme.html.twig',
+    ];
+
     /**
      * @param list<string> $pages
      */
@@ -33,12 +39,32 @@ final class PageLayoutKitExtension extends AbstractExtension implements GlobalsI
     {
         return [
             new TwigFunction('nowo_page_layout_kit_can_edit', $this->canEdit(...)),
+            new TwigFunction('nowo_page_layout_kit_modal_form_themes', $this->modalFormThemes(...), ['needs_environment' => true]),
         ];
     }
 
     public function canEdit(): bool
     {
         return $this->accessChecker->canAccess();
+    }
+
+    /**
+     * Form themes for the block edit modal: only those of optional bundles that are installed
+     * (never host templates), on top of the host's global twig.form_themes.
+     *
+     * @return list<string>
+     */
+    public function modalFormThemes(Environment $environment): array
+    {
+        $loader = $environment->getLoader();
+        $themes = [];
+        foreach (self::OPTIONAL_MODAL_FORM_THEMES as $theme) {
+            if ($loader->exists($theme)) {
+                $themes[] = $theme;
+            }
+        }
+
+        return $themes;
     }
 
     /**

@@ -37,3 +37,11 @@ page_text_block_edit.page_title.label: Page title
 page_text_block_edit.page_description.label: Page description (meta)
 page_text_block_edit.title.label: Title
 page_text_block_edit.body.label: Text
+admin.locale_tabs.label: Locales
+locale.de: German
+locale.en: English
+locale.es: Spanish
+locale.fr: French
+locale.it: Italian
+locale.nl: Dutch
+locale.pt: Portuguese

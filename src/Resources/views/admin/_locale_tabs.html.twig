@@ -1,6 +1,7 @@
 {# Expects `translations` = form field (CollectionType of locale-aware entries).
    Optional: `active_locale` (request/UI locale for the initially selected tab).
    Optional: `id_prefix` to avoid duplicate DOM ids when multiple tab sets exist. #}
+{% trans_default_domain 'NowoPageLayoutKitBundle' %}
 {% set default_locale = nowo_page_layout_kit_default_locale|default('es') %}
 {% set active_locale = active_locale|default(default_locale) %}
 {% if active_locale is empty %}
@@ -33,7 +34,7 @@
           {% if locale != active_locale %}tabindex="-1"{% endif %}
         >
           <span class="admin-locale-tabs__required" aria-hidden="true">*</span>
-          {{ locale|upper }} — {{ ('locale.' ~ locale)|trans }}
+          {% set locale_name = ('locale.' ~ locale)|trans %}{{ locale|upper }}{% if locale_name != 'locale.' ~ locale %} — {{ locale_name }}{% endif %}
         </button>
       {% endif %}
     {% endfor %}
@@ -54,7 +55,7 @@
           aria-controls="{{ panel_id }}"
           {% if locale != active_locale %}tabindex="-1"{% endif %}
         >
-          {{ locale|upper }} — {{ ('locale.' ~ locale)|trans }}
+          {% set locale_name = ('locale.' ~ locale)|trans %}{{ locale|upper }}{% if locale_name != 'locale.' ~ locale %} — {{ locale_name }}{% endif %}
         </button>
       {% endif %}
     {% endfor %}

@@ -1,12 +1,13 @@
-{% form_theme form with [
-  '@NowoCkeditor5EditorBundle/Form/ckeditor5_editor_theme.html.twig',
-  'form/auth_theme.html.twig',
-] %}
+{# Block edit modal body. Self-contained: only bundle templates are used. Hosts customise it by
+   overriding templates/bundles/NowoPageLayoutKitBundle/admin/_modal_form.html.twig (or
+   admin/_locale_tabs.html.twig), and their global twig.form_themes still apply. #}
+{% trans_default_domain 'NowoPageLayoutKitBundle' %}
+{% form_theme form with nowo_page_layout_kit_modal_form_themes() %}
 
 {{ form_start(form, {attr: {class: 'admin-form cms-modal-form', id: 'cms-modal-active-form'}}) }}
   {% for field in form %}
     {% if field.vars.name == 'translations' %}
-      {{ include('components/admin/_locale_tabs.html.twig', {
+      {{ include('@NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig', {
         translations: field,
         active_locale: locale|default(active_locale|default(null)),
         id_prefix: 'cms-locale',
