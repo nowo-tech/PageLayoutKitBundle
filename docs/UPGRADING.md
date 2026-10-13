@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## To 1.4.0
+
+From **1.3.0** — translated block edit stub with resolved links; real translations for all locales.
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
 - The block edit page now extends `web_ui.layout_template` instead of a host `admin/layout.html.twig`; if you overrode `@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig`, note the new variables `page_key`, `back_url` and `view_page_url` (both URLs may be null).
 
 ## To 1.3.0

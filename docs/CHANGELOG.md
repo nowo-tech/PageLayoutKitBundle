@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.0] - 2026-10-13](#140---2026-10-13)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
   - [Fixed](#fixed)
@@ -24,11 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-13
+
 ### Fixed
 
 - Block edit page (`admin/blocks/edit_stub.html.twig`): no more hard-coded Spanish strings or `pageKey: 'home'` link. The page now extends the configured `web_ui.layout_template` (it extended a host `admin/layout.html.twig`), uses the new `admin.blocks.edit.lead` / `admin.blocks.edit.back_to_layout` keys in all 7 locales, links back to the layout of the page that contains the block (first configured page as fallback) and shows a "View page" link through `PublicPageUrlResolver` when the host routes that page.
 - Translations: de/fr/it/nl/pt had English placeholder values for most `admin.layout.*` / `admin.action.*` / `admin.flash.*` keys; they are now real translations. A key/placeholder parity test guards all locales.
 - Admin templates passed the CSS framework as the `size` argument of the UI Kit `ui.btn()` macro; buttons now get the framework classes.
+
+[1.4.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.4.0
 
 ## [1.3.0] - 2026-10-13
 
