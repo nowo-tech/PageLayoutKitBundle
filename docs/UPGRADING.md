@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.5.0](#to-150)
 - [To 1.4.0](#to-140)
 - [To 1.3.0](#to-130)
 - [To 1.2.1](#to-121)
@@ -17,6 +18,14 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+## To 1.5.0
+
+From **1.4.0** — self-contained admin modal templates and translated block forms
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 - Page layout kit form types no longer render FormKit's convention `{form}.{field}.help` / `.placeholder` keys implicitly. If your app translated any of those keys in its own `NowoPageLayoutKitBundle` catalogue, pass `help` / `placeholder` explicitly through a form type extension. The block edit field labels are now shipped by the bundle; app overrides of the same keys keep working.
 - The block edit modal no longer includes your app's `components/admin/_locale_tabs.html.twig` or applies `form/auth_theme.html.twig`. To keep a custom look, override `templates/bundles/NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig` (or `admin/_modal_form.html.twig`), or register your form theme globally in `twig.form_themes`.
