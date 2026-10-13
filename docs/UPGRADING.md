@@ -1,5 +1,21 @@
 # Upgrading
 
+## Table of contents
+
+- [Unreleased](#unreleased)
+- [To 1.4.0](#to-140)
+- [To 1.3.0](#to-130)
+- [To 1.2.1](#to-121)
+- [To 1.2.0](#to-120)
+- [To 1.1.1](#to-111)
+- [From 1.0.6 to 1.1.0](#from-106-to-110)
+- [From 1.0.5 to 1.0.6](#from-105-to-106)
+- [From 1.0.4 to 1.0.5](#from-104-to-105)
+- [1.0.4](#104)
+- [1.0.2](#102)
+- [1.0.1](#101)
+- [1.0.0](#100)
+
 ## Unreleased
 
 ## To 1.4.0
@@ -57,16 +73,6 @@ php bin/console cache:clear
 - No application upgrade steps for require-dev Igor tooling (REQ-CS-008). Consumers do not pull `igor-php/igor-php` transitively.
 
 This document describes how to upgrade **Page Layout Kit Bundle** between released versions.
-
-## Table of contents
-
-- [From 1.0.6 to 1.1.0](#from-106-to-110)
-- [From 1.0.5 to 1.0.6](#from-105-to-106)
-- [From 1.0.4 to 1.0.5](#from-104-to-105)
-- [1.0.4](#104)
-- [1.0.2](#102)
-- [1.0.1](#101)
-- [1.0.0](#100)
 
 ## From 1.0.6 to 1.1.0
 
