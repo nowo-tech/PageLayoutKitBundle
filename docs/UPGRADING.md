@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.6.0](#to-160)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [To 1.4.0](#to-140)
@@ -19,6 +20,14 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+## To 1.6.0
+
+From **1.5.1**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 From **1.5.1**:
 

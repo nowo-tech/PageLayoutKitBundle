@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.0] - 2026-10-19](#160---2026-10-19)
 - [[1.5.1] - 2026-10-18](#151---2026-10-18)
 - [[1.5.0] - 2026-10-13](#150---2026-10-13)
 - [[1.4.0] - 2026-10-13](#140---2026-10-13)
@@ -24,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-10-19
+
+Block edit modal translations use FormKit 2.13 locale_tabs through the UiKit 2.5 partial; CKEditor remounts on nowo-ui:tabs:change and hosts no longer need a locale-tabs Stimulus controller; requires FormKit ^2.13 and UiKit ^2.5.1. See [UPGRADING](UPGRADING.md#to-160).
 
 ### Changed
 
@@ -44,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `@NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig`, its `admin.locale_tabs.label` translation key and the
   dependency on a host Stimulus `locale-tabs` controller.
+
+[1.6.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.6.0
 
 ## [1.5.1] - 2026-10-18
 
