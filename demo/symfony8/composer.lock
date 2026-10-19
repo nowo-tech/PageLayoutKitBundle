@@ -1043,7 +1043,7 @@
         },
         {
             "name": "nowo-tech/page-layout-kit-bundle",
-            "version": "dev-feature/locale-tabs",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "/var/page-layout-kit-bundle",
