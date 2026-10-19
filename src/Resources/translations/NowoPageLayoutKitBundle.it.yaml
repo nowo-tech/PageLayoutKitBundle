@@ -37,7 +37,6 @@ page_text_block_edit.page_title.label: Titolo della pagina
 page_text_block_edit.page_description.label: Descrizione della pagina (meta)
 page_text_block_edit.title.label: Titolo
 page_text_block_edit.body.label: Testo
-admin.locale_tabs.label: Lingue
 locale.de: Tedesco
 locale.en: Inglese
 locale.es: Spagnolo

@@ -1,17 +1,33 @@
 {# Block edit modal body. Self-contained: only bundle templates are used. Hosts customise it by
-   overriding templates/bundles/NowoPageLayoutKitBundle/admin/_modal_form.html.twig (or
-   admin/_locale_tabs.html.twig), and their global twig.form_themes still apply. #}
+   overriding templates/bundles/NowoPageLayoutKitBundle/admin/_modal_form.html.twig, and their global
+   twig.form_themes still apply. Translations render as FormKit locale tabs (mode entries) through the UiKit
+   locale_tabs partial; editors in a panel mount on `nowo-ui:tabs:change` (cms_modal_controller.ts). #}
 {% trans_default_domain 'NowoPageLayoutKitBundle' %}
 {% form_theme form with nowo_page_layout_kit_modal_form_themes() %}
 
 {{ form_start(form, {attr: {class: 'admin-form cms-modal-form', id: 'cms-modal-active-form'}}) }}
   {% for field in form %}
     {% if field.vars.name == 'translations' %}
-      {{ include('@NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig', {
-        translations: field,
+      {% set _default_locale = nowo_page_layout_kit_default_locale|default('es') %}
+      {% set _locale_labels = {} %}
+      {% for _entry in field %}
+        {% set _l = _entry.locale is defined ? _entry.locale.vars.value : '' %}
+        {% if _l is not empty %}
+          {% set _name = ('locale.' ~ _l)|trans %}
+          {% set _locale_labels = _locale_labels|merge({(_l): _name != 'locale.' ~ _l ? _name : _l|upper}) %}
+        {% endif %}
+      {% endfor %}
+      {{ form_errors(field) }}
+      {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', field.vars.locale_tabs|default({})|merge({
+        field: field,
+        mode: 'entries',
+        default_locale: _default_locale,
+        required_locales: [_default_locale],
         active_locale: locale|default(active_locale|default(null)),
-        id_prefix: 'cms-locale',
-      }) }}
+        tabs_id: id_prefix|default('cms-locale'),
+        testid: 'page-layout-kit-locale-tabs',
+        locale_labels: _locale_labels,
+      }), with_context: false) }}
     {% elseif field.vars.name == '_token' %}
       {{ form_widget(field) }}
     {% else %}

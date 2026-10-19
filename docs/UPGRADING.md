@@ -20,6 +20,31 @@
 
 ## Unreleased
 
+From **1.5.1**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle nowo-tech/form-kit-bundle nowo-tech/ui-kit-bundle -W
+```
+
+Requires **FormKit ^2.13** and **UiKit ^2.5.1** (UiKit 1.x dropped).
+
+What hosts must do / may notice:
+
+- **Delete your `locale-tabs` Stimulus controller** if it only served this modal (e.g. `assets/controllers/locale_tabs_controller.js`
+  and its registration): the modal no longer emits `data-controller="locale-tabs"`. The tabs are driven by UiKit's
+  `nowo-ui-tabs.js`, loaded by `cms/modal_shell.html.twig` (and `admin/layout.html.twig`); a host that loads it too is
+  fine (idempotent). Load UiKit's `nowo-ui.css` on pages with the modal for the tab styling.
+- **Copied `cms_modal_controller.ts`:** re-copy it. CKEditor now remounts on `nowo-ui:tabs:change`
+  (`event.detail.panel`), not `locale-tabs:changed`; panels are `[data-nowo-ui-tabs-panel]` with `data-active` instead
+  of `[data-locale-panel].is-active`.
+- **Removed partial:** `admin/_locale_tabs.html.twig`. Delete `templates/bundles/NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig`
+  overrides; customise the look with UiKit theme slots (`tabs`, `tab`, `tab_active`, `tab_panel`) or
+  `nowo_ui_kit.theme.partials.locale_tabs`, or override `admin/_modal_form.html.twig` (see [TEMPLATES](TEMPLATES.md)).
+- **Changed DOM ids / classes:** `cms-locale-tab-<locale>` → `tab-cms-locale-<locale>`, `cms-locale-panel-<locale>` →
+  `tab-cms-locale-<locale>-panel`, root `#cms-locale` (`[data-nowo-ui-locale-tabs]`); `admin-locale-tabs*`, `is-active`,
+  `data-locale-panel`, `data-locale-tabs-*` are gone.
+- **Translation key removed:** `admin.locale_tabs.label` (the tab list label comes from UiKit `locale_tabs.label`).
+
 ## To 1.5.1
 
 From **1.5.0**:

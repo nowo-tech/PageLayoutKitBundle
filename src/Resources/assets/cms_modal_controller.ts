@@ -182,27 +182,29 @@ export default class CmsModalController extends Controller {
     }
 
     /**
-     * Remount CKEditor when locale tabs switch inside the modal body.
+     * Mount CKEditor in the panel a locale tab opens (UiKit `nowo-ui:tabs:change`, `detail.panel`).
      */
     private bindLocaleTabCkeditorRefresh(container: HTMLElement): void {
-        container.addEventListener('locale-tabs:changed', () => {
-            void this.mountRichTextEditorsForActivePanels();
+        container.addEventListener('nowo-ui:tabs:change', (event: Event) => {
+            const panel = (event as CustomEvent<{ panel?: HTMLElement | null }>).detail?.panel ?? null;
+            void this.mountRichTextEditorsForActivePanels(panel);
         });
     }
 
     /**
      * Mount CKEditor only on visible (active) locale panels to avoid tripling cost.
      */
-    private async mountRichTextEditorsForActivePanels(): Promise<void> {
+    private async mountRichTextEditorsForActivePanels(scope: HTMLElement | null = null): Promise<void> {
         const initRoot = CmsModalController.ckeditorInitRoot;
         if (!initRoot) {
             return;
         }
 
-        const roots = this.bodyTarget.querySelectorAll<HTMLElement>('.ckeditor5-editor-widget');
+        const roots = (scope ?? this.bodyTarget).querySelectorAll<HTMLElement>('.ckeditor5-editor-widget');
         for (const root of roots) {
-            const panel = root.closest<HTMLElement>('[data-locale-panel]');
-            if (panel && (panel.hidden || !panel.classList.contains('is-active'))) {
+            // UiKit locale tabs: only the open panel (data-active, set server-side and by nowo-ui-tabs.js).
+            const panel = root.closest<HTMLElement>('[data-nowo-ui-tabs-panel]');
+            if (scope === null && panel && (panel.hidden || !panel.hasAttribute('data-active'))) {
                 continue;
             }
 

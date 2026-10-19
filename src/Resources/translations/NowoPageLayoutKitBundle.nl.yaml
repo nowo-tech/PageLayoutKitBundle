@@ -37,7 +37,6 @@ page_text_block_edit.page_title.label: Paginatitel
 page_text_block_edit.page_description.label: Paginabeschrijving (meta)
 page_text_block_edit.title.label: Titel
 page_text_block_edit.body.label: Tekst
-admin.locale_tabs.label: Talen
 locale.de: Duits
 locale.en: Engels
 locale.es: Spaans

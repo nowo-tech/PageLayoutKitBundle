@@ -25,6 +25,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Block edit modal translations** render through FormKit 2.13 `locale_tabs` (mode `entries`) and UiKit 2.5's
+  `locale_tabs` partial instead of the bundle's own `admin/_locale_tabs.html.twig` and a host-provided Stimulus
+  `locale-tabs` controller: default locale (`nowo_page_layout_kit.default_locale`) first and marked `★` / `*`, the
+  locale child a hidden input, WAI-ARIA tabs with arrow / Home / End keys, invalid tabs marked `!` and opened first,
+  `aria-invalid` on invalid widgets, theme slots `tabs` / `tab` / `tab_active` / `tab_panel`. Translation entries use
+  `error_bubbling: false`. Tab names keep the bundle's `locale.<code>` labels.
+- `cms_modal_controller.ts` remounts CKEditor in the panel a tab opens on `nowo-ui:tabs:change` (`detail.panel`)
+  instead of `locale-tabs:changed`; the open panel is the one with `data-active`.
+- `cms/modal_shell.html.twig` loads UiKit's tabs runtime (`nowo-ui-tabs.js`, through the UiKit `scripts` partial) and
+  `admin/layout.html.twig` loads the UiKit runtimes, so hosts need no tabs controller.
+- The default-locale panel no longer forces `required` on every field; each field keeps its own `required`.
+- Requires `nowo-tech/form-kit-bundle ^2.13` and `nowo-tech/ui-kit-bundle ^2.5.1` (UiKit 1.x is no longer supported).
+
+### Removed
+
+- `@NowoPageLayoutKitBundle/admin/_locale_tabs.html.twig`, its `admin.locale_tabs.label` translation key and the
+  dependency on a host Stimulus `locale-tabs` controller.
+
 ## [1.5.1] - 2026-10-18
 
 Allows nowo-tech/ui-kit-bundle 2.x (^1.4 || ^2.2) so hosts can move to UiKit 2.2. See [UPGRADING](UPGRADING.md#to-151).

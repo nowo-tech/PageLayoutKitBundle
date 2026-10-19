@@ -38,11 +38,12 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
 
         $this->withBuilder($builder, function (): void {
             $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
-                'entry_type'   => PageBlockLocalePanelType::class,
-                'allow_add'    => false,
-                'allow_delete' => false,
-                'label'        => false,
-                'mapped'       => false,
+                'entry_type'    => PageBlockLocalePanelType::class,
+                'entry_options' => ['label' => false, 'error_bubbling' => false],
+                'allow_add'     => false,
+                'allow_delete'  => false,
+                'label'         => false,
+                'mapped'        => false,
             ]);
         });
 

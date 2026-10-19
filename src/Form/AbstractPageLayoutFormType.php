@@ -70,9 +70,10 @@ abstract class AbstractPageLayoutFormType extends FormKitAbstractType
     protected function addTranslationsCollectionField(string $entryType, array $options = []): void
     {
         $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [
-            'entry_type'   => $entryType,
-            'allow_add'    => false,
-            'allow_delete' => false,
+            'entry_type'    => $entryType,
+            'entry_options' => ['label' => false, 'error_bubbling' => false],
+            'allow_add'     => false,
+            'allow_delete'  => false,
             // Rendered as locale tabs; the collection itself has no visible label.
             'label' => false,
             ...$options,
