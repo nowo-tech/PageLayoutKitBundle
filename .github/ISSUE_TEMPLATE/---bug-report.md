@@ -8,8 +8,10 @@ assignees: ''
 ---
 
 <!--
-- Please do not report an issue for a version of PageLayoutKitBundle that is no longer supported.
-- You can retrieve the bundle version by running `composer show nowo-tech/page-layout-kit-bundle`.
+- Please do not report an issue for a version of `page-layout-kit-bundle` that is no longer supported. Currently supported versions are listed here: https://github.com/nowo-tech/PageLayoutKitBundle#version-information
+- Please fill in this template according to your issue.
+- Please keep the table shown below at the top of your issue.
+- You can retrieve `page-layout-kit-bundle` version by running `composer info | grep "page-layout-kit-bundle"`.
 - You can retrieve PHP version by running `php -v`.
 - Please post code as text (using proper markup). Do not post screenshots of code.
 - Please remove this comment before submitting your issue.
@@ -17,9 +19,8 @@ assignees: ''
 
 | Q                           | A
 | ----------------------------| -----------------------
-| `page-layout-kit-bundle` version  | x.y.z
+| `PageLayoutKitBundle` version        | x.y.z
 | PHP version                 | x.y.z
-| Symfony version             | x.y.z
 | Database                    | MySQL / PostgreSQL / SQLite / Other
 
 #### Summary

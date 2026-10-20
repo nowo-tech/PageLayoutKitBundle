@@ -9,6 +9,19 @@
 | Remediation | W-01…W-03 resolved: request-scoped layout memo (`WeakMap`), `nowo_page_layout_kit_can_edit()` Twig function (global deprecated), `HINT_REFRESH` on layout entries **and** admin block loaders, closed entity manager recovery subscriber. Regression tests simulate consecutive requests without `reset()`. |
 | **Verdict** | ✅ **Compatible with scenario B (kernel not reset / no `services_resetter`)** for bundle-owned correctness: layout memo cannot outlive its main request, CMS pencils use a per-call Twig function, layout entries and admin block aggregates refresh from the DB, and a closed entity manager is reset at the next main request. Residual host responsibility: optional Doctrine identity-map memory hygiene (`clear()` / `FRANKENPHP_LOOP_MAX`) and migrating template overrides away from the deprecated `nowo_page_layout_kit_can_edit` global (W-02). |
 
+## Table of contents
+
+- [Execution model assumed](#execution-model-assumed)
+- [Summary](#summary)
+- [Services reviewed](#services-reviewed)
+- [Findings](#findings)
+  - [W-01 — `PageBlockProvider` layout cache survives requests when nothing resets it (Medium)](#w-01--pageblockprovider-layout-cache-survives-requests-when-nothing-resets-it-medium)
+  - [W-02 — `nowo_page_layout_kit_can_edit` is a per-user value exposed as a Twig global (Medium)](#w-02--nowo_page_layout_kit_can_edit-is-a-per-user-value-exposed-as-a-twig-global-medium)
+  - [W-03 — Doctrine EntityManager state relies on DoctrineBundle's resetter (Medium)](#w-03--doctrine-entitymanager-state-relies-on-doctrinebundles-resetter-medium)
+  - [Info](#info)
+- [Usage recommendations in worker mode](#usage-recommendations-in-worker-mode)
+- [Re-audit triggers](#re-audit-triggers)
+
 ## Execution model assumed
 
 FrankenPHP worker mode boots the Symfony kernel once per worker and serves many requests with the same container. This audit assumes the **strict** variant: the kernel is **not** rebooted between requests, so every shared service, static property and PHP global survives from one request to the next. Two scenarios are evaluated:

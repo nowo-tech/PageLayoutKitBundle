@@ -10,6 +10,8 @@ Security considerations for page layout editing, inline CMS modals, and public b
 - [Rich text rendering](#rich-text-rendering)
 - [Operational guidance](#operational-guidance)
 - [Release security checklist](#release-security-checklist)
+- [Secrets](#secrets)
+- [REQ-SEC-004 recording](#req-sec-004-recording)
 
 ## Threat model
 

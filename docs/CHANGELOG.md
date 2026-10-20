@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation: wave-1 REQ compliance — README standard badges (Symfony 7.4 | 8.0 | 8.1+, stars image, Coverage) and documentation list order, canonical FrankenPHP claim line, CONTRIBUTING Cursor Agent settings and post-release-commit trailer check, canonical issue templates, tailored Spec Kit constitution, demo `.env.example` comments, SPEC-DRIVEN-DEVELOPMENT relationship to Engram, doc TOCs, Spec Kit inventory refresh (117/117).
+
 ## [1.6.0] - 2026-10-19
 
 Block edit modal translations use FormKit 2.13 locale_tabs through the UiKit 2.5 partial; CKEditor remounts on nowo-ui:tabs:change and hosts no longer need a locale-tabs Stimulus controller; requires FormKit ^2.13 and UiKit ^2.5.1. See [UPGRADING](UPGRADING.md#to-160).

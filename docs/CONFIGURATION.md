@@ -5,6 +5,7 @@ All options live under the root key `nowo_page_layout_kit`.
 ## Table of contents
 
 - [Full YAML tree](#full-yaml-tree)
+- [html.sanitize](#htmlsanitize)
 - [Top-level options](#top-level-options)
 - [security](#security)
 - [web_ui](#web_ui)

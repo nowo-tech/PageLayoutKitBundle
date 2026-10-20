@@ -2,7 +2,7 @@
 
 **Baseline spec:** [`spec.md`](spec.md)  
 **Package:** `nowo-tech/page-layout-kit-bundle`  
-**Last audited:** 2026-09-24
+**Last audited:** 2026-10-20 (public URL resolver, translation catalogues; removed _locale_tabs view)
 
 Maps production files under `src/` (baseline inventory kept in sync for worker-mode and HTML-sanitize surfaces).
 
@@ -115,6 +115,7 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Service/PageBlockView.php` | Public block view object with template resolution | FR-REN-001, FR-REN-002 |
 | `Service/PageBlockRegistry.php` | Loads typed block aggregates by type and id | FR-ADM-002, FR-ORM-001, FR-WRK-001 |
 | `Service/PageBlockMigrator.php` | Converts legacy content into typed blocks and layout entries | FR-LEG-002, FR-CMP-001 |
+| `Service/PublicPageUrlResolver.php` | Public URL of a page key (view links, redirects) | FR-ADM-004 |
 
 ## Repositories
 
@@ -159,7 +160,6 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | Source file | Purpose | Requirement IDs |
 | --- | --- | --- |
 | `Resources/views/admin/layout.html.twig` | Default admin shell layout | FR-CFG-002, FR-TWIG-001 |
-| `Resources/views/admin/_locale_tabs.html.twig` | Locale tab UI partial | FR-I18N-001, FR-ADM-002 |
 | `Resources/views/admin/_modal_form.html.twig` | Shared admin modal form | FR-ADM-002 |
 | `Resources/views/admin/layout/index.html.twig` | Reorder page layout screen | FR-ADM-001 |
 | `Resources/views/admin/blocks/_modal_form.html.twig` | Block modal body partial | FR-ADM-002 |
@@ -191,9 +191,36 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Resources/views/cms/_icon_pencil.svg.twig` | Pencil icon partial | FR-ADM-002 |
 | `Resources/views/cms/_icon_plus.svg.twig` | Plus icon partial | FR-ADM-002 |
 
+## Resources — translations
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/translations/NowoPageLayoutKitBundle.de.yaml` | UI strings (de) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.en.yaml` | UI strings (en) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.es.yaml` | UI strings (es) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.fr.yaml` | UI strings (fr) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.it.yaml` | UI strings (it) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.nl.yaml` | UI strings (nl) | FR-I18N-002 |
+| `Resources/translations/NowoPageLayoutKitBundle.pt.yaml` | UI strings (pt) | FR-I18N-002 |
+
 ## Coverage summary
 
-| Metric | Value |
-| --- | --- |
-| Production units mapped | 97 |
-| Unmapped files under `src/` | 0 |
+| Category | Files | Mapped |
+| --- | ---: | ---: |
+| Bundle entry | 1 | 1 |
+| Command | 1 | 1 |
+| Controllers | 3 | 3 |
+| Dependency injection and compiler | 4 | 4 |
+| Entities | 17 | 17 |
+| Enums, locale, and model helpers | 5 | 5 |
+| Event subscriber and security | 13 | 13 |
+| Forms | 17 | 17 |
+| Services | 5 | 5 |
+| Repositories | 19 | 19 |
+| Twig extension | 1 | 1 |
+| Resources — config and assets | 3 | 3 |
+| Resources — admin Twig views | 5 | 5 |
+| Resources — public block Twig views | 7 | 7 |
+| Resources — CMS Twig views | 9 | 9 |
+| Resources — translations | 7 | 7 |
+| **Total production sources** | **117** | **117** |

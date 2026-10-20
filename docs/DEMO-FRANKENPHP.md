@@ -2,7 +2,7 @@
 
 This repository ships a Symfony 8 demo for Page Layout Kit Bundle running on FrankenPHP.
 
-## Contents
+## Table of contents
 
 - [Overview](#overview)
 - [What the demo includes](#what-the-demo-includes)
