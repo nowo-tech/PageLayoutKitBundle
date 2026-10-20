@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.1] - 2026-10-20](#161---2026-10-20)
 - [[1.6.0] - 2026-10-19](#160---2026-10-19)
 - [[1.5.1] - 2026-10-18](#151---2026-10-18)
 - [[1.5.0] - 2026-10-13](#150---2026-10-13)
@@ -26,9 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-10-20
+
+Documentation: wave-1 REQ compliance (README, CONTRIBUTING, issue templates, Spec Kit inventory). See [UPGRADING](UPGRADING.md#to-161).
+
 ### Changed
 
 - Documentation: wave-1 REQ compliance — README standard badges (Symfony 7.4 | 8.0 | 8.1+, stars image, Coverage) and documentation list order, canonical FrankenPHP claim line, CONTRIBUTING Cursor Agent settings and post-release-commit trailer check, canonical issue templates, tailored Spec Kit constitution, demo `.env.example` comments, SPEC-DRIVEN-DEVELOPMENT relationship to Engram, doc TOCs, Spec Kit inventory refresh (117/117).
+
+[1.6.1]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.6.1
 
 ## [1.6.0] - 2026-10-19
 
