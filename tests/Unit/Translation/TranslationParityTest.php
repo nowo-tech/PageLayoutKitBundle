@@ -53,22 +53,22 @@ final class TranslationParityTest extends TestCase
     #[DataProvider('locales')]
     public function testLocaleHasTheSameKeysAndPlaceholdersAsEnglish(string $locale): void
     {
-        $en     = self::load('en');
-        $target = self::load($locale);
+        $en     = $this->load('en');
+        $target = $this->load($locale);
 
         self::assertSame(array_keys($en), array_keys($target), $locale . ' keys differ from en');
 
         foreach ($en as $key => $value) {
             self::assertNotSame('', trim($target[$key]), $locale . ':' . $key . ' is empty');
-            self::assertSame(self::placeholders($value), self::placeholders($target[$key]), $locale . ':' . $key . ' placeholders');
+            self::assertSame($this->placeholders($value), $this->placeholders($target[$key]), $locale . ':' . $key . ' placeholders');
         }
     }
 
     #[DataProvider('locales')]
     public function testLocaleValuesAreTranslatedNotEnglishCopies(string $locale): void
     {
-        $en     = self::load('en');
-        $target = self::load($locale);
+        $en     = $this->load('en');
+        $target = $this->load($locale);
 
         foreach ($en as $key => $value) {
             if (in_array($key, self::SAME_AS_ENGLISH[$locale], true)) {
@@ -82,7 +82,7 @@ final class TranslationParityTest extends TestCase
     /**
      * @return array<string, string>
      */
-    private static function load(string $locale): array
+    private function load(string $locale): array
     {
         /** @var array<string, string> $data */
         $data = Yaml::parseFile(self::DIR . '/NowoPageLayoutKitBundle.' . $locale . '.yaml');
@@ -93,7 +93,7 @@ final class TranslationParityTest extends TestCase
     /**
      * @return list<string>
      */
-    private static function placeholders(string $value): array
+    private function placeholders(string $value): array
     {
         preg_match_all('/%[a-z_]+%/', $value, $matches);
         $found = $matches[0];

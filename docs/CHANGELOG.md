@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Dependencies refreshed (Composer and pnpm/npm lock files of the bundle and its demos, campaign 2026-10-19).
 - `.php-cs-fixer.dist.php`: `new ParallelConfig(2)` (REQ-CS-001).
+- `nowo:page-layout:migrate` logs start, result and failure through an optional PSR-3 logger (`psr/log` is now required); `docs/SECURITY.md` documents what is and is not logged; PSR-3 adopted in `docs/PSR.md` (REQ-OBS-001, REQ-SEC-001).
+- Demo login renders through a Symfony form (`_username` / `_password` / `_csrf_token` for `form_login`), and `release-check` now runs `check-no-raw-html-form` (REQ-TWIG-005, REQ-MAKE-002, REQ-DEMO-001).
+- README publishes the measured coverage (REQ-TEST-007); the co-author check accepts git worktrees.
 
 ## [1.6.1] - 2026-10-20
 

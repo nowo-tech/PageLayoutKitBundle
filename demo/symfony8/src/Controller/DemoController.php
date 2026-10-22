@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Form\LoginFormType;
 use Nowo\PageLayoutKitBundle\Service\PageBlockProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,8 +33,12 @@ final class DemoController extends AbstractController
             return $this->redirectToRoute('home');
         }
 
+        $loginForm = $this->createForm(LoginFormType::class, ['_username' => $authenticationUtils->getLastUsername()], [
+            'action' => $this->generateUrl('app_login'),
+        ]);
+
         return $this->render('security/login.html.twig', [
-            'last_username' => $authenticationUtils->getLastUsername(),
+            'loginForm' => $loginForm->createView(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
         ]);
     }

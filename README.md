@@ -101,7 +101,9 @@ Demo default URL: `http://localhost:8127`.
 
 | Area | Status | Command |
 | --- | --- | --- |
-| PHP `src/` coverage target | ≥99% (CI gate) | `make test-coverage` |
+| PHP `src/` coverage | **100%** lines (1908/1908; CI gate ≥99%) | `make test-coverage` |
+| TS/JS | N/A (the shipped `cms_modal_controller.ts` is copied by hosts; no build or test suite in this bundle) | — |
+| Python | N/A | — |
 | Unit and bundle QA | Enabled | `make test` |
 | Full release checks | Enabled | `make release-check` |
 

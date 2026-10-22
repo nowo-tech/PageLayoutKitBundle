@@ -22,6 +22,8 @@
 
 ## Unreleased
 
+- New runtime requirement `psr/log` (interfaces only); the migration command autowires your logger.
+
 ## To 1.6.1
 
 From **1.6.0**:

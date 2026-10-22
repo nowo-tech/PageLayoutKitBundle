@@ -9,6 +9,7 @@ Security considerations for page layout editing, inline CMS modals, and public b
 - [Inline editing and CSRF](#inline-editing-and-csrf)
 - [Rich text rendering](#rich-text-rendering)
 - [Operational guidance](#operational-guidance)
+- [Logging](#logging)
 - [Release security checklist](#release-security-checklist)
 - [Secrets](#secrets)
 - [REQ-SEC-004 recording](#req-sec-004-recording)
@@ -88,6 +89,18 @@ Additional guidance:
 - Use `doctrine.table_prefix` when multiple bundles or applications share one schema and naming isolation matters.
 - Leave `allow_unauthenticated: false` in production.
 - Review demo credentials and never copy demo auth settings directly into production.
+
+## Logging
+
+The only operation the bundle logs is the destructive legacy migration `nowo:page-layout:migrate` (`MigratePageBlocksCommand`), through the optional PSR-3 logger:
+
+| Event | Level | Context |
+| --- | --- | --- |
+| Migration started / finished / skipped (layout exists, `--if-empty`) | `info` | `bundle: page_layout_kit`, `action: migrate_page_blocks`, `force`, `if_empty` |
+| Not run (layout exists, no `--force`) | `warning` | same |
+| Failure (exception rethrown) | `error` | same + `exception` (class name only) |
+
+**Never logged:** page content, block payloads, rich-text HTML, editor identities, request data or credentials. Admin HTTP actions are not logged by the bundle; rely on your application's request / audit logging.
 
 ## Release security checklist
 

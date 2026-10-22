@@ -17,7 +17,10 @@ use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use ReflectionObject;
+use RuntimeException;
+use Stringable;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class MigratePageBlocksCommandTest extends TestCase
@@ -94,6 +97,33 @@ final class MigratePageBlocksCommandTest extends TestCase
         $tester = new CommandTester($command);
         self::assertSame(0, $tester->execute([]));
         self::assertStringContainsString('Page blocks migrated from legacy content.', $tester->getDisplay());
+    }
+
+    public function testCommandLogsEveryOutcome(): void
+    {
+        $legacy = new FakeCommandLegacyProvider(['home:es' => ['hero_title' => 'Hero', 'detect_items' => [], 'process_items' => []], 'home:en' => [], 'contact:es' => ['h1' => 'Contact', 'expect_items' => []], 'contact:en' => []]);
+
+        $logger   = new RecordingMigrationLogger();
+        $migrator = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), $legacy);
+        (new CommandTester(new MigratePageBlocksCommand($migrator, $logger)))->execute([]);
+        self::assertSame(['info', 'info'], $logger->levels());
+
+        $logger = new RecordingMigrationLogger();
+        $notRun = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => []]));
+        (new CommandTester(new MigratePageBlocksCommand($notRun, $logger)))->execute([]);
+        self::assertSame(['info', 'warning'], $logger->levels());
+
+        $logger        = new RecordingMigrationLogger();
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->method('flush')->willThrowException(new RuntimeException('db down'));
+        $failing = new PageBlockMigrator($entityManager, $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), $legacy);
+        try {
+            (new CommandTester(new MigratePageBlocksCommand($failing, $logger)))->execute([]);
+            self::fail('The migration failure must be rethrown.');
+        } catch (RuntimeException) {
+        }
+        self::assertSame(['info', 'error'], $logger->levels());
+        self::assertSame(['bundle' => 'page_layout_kit', 'action' => 'migrate_page_blocks', 'force' => false, 'if_empty' => false, 'exception' => RuntimeException::class], $logger->lastContext());
     }
 
     /**
@@ -203,5 +233,32 @@ final readonly class FakeCommandLegacyProvider implements LegacyPageContentProvi
     public function defaultLocale(): string
     {
         return $this->defaultLocale;
+    }
+}
+
+/**
+ * In-memory PSR-3 logger for the migration command tests.
+ */
+final class RecordingMigrationLogger extends AbstractLogger
+{
+    /** @var list<array{level: string, context: array<mixed>}> */
+    private array $records = [];
+
+    /** @param array<mixed> $context */
+    public function log(mixed $level, string|Stringable $message, array $context = []): void
+    {
+        $this->records[] = ['level' => (string) $level, 'context' => $context];
+    }
+
+    /** @return list<string> */
+    public function levels(): array
+    {
+        return array_column($this->records, 'level');
+    }
+
+    /** @return array<mixed> */
+    public function lastContext(): array
+    {
+        return $this->records === [] ? [] : $this->records[array_key_last($this->records)]['context'];
     }
 }
