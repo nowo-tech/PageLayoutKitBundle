@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.7.0] - 2026-10-22](#170---2026-10-22)
 - [[1.6.1] - 2026-10-20](#161---2026-10-20)
 - [[1.6.0] - 2026-10-19](#160---2026-10-19)
 - [[1.5.1] - 2026-10-18](#151---2026-10-18)
@@ -27,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-22
+
+Dependency refresh, logged legacy page-block migration (psr/log), demo login via Symfony form and raw-form release gate. See [UPGRADING](UPGRADING.md#to-170).
+
 ### Changed
 
 - Dependencies refreshed (Composer and pnpm/npm lock files of the bundle and its demos, campaign 2026-10-19).
@@ -34,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nowo:page-layout:migrate` logs start, result and failure through an optional PSR-3 logger (`psr/log` is now required); `docs/SECURITY.md` documents what is and is not logged; PSR-3 adopted in `docs/PSR.md` (REQ-OBS-001, REQ-SEC-001).
 - Demo login renders through a Symfony form (`_username` / `_password` / `_csrf_token` for `form_login`), and `release-check` now runs `check-no-raw-html-form` (REQ-TWIG-005, REQ-MAKE-002, REQ-DEMO-001).
 - README publishes the measured coverage (REQ-TEST-007); the co-author check accepts git worktrees.
+
+[1.7.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.7.0
 
 ## [1.6.1] - 2026-10-20
 
