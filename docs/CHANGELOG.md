@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.8.1] - 2026-10-28](#181---2026-10-28)
 - [[1.8.0] - 2026-10-28](#180---2026-10-28)
 - [[1.7.0] - 2026-10-22](#170---2026-10-22)
 - [[1.6.1] - 2026-10-20](#161---2026-10-20)
@@ -29,12 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-10-28
+
+Security: the admin controllers are guarded by class, so a route name_prefix no longer bypasses the access check. See [UPGRADING](UPGRADING.md#to-181).
+
 ### Security
 
 - **Admin guard no longer depends on route names.** `PageLayoutKitAdminAccessSubscriber` only checked routes whose
   name starts with `admin_page_layout` / `admin_page_blocks`; importing the bundle routes with a `name_prefix:` (or
   renaming them) served the layout admin and block edit endpoints without the access check. The bundle's admin
   controllers are now guarded by class, and the route-name prefixes still apply.
+
+[1.8.1]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.8.1
 
 ## [1.8.0] - 2026-10-28
 
