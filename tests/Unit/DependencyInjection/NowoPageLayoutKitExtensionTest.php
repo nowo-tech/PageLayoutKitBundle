@@ -20,6 +20,7 @@ use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -96,6 +97,33 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
             ]);
 
         (new NowoPageLayoutKitExtension())->prepend($container);
+    }
+
+    /**
+     * @return iterable<string, array{string, bool, bool}>
+     */
+    public static function allowUnauthenticatedKernels(): iterable
+    {
+        yield 'dev debug' => ['dev', true, true];
+        yield 'test without debug' => ['test', false, true];
+        yield 'prod' => ['prod', true, false];
+        yield 'staging without debug' => ['staging', false, false];
+    }
+
+    #[DataProvider('allowUnauthenticatedKernels')]
+    public function testAllowUnauthenticatedIsRefusedInProduction(string $environment, bool $debug, bool $allowed): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', $environment);
+        $container->setParameter('kernel.debug', $debug);
+        if (!$allowed) {
+            $this->expectException(LogicException::class);
+            $this->expectExceptionMessage('dev/demo switch');
+        }
+
+        (new NowoPageLayoutKitExtension())->load([['security' => ['allow_unauthenticated' => true]]], $container);
+
+        self::assertTrue($container->hasDefinition('nowo_page_layout_kit.access_checker.allow_all'));
     }
 
     public function testLoadPublishesParametersAndRegistersAllowAllAccessChecker(): void

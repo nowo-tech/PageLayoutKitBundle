@@ -25,6 +25,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use function array_key_exists;
 use function is_array;
 use function is_string;
+use function str_starts_with;
 
 /**
  * Loads PageLayoutKit services and publishes configuration parameters.
@@ -117,6 +118,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
     private function registerAccessChecker(ContainerBuilder $container, array $security): void
     {
         if ($security['allow_unauthenticated']) {
+            $this->refuseAllowUnauthenticatedInProduction($container);
             $id = 'nowo_page_layout_kit.access_checker.allow_all';
             $container->setDefinition($id, new Definition(AllowAllPageLayoutKitAccessChecker::class));
             $container->setAlias(PageLayoutKitAccessCheckerInterface::class, $id);
@@ -193,5 +195,20 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $bundles = $container->getParameter('kernel.bundles');
 
         return isset($bundles['SecurityBundle']);
+    }
+
+    /**
+     * `allow_unauthenticated` opens the layout admin to anonymous users: a dev / demo switch, refused in the prod
+     * environment and in any non-debug kernel outside the test environments (test*), as in ContactFormBundle.
+     */
+    private function refuseAllowUnauthenticatedInProduction(ContainerBuilder $container): void
+    {
+        $environment = $container->hasParameter('kernel.environment') ? $container->getParameter('kernel.environment') : '';
+        $environment = is_string($environment) ? $environment : '';
+        $debug       = $container->hasParameter('kernel.debug') ? (bool) $container->getParameter('kernel.debug') : true;
+
+        if ($environment === 'prod' || (!$debug && !str_starts_with($environment, 'test'))) {
+            throw new LogicException('nowo_page_layout_kit.security.allow_unauthenticated is a dev/demo switch: it opens the layout admin to anonymous users and is refused in the prod environment and in non-debug kernels (test* environments excepted).');
+        }
     }
 }

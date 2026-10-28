@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **`allow_unauthenticated` refused in production.** The switch opens the layout admin to anonymous users; the
+  container now refuses to compile with it in the `prod` environment or in any non-debug kernel outside `test*`
+  environments (as ContactFormBundle).
+
 ## [1.8.1] - 2026-10-28
 
 Security: the admin controllers are guarded by class, so a route name_prefix no longer bypasses the access check. See [UPGRADING](UPGRADING.md#to-181).
