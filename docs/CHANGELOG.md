@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.8.0] - 2026-10-28](#180---2026-10-28)
 - [[1.7.0] - 2026-10-22](#170---2026-10-22)
 - [[1.6.1] - 2026-10-20](#161---2026-10-20)
 - [[1.6.0] - 2026-10-19](#160---2026-10-19)
@@ -28,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-28
+
+Security: empty access_roles deny instead of granting everyone; CSRF fails closed without form CSRF protection. See [UPGRADING](UPGRADING.md#to-180).
+
 ### Security
 
 - **Empty role list denies (P1):** `ConfigurablePageLayoutKitAccessChecker` returned `true` for `security.access_roles: []`,
@@ -38,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `form.type_extension.csrf`, or with `framework.form.csrf_protection: false`. Before, block reorder and block edit
   accepted forged POSTs on such hosts. `symfony/security-csrf` is now a required dependency.
   See [UPGRADING](UPGRADING.md#unreleased).
+
+[1.8.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.8.0
 
 ## [1.7.0] - 2026-10-22
 
