@@ -16,14 +16,14 @@ final class PageLayoutKitAccessCheckerTest extends TestCase
         self::assertTrue((new AllowAllPageLayoutKitAccessChecker())->canAccess());
     }
 
-    public function testConfigurableCheckerAllowsWhenNoRolesConfigured(): void
+    public function testConfigurableCheckerDeniesWhenNoRolesConfigured(): void
     {
         $authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $authorizationChecker->expects(self::never())->method('isGranted');
 
         $checker = new ConfigurablePageLayoutKitAccessChecker($authorizationChecker, []);
 
-        self::assertTrue($checker->canAccess());
+        self::assertFalse($checker->canAccess());
     }
 
     public function testConfigurableCheckerReturnsTrueWhenAnyRoleIsGranted(): void

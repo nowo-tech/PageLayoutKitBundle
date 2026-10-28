@@ -19,8 +19,9 @@ Security considerations for page layout editing, inline CMS modals, and public b
 | Risk | Mitigation |
 | --- | --- |
 | Unauthorized editors reach layout admin or block edit endpoints | `access_roles`, custom `access_checker`, and Symfony Security |
+| Misconfigured empty `access_roles` opens the admin to every user | An empty list grants nothing (`ConfigurablePageLayoutKitAccessChecker`); `access_roles: []` without `access_checker` / `allow_unauthenticated` → container compile error (`NowoPageLayoutKitExtension`) |
 | Stored XSS through rich text block content | Default Twig auto-escaping where possible; review templates that intentionally use `|raw` |
-| CSRF on reorder or modal save actions | Symfony forms and CSRF-protected admin flows |
+| CSRF on reorder or modal save actions | Symfony forms with CSRF tokens; `CsrfProtectionPass` fails compilation (fail closed) when `security.csrf.token_manager` / `form.type_extension.csrf` is missing or `framework.form.csrf_protection` is false |
 | Overly broad demo access | `allow_unauthenticated` defaults to `false`; enable only for trusted demos |
 | Shared-database table collisions | Optional `doctrine.table_prefix` |
 
@@ -59,7 +60,7 @@ The reorder form and modal update forms are submitted through Symfony forms, not
 Recommendations:
 
 - Do not expose admin routes outside authenticated editor sessions.
-- Do not remove CSRF handling from overridden forms.
+- Do not remove CSRF handling from overridden forms. The bundle refuses to compile when form CSRF protection is off (`DependencyInjection\Compiler\CsrfProtectionPass`).
 - Keep modal edit endpoints behind the same editor policy as the reorder UI.
 
 ## Rich text rendering

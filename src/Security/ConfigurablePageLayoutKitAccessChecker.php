@@ -6,6 +6,11 @@ namespace Nowo\PageLayoutKitBundle\Security;
 
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
+/**
+ * Role-based access driven by nowo_page_layout_kit.security.access_roles.
+ *
+ * An empty role list grants nothing (fail closed); the extension refuses to compile that configuration.
+ */
 final readonly class ConfigurablePageLayoutKitAccessChecker implements PageLayoutKitAccessCheckerInterface
 {
     /**
@@ -19,16 +24,6 @@ final readonly class ConfigurablePageLayoutKitAccessChecker implements PageLayou
 
     public function canAccess(): bool
     {
-        if ($this->accessRoles === []) {
-            return true;
-        }
-
-        foreach ($this->accessRoles as $role) {
-            if ($this->authorizationChecker->isGranted($role)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->accessRoles, fn (string $role): bool => $this->authorizationChecker->isGranted($role));
     }
 }

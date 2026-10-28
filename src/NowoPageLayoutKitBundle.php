@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
+use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\CsrfProtectionPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
@@ -19,6 +20,7 @@ class NowoPageLayoutKitBundle extends Bundle
 {
     public function build(ContainerBuilder $container): void
     {
+        $container->addCompilerPass(new CsrfProtectionPass());
         $container->addCompilerPass(new TwigPathsPass());
 
         $entityDir = __DIR__ . '/Entity';

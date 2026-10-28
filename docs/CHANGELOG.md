@@ -28,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Empty role list denies (P1):** `ConfigurablePageLayoutKitAccessChecker` returned `true` for `security.access_roles: []`,
+  opening the layout admin and block edit endpoints to every user reaching them. An empty list now grants nothing, and
+  `NowoPageLayoutKitExtension` throws a `LogicException` at compile time when `access_roles` is empty while
+  `allow_unauthenticated` is `false` and no `access_checker` is set.
+- **CSRF fails closed (P2):** new `CsrfProtectionPass` refuses to compile without `security.csrf.token_manager` and
+  `form.type_extension.csrf`, or with `framework.form.csrf_protection: false`. Before, block reorder and block edit
+  accepted forged POSTs on such hosts. `symfony/security-csrf` is now a required dependency.
+  See [UPGRADING](UPGRADING.md#unreleased).
+
 ## [1.7.0] - 2026-10-22
 
 Dependency refresh, logged legacy page-block migration (psr/log), demo login via Symfony form and raw-form release gate. See [UPGRADING](UPGRADING.md#to-170).

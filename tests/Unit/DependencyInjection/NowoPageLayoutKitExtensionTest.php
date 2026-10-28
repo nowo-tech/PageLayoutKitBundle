@@ -192,6 +192,35 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         self::assertFalse($container->hasDefinition(TablePrefixListener::class));
     }
 
+    public function testLoadRejectsEmptyAccessRoles(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.bundles', [
+            'SecurityBundle' => SecurityBundle::class,
+        ]);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('security.access_roles is empty');
+
+        (new NowoPageLayoutKitExtension())->load([
+            ['security' => ['allow_unauthenticated' => false, 'access_roles' => []]],
+        ], $container);
+    }
+
+    public function testLoadAcceptsEmptyAccessRolesWithCustomChecker(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.bundles', [
+            'SecurityBundle' => SecurityBundle::class,
+        ]);
+
+        (new NowoPageLayoutKitExtension())->load([
+            ['security' => ['access_roles' => [], 'access_checker' => 'app.page_layout_checker']],
+        ], $container);
+
+        self::assertSame('app.page_layout_checker', (string) $container->getAlias(PageLayoutKitAccessCheckerInterface::class));
+    }
+
     public function testLoadRegistersDefaultConfigurableAccessCheckerWhenNeeded(): void
     {
         $container = new ContainerBuilder();

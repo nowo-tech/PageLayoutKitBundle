@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Tests\Unit;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
+use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\CsrfProtectionPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
@@ -25,6 +26,7 @@ final class NowoPageLayoutKitBundleTest extends TestCase
 
         $passes = $container->getCompilerPassConfig()->getPasses();
         self::assertNotEmpty(array_filter($passes, static fn (object $pass): bool => $pass instanceof TwigPathsPass));
+        self::assertNotEmpty(array_filter($passes, static fn (object $pass): bool => $pass instanceof CsrfProtectionPass));
         self::assertNotEmpty(array_filter($passes, static fn (object $pass): bool => $pass instanceof DoctrineOrmMappingsPass));
     }
 

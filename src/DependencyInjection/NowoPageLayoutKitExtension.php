@@ -131,6 +131,10 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
             return;
         }
 
+        if ($security['access_roles'] === []) {
+            throw new LogicException('NowoPageLayoutKitBundle: security.access_roles is empty, so nobody could use the admin UI (an empty list denies). Configure at least one role, set security.access_checker, or set security.allow_unauthenticated for a trusted demo.');
+        }
+
         $id         = 'nowo_page_layout_kit.access_checker.default';
         $definition = new Definition(ConfigurablePageLayoutKitAccessChecker::class);
         $definition->setArgument('$accessRoles', $security['access_roles']);

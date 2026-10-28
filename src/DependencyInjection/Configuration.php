@@ -51,6 +51,7 @@ final class Configuration implements ConfigurationInterface
                         ->arrayNode('access_roles')
                             ->scalarPrototype()->end()
                             ->defaultValue(['ROLE_EDITOR'])
+                            ->info('Roles allowed to use the layout admin (user needs at least one). Empty list → grants nothing; fails container compilation unless access_checker or allow_unauthenticated is set.')
                         ->end()
                         ->scalarNode('access_checker')->defaultNull()->end()
                         ->booleanNode('allow_unauthenticated')->defaultFalse()->end()

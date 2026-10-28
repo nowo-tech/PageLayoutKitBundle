@@ -23,6 +23,19 @@
 
 ## Unreleased
 
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+**Behaviour changes (security):**
+
+- `nowo_page_layout_kit.security.access_roles: []` used to allow everyone; it now fails container compilation (and
+  an empty list denies). Configure a role, set `security.access_checker`, or — trusted demos only —
+  `security.allow_unauthenticated: true`.
+- The container no longer compiles without form CSRF protection. Keep `framework.csrf_protection` and
+  `framework.form.csrf_protection` enabled; `symfony/security-csrf` is now a required dependency.
+- Default configuration (`[ROLE_EDITOR]`, CSRF on) is unaffected.
+
 ## To 1.7.0
 
 From **1.6.1**:

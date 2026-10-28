@@ -63,11 +63,14 @@ Sanitization runs on Doctrine persist/update for text/compare/cta block translat
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `access_roles` | `[ROLE_EDITOR]` | Any matching role grants admin access when no custom checker is configured. |
+| `access_roles` | `[ROLE_EDITOR]` | Any matching role grants admin access when no custom checker is configured. An empty list **denies** (never "everyone") and fails container compilation unless `access_checker` or `allow_unauthenticated` is set. |
 | `access_checker` | `null` | Optional service id implementing `PageLayoutKitAccessCheckerInterface`. |
 | `allow_unauthenticated` | `false` | When `true`, the bundle uses an allow-all checker. Intended only for trusted demos or internal tools. |
 
 The bundle enforces access on route names beginning with `admin_page_layout` and `admin_page_blocks`.
+
+The container also refuses to compile without form CSRF protection (`security.csrf.token_manager` +
+`form.type_extension.csrf`, `framework.form.csrf_protection` not `false`): block reorder and block edit rely on it.
 
 ## web_ui
 
