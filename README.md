@@ -14,6 +14,19 @@ This bundle is **FrankenPHP worker mode friendly**.
 
 Worker mode is supported including when the kernel is **not** reset between requests (`services_resetter` off). See [FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/page-blocks.webp" alt="Public home page composed from ordered hero, text and cards blocks with Edit block links" />
+      <br /><sub>Public page rendered from ordered, typed blocks</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/admin-layout.webp" alt="Admin layout screen listing the page blocks with position fields and Edit buttons" />
+      <br /><sub>Secured admin screen to reorder and edit the blocks of a page</sub>
+    </td>
+  </tr>
+</table>
+
 ## What is this?
 
 Page Layout Kit Bundle gives Symfony applications a reusable page-layout layer backed by Doctrine. Editors can manage ordered blocks for configured page keys such as `home` and `contact`, reorder them in the admin UI, and edit supported blocks through inline CMS modals. Public pages consume the resolved layout through services and Twig templates.
@@ -74,6 +87,8 @@ make demo-smoke
 ```
 
 Demo default URL: `http://localhost:8127`.
+
+The screenshots at the top come from the demo (sign in with `admin` / `admin`). Refresh them with `make -C demo/symfony8 demo-screenshots`; `make -C demo/symfony8 test-e2e` runs the Playwright happy path.
 
 ## Documentation
 
