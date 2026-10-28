@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\EventSubscriber;
 
+use Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController;
+use Nowo\PageLayoutKitBundle\Controller\Admin\PageLayoutController;
 use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitAdminAccessSubscriber;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
@@ -62,14 +65,33 @@ final class PageLayoutKitAdminAccessSubscriberTest extends TestCase
         $subscriber->onKernelController($this->createEvent('admin_page_blocks_edit'));
     }
 
-    private function createEvent(string|int|null $route): ControllerEvent
+    /** Routes imported with a `name_prefix` (or renamed by the host) must not bypass the guard. */
+    public function testDeniesBundleAdminControllersWhateverTheRouteName(): void
+    {
+        $checker = $this->createMock(PageLayoutKitAccessCheckerInterface::class);
+        $checker->expects(self::exactly(2))->method('canAccess')->willReturn(false);
+        $subscriber = new PageLayoutKitAdminAccessSubscriber($checker);
+
+        foreach ([PageLayoutController::class => 'layout', PageBlockEditController::class => 'editModal'] as $class => $method) {
+            $controller = (new ReflectionClass($class))->newInstanceWithoutConstructor();
+            $callable   = [$controller, $method];
+            self::assertIsCallable($callable);
+            try {
+                $subscriber->onKernelController($this->createEvent('cms_admin_layout', $callable));
+                self::fail($class . ' must be guarded');
+            } catch (AccessDeniedException) {
+            }
+        }
+    }
+
+    private function createEvent(string|int|null $route, ?callable $controller = null): ControllerEvent
     {
         $request = new Request();
         $request->attributes->set('_route', $route);
 
         return new ControllerEvent(
             $this->createMock(HttpKernelInterface::class),
-            static fn (): null => null,
+            $controller ?? static fn (): null => null,
             $request,
             HttpKernelInterface::MAIN_REQUEST,
         );

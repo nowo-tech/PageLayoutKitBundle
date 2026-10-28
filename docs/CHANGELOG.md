@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Admin guard no longer depends on route names.** `PageLayoutKitAdminAccessSubscriber` only checked routes whose
+  name starts with `admin_page_layout` / `admin_page_blocks`; importing the bundle routes with a `name_prefix:` (or
+  renaming them) served the layout admin and block edit endpoints without the access check. The bundle's admin
+  controllers are now guarded by class, and the route-name prefixes still apply.
+
 ## [1.8.0] - 2026-10-28
 
 Security: empty access_roles deny instead of granting everyone; CSRF fails closed without form CSRF protection. See [UPGRADING](UPGRADING.md#to-180).
