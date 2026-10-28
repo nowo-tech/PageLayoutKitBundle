@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.0] - 2026-10-28](#190---2026-10-28)
 - [[1.8.1] - 2026-10-28](#181---2026-10-28)
 - [[1.8.0] - 2026-10-28](#180---2026-10-28)
 - [[1.7.0] - 2026-10-22](#170---2026-10-22)
@@ -30,11 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-28
+
+Security: allow_unauthenticated is refused in production (prod or non-debug kernels). See [UPGRADING](UPGRADING.md#to-190).
+
 ### Security
 
 - **`allow_unauthenticated` refused in production.** The switch opens the layout admin to anonymous users; the
   container now refuses to compile with it in the `prod` environment or in any non-debug kernel outside `test*`
   environments (as ContactFormBundle).
+
+[1.9.0]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.9.0
 
 ## [1.8.1] - 2026-10-28
 

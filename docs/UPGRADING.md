@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.9.0](#to-190)
 - [To 1.8.1](#to-181)
 - [To 1.8.0](#to-180)
 - [To 1.7.0](#to-170)
@@ -24,6 +25,14 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+## To 1.9.0
+
+From **1.8.1**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 ## To 1.8.1
 
