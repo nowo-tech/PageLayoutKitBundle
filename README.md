@@ -1,6 +1,6 @@
 # Page Layout Kit Bundle
 
-[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-99%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/PageLayoutKitBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/page-layout-kit-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/page-layout-kit-bundle.svg)](https://packagist.org/packages/nowo-tech/page-layout-kit-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/PageLayoutKitBundle.svg?style=social&label=Star)](https://github.com/nowo-tech/PageLayoutKitBundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** Give it a star on GitHub! It helps us maintain and improve the project.
 
@@ -116,8 +116,9 @@ The screenshots at the top come from the demo (sign in with `admin` / `admin`). 
 
 | Area | Status | Command |
 | --- | --- | --- |
-| PHP `src/` coverage | **100%** lines (1908/1908; CI gate ≥99%) | `make test-coverage` |
-| TS/JS | N/A (the shipped `cms_modal_controller.ts` is copied by hosts; no build or test suite in this bundle) | — |
+| PHP `src/` coverage | **100%** lines (1915/1915; CI gate ≥99%) | `make test-coverage` |
+| TS `src/Resources/assets/src` coverage | **100%** (min of statements / branches / functions / lines, 144/92/27/143; Vitest gate 100%) | `make test-ts` |
+| TS build (Vite, ES module + IIFE) | Committed in `src/Resources/public/js/`; CI checks it is up to date | `make assets` |
 | Python | N/A | — |
 | Unit and bundle QA | Enabled | `make test` |
 | Full release checks | Enabled | `make release-check` |

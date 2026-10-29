@@ -7,45 +7,37 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\Locale;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use RuntimeException;
+use ReflectionMethod;
 
 final class PageLocalesTest extends TestCase
 {
-    public function testStaticAccessRequiresABoundInstance(): void
-    {
-        $this->unbindPageLocales();
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('PageLocales is not bound.');
-
-        PageLocales::default();
-    }
-
-    public function testBoundAndInstanceAccessReturnConfiguredLocales(): void
+    public function testInstanceReturnsConfiguredLocales(): void
     {
         $locales = new PageLocales('es', ['es', 'en']);
-        PageLocales::bind($locales);
 
-        self::assertSame('es', PageLocales::default());
-        self::assertSame(['es', 'en'], PageLocales::all());
         self::assertSame('es', $locales->getDefault());
         self::assertSame(['es', 'en'], $locales->getAll());
     }
 
-    public function testInstanceAccessWorksWithoutStaticBinding(): void
+    public function testInstancesAreIndependent(): void
     {
-        $this->unbindPageLocales();
+        $spanish = new PageLocales('es', ['es', 'en']);
+        $french  = new PageLocales('fr', ['fr', 'de']);
 
-        $locales = new PageLocales('fr', ['fr', 'de']);
-
-        self::assertSame('fr', $locales->getDefault());
-        self::assertSame(['fr', 'de'], $locales->getAll());
+        self::assertSame('es', $spanish->getDefault());
+        self::assertSame('fr', $french->getDefault());
+        self::assertSame(['fr', 'de'], $french->getAll());
     }
 
-    private function unbindPageLocales(): void
+    public function testHoldsNoStaticState(): void
     {
         $reflection = new ReflectionClass(PageLocales::class);
-        $property   = $reflection->getProperty('instance');
-        $property->setValue(null, null);
+
+        self::assertTrue($reflection->isReadOnly());
+        self::assertSame([], $reflection->getStaticProperties());
+        self::assertSame([], array_values(array_filter(
+            $reflection->getMethods(),
+            static fn (ReflectionMethod $method): bool => $method->isStatic(),
+        )));
     }
 }

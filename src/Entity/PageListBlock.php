@@ -46,7 +46,7 @@ class PageListBlock
     }
 
     /** @return array<string, mixed> */
-    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
+    public function toArray(string $locale, PageLocales $pageLocales): array
     {
         $items = [];
 

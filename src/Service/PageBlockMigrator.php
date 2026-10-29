@@ -37,8 +37,8 @@ final readonly class PageBlockMigrator
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PageLayoutEntryRepository $pageLayoutEntryRepository,
+        private PageLocales $pageLocales,
         private ?LegacyPageContentProviderInterface $legacyContentProvider = null,
-        private ?PageLocales $pageLocales = null,
     ) {
     }
 
@@ -364,13 +364,13 @@ final readonly class PageBlockMigrator
 
     private function defaultLocale(): string
     {
-        return $this->pageLocales?->getDefault() ?? PageLocales::default();
+        return $this->pageLocales->getDefault();
     }
 
     /** @return list<string> */
     private function locales(): array
     {
-        return $this->pageLocales?->getAll() ?? PageLocales::all();
+        return $this->pageLocales->getAll();
     }
 
     /** @param array<string, mixed> $data

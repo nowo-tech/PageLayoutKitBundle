@@ -17,11 +17,6 @@ use ReflectionMethod;
 
 final class PageBlockSqlRepositoryTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        PageLocales::bind(new PageLocales('es', ['es', 'en']));
-    }
-
     public function testLoadDataForEntriesReturnsNormalizedDataForEveryBlockType(): void
     {
         $queries    = [];
@@ -88,7 +83,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager->method('getConnection')->willReturn($connection);
         $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
-        $repository = new PageBlockSqlRepository($entityManager);
+        $repository = new PageBlockSqlRepository($entityManager, LocaleTestSupport::defaults());
         $data       = $repository->loadDataForEntries([
             $this->createEntry(PageBlockType::Hero, 10),
             $this->createEntry(PageBlockType::Text, 11),
@@ -110,7 +105,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         self::assertSame('es', $queries[0][1]['fallback']);
     }
 
-    public function testLoadDataForEntriesUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testLoadDataForEntriesUsesTheInjectedPageLocales(): void
     {
         $queries    = [];
         $connection = $this->createStub(Connection::class);
@@ -126,9 +121,9 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
         $repository = new PageBlockSqlRepository($entityManager, new PageLocales('fr', ['fr', 'de']));
-        $data       = LocaleTestSupport::withoutStaticBinding(static fn (): array => $repository->loadDataForEntries([
+        $data       = $repository->loadDataForEntries([
             (new PageLayoutEntry())->setPageKey('home')->setBlockType(PageBlockType::Hero)->setBlockId(10)->setPosition(0),
-        ], 'de'));
+        ], 'de');
 
         self::assertSame([], $data);
         self::assertCount(1, $queries);
@@ -141,7 +136,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::never())->method('getConnection');
 
-        $repository = new PageBlockSqlRepository($entityManager);
+        $repository = new PageBlockSqlRepository($entityManager, LocaleTestSupport::defaults());
 
         self::assertSame([], $repository->loadDataForEntries([], 'en'));
     }
@@ -151,7 +146,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::never())->method('getConnection');
 
-        $repository = new PageBlockSqlRepository($entityManager);
+        $repository = new PageBlockSqlRepository($entityManager, LocaleTestSupport::defaults());
         $method     = new ReflectionMethod(PageBlockSqlRepository::class, 'loadHeroBlocks');
 
         self::assertSame([], $method->invoke($repository, [], 'en'));
@@ -192,7 +187,7 @@ final class PageBlockSqlRepositoryTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::never())->method('getConnection');
 
-        $repository = new PageBlockSqlRepository($entityManager);
+        $repository = new PageBlockSqlRepository($entityManager, LocaleTestSupport::defaults());
         $method     = new ReflectionMethod(PageBlockSqlRepository::class, $methodName);
 
         /** @var array<int, array<string, mixed>> $result */

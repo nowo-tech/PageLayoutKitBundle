@@ -39,7 +39,7 @@ class PageCtaBlock
     }
 
     /** @return array<string, mixed> */
-    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
+    public function toArray(string $locale, PageLocales $pageLocales): array
     {
         return array_merge(
             ['sectionKey' => $this->sectionKey],

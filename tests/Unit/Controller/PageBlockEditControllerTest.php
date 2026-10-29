@@ -37,7 +37,6 @@ use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
-use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -473,7 +472,7 @@ final class PageBlockEditControllerTest extends TestCase
         self::assertNotNull($hero->getTranslation('es'));
     }
 
-    public function testEnsureBlockTranslationsUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testEnsureBlockTranslationsUsesTheInjectedPageLocales(): void
     {
         $cards = new PageCardsBlock();
         $cards->addItem(new PageCardItem());
@@ -485,7 +484,7 @@ final class PageBlockEditControllerTest extends TestCase
         );
 
         $method = new ReflectionMethod(PageBlockEditController::class, 'ensureBlockTranslations');
-        LocaleTestSupport::withoutStaticBinding(static fn (): mixed => $method->invoke($controller, $cards));
+        $method->invoke($controller, $cards);
 
         self::assertNotNull($cards->getTranslation('fr'));
         self::assertNull($cards->getTranslation('es'));

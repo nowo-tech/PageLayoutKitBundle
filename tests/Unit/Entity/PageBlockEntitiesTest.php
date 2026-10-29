@@ -28,11 +28,6 @@ use PHPUnit\Framework\TestCase;
 
 final class PageBlockEntitiesTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        LocaleTestSupport::bindDefaults();
-    }
-
     public function testHeroTextAndCompareBlocksExposeExpectedData(): void
     {
         $hero   = new PageHeroBlock();
@@ -47,7 +42,7 @@ final class PageBlockEntitiesTest extends TestCase
             ->setCtaSecondary('More');
         $hero->addTranslation($heroTr);
 
-        self::assertSame('SEO', $hero->toArray('es')['pageTitle']);
+        self::assertSame('SEO', $hero->toArray('es', LocaleTestSupport::defaults())['pageTitle']);
         self::assertSame($heroTr, $hero->getTranslation('es'));
         self::assertSame($hero, $heroTr->getTranslatable());
         self::assertSame('More', $heroTr->getCtaSecondary());
@@ -61,7 +56,7 @@ final class PageBlockEntitiesTest extends TestCase
             ->setTitle('T')
             ->setBody('B');
         $text->addTranslation($textTranslation);
-        $payload = $text->toArray('es');
+        $payload = $text->toArray('es', LocaleTestSupport::defaults());
 
         self::assertSame('intro', $payload['sectionKey']);
         self::assertSame('Meta title', $payload['pageTitle']);
@@ -79,7 +74,7 @@ final class PageBlockEntitiesTest extends TestCase
             ->setAfterText('New');
         $compare->addTranslation($compareTranslation);
 
-        self::assertSame('Before', $compare->toArray('es')['beforeLabel']);
+        self::assertSame('Before', $compare->toArray('es', LocaleTestSupport::defaults())['beforeLabel']);
         self::assertSame('Old', $compareTranslation->getBeforeText());
         self::assertSame('After', $compareTranslation->getAfterLabel());
         self::assertSame('New', $compareTranslation->getAfterText());
@@ -105,9 +100,9 @@ final class PageBlockEntitiesTest extends TestCase
         $cards->removeItem($card);
         self::assertCount(0, $cards->getItems());
         $cards->addItem($card);
-        self::assertSame('Cards', $cards->toArray('es')['title']);
-        self::assertSame('Card', $cards->toArray('es')['items'][0]['title']);
-        self::assertSame('Body', $cards->toArray('es')['items'][0]['body']);
+        self::assertSame('Cards', $cards->toArray('es', LocaleTestSupport::defaults())['title']);
+        self::assertSame('Card', $cards->toArray('es', LocaleTestSupport::defaults())['items'][0]['title']);
+        self::assertSame('Body', $cards->toArray('es', LocaleTestSupport::defaults())['items'][0]['body']);
 
         $list            = (new PageListBlock())->setSectionKey('steps');
         $listTranslation = (new PageListBlockTranslation())->setLocale('es')->setTitle('Steps');
@@ -117,7 +112,7 @@ final class PageBlockEntitiesTest extends TestCase
         $item->addTranslation($itemTranslation);
         $list->addItem($item);
 
-        self::assertSame('Step one', $list->toArray('es')['items'][0]['text']);
+        self::assertSame('Step one', $list->toArray('es', LocaleTestSupport::defaults())['items'][0]['text']);
         self::assertSame(1, $item->getPosition());
         self::assertSame($list, $item->getBlock());
         self::assertSame($item, $itemTranslation->getTranslatable());
@@ -130,8 +125,8 @@ final class PageBlockEntitiesTest extends TestCase
         $ctaTranslation = (new PageCtaBlockTranslation())->setLocale('es')->setTitle('CTA')->setBody('Text');
         $cta->addTranslation($ctaTranslation);
 
-        self::assertSame('footer', $cta->toArray('es')['sectionKey']);
-        self::assertSame('CTA', $cta->toArray('es')['title']);
+        self::assertSame('footer', $cta->toArray('es', LocaleTestSupport::defaults())['sectionKey']);
+        self::assertSame('CTA', $cta->toArray('es', LocaleTestSupport::defaults())['title']);
         self::assertSame('Text', $ctaTranslation->getBody());
         self::assertSame($cta, $ctaTranslation->getTranslatable());
     }
@@ -153,7 +148,7 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertFalse($entry->isEnabled());
 
         $hero = new PageHeroBlock();
-        $hero->ensureTranslations();
+        $hero->ensureTranslations(LocaleTestSupport::defaults());
         self::assertNotNull($hero->getTranslation('es'));
         self::assertNotNull($hero->getTranslation('en'));
     }
@@ -254,34 +249,32 @@ final class PageBlockEntitiesTest extends TestCase
     public function testTranslatableBlockTraitFallbacks(): void
     {
         $block    = new PageTextBlock();
-        $fallback = $block->getTranslationOrFallback('es');
+        $fallback = $block->getTranslationOrFallback('es', LocaleTestSupport::defaults());
         self::assertSame('', $fallback->getTitle());
 
         $enTr   = (new PageTextBlockTranslation())->setLocale('en')->setTitle('EN Title');
         $block2 = new PageTextBlock();
         $block2->addTranslation($enTr);
-        $got = $block2->getTranslationOrFallback('fr');
+        $got = $block2->getTranslationOrFallback('fr', LocaleTestSupport::defaults());
         self::assertSame('EN Title', $got->getTitle());
     }
 
-    public function testTranslatableBlockTraitUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testTranslatableBlockTraitUsesTheInjectedPageLocales(): void
     {
         $pageLocales = new PageLocales('fr', ['fr', 'de']);
 
-        LocaleTestSupport::withoutStaticBinding(static function () use ($pageLocales): void {
-            $block = (new PageTextBlock())->ensureTranslations($pageLocales);
-            self::assertSame(['fr', 'de'], array_map(
-                static fn (PageTextBlockTranslation $translation): string => $translation->getLocale(),
-                array_values($block->getTranslations()->toArray()),
-            ));
+        $block = (new PageTextBlock())->ensureTranslations($pageLocales);
+        self::assertSame(['fr', 'de'], array_map(
+            static fn (PageTextBlockTranslation $translation): string => $translation->getLocale(),
+            array_values($block->getTranslations()->toArray()),
+        ));
 
-            $block->getTranslationOrFallback('fr', $pageLocales)->setTitle('FR Title');
-            self::assertSame('FR Title', $block->getTranslationOrFallback('es', $pageLocales)->getTitle());
-            self::assertSame('', $block->getTranslationOrFallback('de', $pageLocales)->getTitle());
-        });
+        $block->getTranslationOrFallback('fr', $pageLocales)->setTitle('FR Title');
+        self::assertSame('FR Title', $block->getTranslationOrFallback('es', $pageLocales)->getTitle());
+        self::assertSame('', $block->getTranslationOrFallback('de', $pageLocales)->getTitle());
     }
 
-    public function testToArrayUsesInjectedPageLocalesDefaultWithoutStaticBinding(): void
+    public function testToArrayFallsBackToTheInjectedDefaultLocale(): void
     {
         $pageLocales = new PageLocales('fr', ['fr', 'de']);
 
@@ -310,14 +303,14 @@ final class PageBlockEntitiesTest extends TestCase
                 ->addTranslation((new PageListItemTranslation())->setLocale('en')->setText('EN'))
                 ->addTranslation((new PageListItemTranslation())->setLocale('fr')->setText('FR')));
 
-        $payloads = LocaleTestSupport::withoutStaticBinding(static fn (): array => [
+        $payloads = [
             'hero'    => $hero->toArray('de', $pageLocales),
             'text'    => $text->toArray('de', $pageLocales),
             'compare' => $compare->toArray('de', $pageLocales),
             'cta'     => $cta->toArray('de', $pageLocales),
             'cards'   => $cards->toArray('de', $pageLocales),
             'list'    => $list->toArray('de', $pageLocales),
-        ]);
+        ];
 
         self::assertSame('FR', $payloads['hero']['title']);
         self::assertSame('FR', $payloads['text']['title']);
@@ -329,12 +322,12 @@ final class PageBlockEntitiesTest extends TestCase
         self::assertSame('FR', $payloads['list']['items'][0]['text']);
     }
 
-    public function testTranslatableBlockTraitFallsBackToStaticBindingWithoutInjectedPageLocales(): void
+    public function testTranslatableBlockTraitFallsBackToTheConfiguredDefaultLocale(): void
     {
-        $block = (new PageTextBlock())->ensureTranslations();
-        $block->getTranslationOrFallback('es')->setTitle('ES Title');
+        $block = (new PageTextBlock())->ensureTranslations(LocaleTestSupport::defaults());
+        $block->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setTitle('ES Title');
 
         self::assertNotNull($block->getTranslation('en'));
-        self::assertSame('ES Title', $block->getTranslationOrFallback('fr')->getTitle());
+        self::assertSame('ES Title', $block->getTranslationOrFallback('fr', LocaleTestSupport::defaults())->getTitle());
     }
 }

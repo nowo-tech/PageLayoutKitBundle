@@ -31,6 +31,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Breaking: the deprecated static `PageLocales` binding is removed (inject the service); the inline CMS modal controller is built with pnpm + Vite into `src/Resources/public/js/`. See [UPGRADING](UPGRADING.md#unreleased).
+
+### Removed
+
+- **Static `PageLocales` accessors** (deprecated since 1.1.0): `PageLocales::bind()`, `PageLocales::default()`,
+  `PageLocales::all()` and the binding in `NowoPageLayoutKitBundle::boot()` (the bundle no longer overrides `boot()`).
+  `PageLocales` is now a `final readonly` service with only `getDefault()` / `getAll()`, so no locale state lives in a
+  static property across FrankenPHP worker requests. PHPStan runs with `ignoreErrors: []` (the
+  `frankenphp.worker.noMutableStaticProperty` exception is gone).
+
+### Changed
+
+- **`PageLocales` is a required argument** everywhere it used to be an optional fallback:
+  `TranslatableBlockTrait::getTranslationOrFallback(string $locale, PageLocales $pageLocales)`,
+  `ensureTranslations(PageLocales $pageLocales)`, every block entity / item `toArray(string $locale, PageLocales $pageLocales)`,
+  and the constructors of `PageBlockSqlRepository`, `PageBlockEditController`, `PageCardsBlockInlineModalType` and
+  `PageListBlockInlineModalType`. `PageBlockMigrator` now takes it as the third argument, before the optional legacy
+  content provider. Service wiring is unchanged for hosts that use the bundle's container definitions.
+- **Inline CMS modal controller build (REQ-ASSETS-001):** the TypeScript source moved to
+  `src/Resources/assets/src/cms_modal_controller.ts` and is built with pnpm + Vite (`make assets`) into
+  `src/Resources/public/js/cms_modal_controller.js` (ES module, `@hotwired/stimulus` external) and
+  `cms_modal_controller.iife.js` (IIFE over the Stimulus UMD global, exposes `window.NowoPageLayoutKitCmsModalController`).
+  The successful-save reload moved to a `reloadPage()` method; behaviour is unchanged.
+
+### Added
+
+- Vitest suite for the controller (jsdom, 100% statements / branches / functions / lines gate), `make test-ts`
+  printing the global TS percentage (`.scripts/ts-coverage-percent.sh`), a CI `frontend` job (typecheck, coverage,
+  build, committed build up to date) and Node + pnpm in the development image.
+
+### Documentation
+
+- `docs/USAGE.md` Twig overrides (REQ-TWIG-001): freeze rule, upgrade-safe alternatives, recovery after a freeze,
+  override procedure and the full table of overridable `<subpath>` values.
+
 ## [1.9.0] - 2026-10-28
 
 Security: allow_unauthenticated is refused in production (prod or non-debug kernels). See [UPGRADING](UPGRADING.md#to-190).

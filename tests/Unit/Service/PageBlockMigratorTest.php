@@ -33,7 +33,6 @@ final class PageBlockMigratorTest extends TestCase
 
     protected function setUp(): void
     {
-        PageLocales::bind(new PageLocales('es', ['es', 'en']));
         $this->nextId    = 1;
         $this->persisted = [];
     }
@@ -45,6 +44,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
+            LocaleTestSupport::defaults(),
         );
 
         self::assertTrue($migrator->isEmpty());
@@ -63,6 +63,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [$entry],
             ]),
+            LocaleTestSupport::defaults(),
         );
 
         self::assertFalse($migrator->isEmpty());
@@ -79,6 +80,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
+            LocaleTestSupport::defaults(),
         );
 
         self::assertFalse($migrator->migrate());
@@ -100,6 +102,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [$entry],
             ]),
+            LocaleTestSupport::defaults(),
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
@@ -120,6 +123,7 @@ final class PageBlockMigratorTest extends TestCase
                 'home'    => [$entry],
                 'contact' => [],
             ]),
+            LocaleTestSupport::defaults(),
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
@@ -133,6 +137,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
+            LocaleTestSupport::defaults(),
         );
 
         $method = new ReflectionMethod(PageBlockMigrator::class, 'contentForPage');
@@ -163,6 +168,7 @@ final class PageBlockMigratorTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
+            LocaleTestSupport::defaults(),
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
@@ -190,6 +196,7 @@ final class PageBlockMigratorTest extends TestCase
                 'home'    => [],
                 'contact' => [],
             ]),
+            LocaleTestSupport::defaults(),
             new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
@@ -207,7 +214,7 @@ final class PageBlockMigratorTest extends TestCase
         self::assertGreaterThan(0, $layoutEntries[0]->getBlockId());
     }
 
-    public function testMigrateUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testMigrateUsesTheInjectedPageLocales(): void
     {
         $migrator = new PageBlockMigrator(
             $this->entityManagerMock(),
@@ -215,11 +222,11 @@ final class PageBlockMigratorTest extends TestCase
                 'home'    => [],
                 'contact' => [],
             ]),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
             new PageLocales('es', ['es', 'fr']),
+            new FakeMigratorLegacyProvider($this->legacyContentMap()),
         );
 
-        self::assertTrue(LocaleTestSupport::withoutStaticBinding(static fn (): bool => $migrator->migrate(false)));
+        self::assertTrue($migrator->migrate(false));
 
         $heroBlocks = array_values(array_filter(
             $this->persisted,

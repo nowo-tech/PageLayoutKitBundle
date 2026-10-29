@@ -29,11 +29,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class PageBlockProviderTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        PageLocales::bind(new PageLocales('es', ['es', 'en']));
-    }
-
     public function testReturnsLegacyLayoutsAndMetaWhenNoStoredLayoutExists(): void
     {
         $provider = new PageBlockProvider(
@@ -262,7 +257,7 @@ final class PageBlockProviderTest extends TestCase
         $requestStack = new RequestStack();
         $provider     = new PageBlockProvider(
             $this->createPageLayoutEntryRepository(['home' => [$heroEntry]]),
-            new PageBlockSqlRepository($sqlEntityManager),
+            new PageBlockSqlRepository($sqlEntityManager, new PageLocales('es', ['es', 'en'])),
             $requestStack,
             new PageLocales('es', ['es', 'en']),
             $this->createProtection(),
@@ -442,7 +437,7 @@ final class PageBlockProviderTest extends TestCase
         $entityManager->method('getConnection')->willReturn($connection);
         $entityManager->method('getClassMetadata')->willReturnCallback(EntityTableMetadata::for(...));
 
-        return new PageBlockSqlRepository($entityManager);
+        return new PageBlockSqlRepository($entityManager, new PageLocales('es', ['es', 'en']));
     }
 
     private function createRequestStack(string $locale): RequestStack

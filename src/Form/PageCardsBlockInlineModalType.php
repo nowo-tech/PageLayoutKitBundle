@@ -24,7 +24,7 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
     public function __construct(
         FormOptionsMerger $formOptionsMerger,
         FormTypeMap $formTypeMap,
-        private readonly ?PageLocales $pageLocales = null,
+        private readonly PageLocales $pageLocales,
     ) {
         parent::__construct($formOptionsMerger, $formTypeMap);
     }
@@ -34,7 +34,7 @@ final class PageCardsBlockInlineModalType extends AbstractPageLayoutFormType
         /** @var PageCardsBlock $block */
         $block       = $options['block'];
         $pageLocales = $this->pageLocales;
-        $locales     = $pageLocales?->getAll() ?? PageLocales::all();
+        $locales     = $pageLocales->getAll();
 
         $this->withBuilder($builder, function (): void {
             $this->addWithDefaults($this->boundBuilder(), 'translations', CollectionType::class, [

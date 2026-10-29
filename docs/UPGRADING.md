@@ -26,6 +26,42 @@
 
 ## Unreleased
 
+From **1.9.0**. This release removes APIs deprecated since 1.1.0 (next major).
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+**Static `PageLocales` accessors removed.** `PageLocales::bind()`, `PageLocales::default()` and `PageLocales::all()`
+no longer exist and the bundle no longer binds an instance in `boot()`. Inject the service:
+
+```php
+public function __construct(private readonly PageLocales $pageLocales) {}
+
+$default = $this->pageLocales->getDefault(); // was PageLocales::default()
+$locales = $this->pageLocales->getAll();     // was PageLocales::all()
+```
+
+**`PageLocales` is now required where it was optional:**
+
+| API | 1.x | Now |
+| --- | --- | --- |
+| Block entities / items `toArray()` | `toArray($locale, ?PageLocales = null)` | `toArray($locale, $pageLocales)` |
+| `TranslatableBlockTrait::getTranslationOrFallback()` | `($locale, ?PageLocales = null)` | `($locale, $pageLocales)` |
+| `TranslatableBlockTrait::ensureTranslations()` | `(?PageLocales = null)` | `($pageLocales)` |
+| `PageBlockSqlRepository`, `PageBlockEditController`, `PageCardsBlockInlineModalType`, `PageListBlockInlineModalType` | trailing `?PageLocales $pageLocales = null` | `PageLocales $pageLocales` (same position) |
+| `PageBlockMigrator` | `($em, $repo, ?$legacy = null, ?PageLocales = null)` | `($em, $repo, PageLocales $pageLocales, ?$legacy = null)` |
+
+Nothing changes when these services come from the bundle's container definitions (named arguments). Code that
+constructs them manually (tests, custom factories) or calls the entity methods must pass the `PageLocales` instance;
+tests that only called `PageLocales::bind()` can build `new PageLocales('es', ['es', 'en'])` and pass it.
+
+**Copied `cms_modal_controller.ts`.** The source moved from `src/Resources/assets/cms_modal_controller.ts` to
+`src/Resources/assets/src/cms_modal_controller.ts`; update the path if your build imports it from `vendor/`. You can
+stop copying it and use the built files instead (`php bin/console assets:install` publishes them under
+`public/bundles/nowopagelayoutkit/js/`), see [USAGE.md — Inline CMS modals](USAGE.md#inline-cms-modals). If you
+subclassed the controller, a successful save now calls the overridable `reloadPage()` method.
+
 ## To 1.9.0
 
 From **1.8.1**:
