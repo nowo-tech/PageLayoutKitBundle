@@ -1,5 +1,7 @@
 # Dependencies
 /vendor
+/node_modules
+/.pnpm-store
 
 # Environment and secrets
 .env
@@ -10,6 +12,8 @@
 /coverage
 /coverage.xml
 /coverage-php.txt
+/coverage-ts
+/coverage-ts.txt
 
 # PHP tool caches
 /.php-cs-fixer.cache
