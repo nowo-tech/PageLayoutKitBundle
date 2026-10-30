@@ -31,7 +31,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Breaking: the deprecated static `PageLocales` binding is removed (inject the service); the inline CMS modal controller is built with pnpm + Vite into `src/Resources/public/js/`. See [UPGRADING](UPGRADING.md#unreleased).
+Security: stored XSS bypasses of the `allowlist` and `strip` sanitizers fixed (M1, M2), same-host post-save redirect, `strategy: service` requires a service. Breaking: the deprecated static `PageLocales` binding is removed (inject the service); the inline CMS modal controller is built with pnpm + Vite into `src/Resources/public/js/`. See [UPGRADING](UPGRADING.md#unreleased).
+
+### Security
+
+Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`, Appendix BJ).
+
+- **M1 (Medium, CWE-79) — `allowlist` sanitizer bypasses (affects 1.0.3–1.9.0; opt-in in 1.0.3–1.1.1, default strategy since 1.2.0).**
+  `AllowlistPageLayoutHtmlSanitizer` let through `<section><img src=x onerror=…></section>` (children of unwrapped
+  elements were moved up but never sanitized, at any nesting depth), `<iframe src="javascript://www.youtube.com/%0a…">`
+  (host-only check), `<!--><img … onerror=…>-->` (comments kept; libxml's HTML4 parser disagrees with browsers) and
+  raw-text `<style>` content. It is now built on **symfony/html-sanitizer** (new dependency) with the HTML5 parser
+  and the same allowlist: only element and text nodes survive, every text node and attribute is re-encoded,
+  structural elements are unwrapped with sanitized children, `script` / `style` / `template` / `noscript` /
+  `textarea` / `xmp` / `svg` / `math` / forms / unknown elements are dropped with their content, links stay
+  `http(s)` / `mailto` / root-relative, images `http(s)` / root-relative, and iframes need `https://` on an
+  allowlisted host with `allow` reduced to player permissions (`PageLayoutUrlAttributeSanitizer`). The output is
+  canonical HTML (`<br />`, attribute values entity-encoded). Stored content is re-sanitized at render.
+- **M2 (Medium, CWE-116) — `strip` strategy revived encoded markup (1.0.3+).** `StripPageLayoutHtmlSanitizer`
+  decoded entities after `strip_tags()`, so `&amp;lt;img src=x onerror=…&amp;gt;` became a live tag after the
+  render-time pass. It now returns `strip_tags()` output HTML-escaped (existing entities kept, never decoded).
+- **N1 (Low) — URL parser differentials.** `symfony/html-sanitizer` is required at `^7.4.12 || ^8.0.12` (before
+  CVE-2026-45066 `https://evil.tld\@www.youtube.com/` passed the iframe host check while browsers load `evil.tld`),
+  and `PageLayoutUrlAttributeSanitizer` itself refuses URLs with `\`, ASCII control / whitespace characters or
+  userinfo (`@`) in the authority.
+- **N2 — double encoding in escaped contexts.** Card / list item bodies are plain text printed with Twig
+  auto-escaping; `PageBlockProvider` no longer HTML-sanitizes them (they showed `Don&#039;t`). The `pageMeta()`
+  description fallback (contact header body) is now plain text (tags stripped, entities decoded once) for an
+  escaped `<meta>` attribute.
+- **L1 — open redirect after saving a block.** `PageBlockEditController::update()` follows the `Referer` only when it
+  is root-relative or has the request's scheme + host + port; otherwise it redirects to the first public page.
+- **L2 — `html.sanitize.strategy: service` without `html.sanitize.service`** silently disabled sanitizing; the
+  container now refuses to compile, and a hand-built `PageLayoutProtection` falls back to the allowlist sanitizer.
+- **L3 — dist archives** shipped tests, demo (with demo credentials), specs and tooling: `.gitattributes` now
+  `export-ignore`s them.
+- **Info:** the `cms/faq_*`, `cms/item_*` and `cms/seo_edit_button` templates use the access checker
+  (`nowo_page_layout_kit_can_edit()`) instead of `is_granted('ROLE_EDITOR')`; the CMS modal controller
+  `encodeURIComponent`-encodes values interpolated into URL templates (rebuilt with Vite); `admin_page_layout` only
+  accepts GET and POST; the demo binds `127.0.0.1` only.
 
 ### Removed
 
@@ -63,6 +100,8 @@ Breaking: the deprecated static `PageLocales` binding is removed (inject the ser
 
 ### Documentation
 
+- `docs/SECURITY.md`: threat model (XSS, open redirect), guard by controller class, allowlist policy table and the
+  2026-10-30 REQ-SEC-004 record (Pass (good) / Low, Appendix BJ).
 - `docs/USAGE.md` Twig overrides (REQ-TWIG-001): freeze rule, upgrade-safe alternatives, recovery after a freeze,
   override procedure and the full table of overridable `<subpath>` values.
 

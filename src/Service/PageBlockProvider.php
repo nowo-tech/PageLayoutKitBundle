@@ -19,6 +19,9 @@ use function is_array;
 use function is_string;
 use function sprintf;
 
+use const ENT_HTML5;
+use const ENT_QUOTES;
+
 /**
  * Resolves ordered page blocks for configured page keys, with optional legacy JSON fallback.
  */
@@ -126,7 +129,7 @@ final class PageBlockProvider implements ResetInterface
             if ($pageBlockView->type === PageBlockType::Text && $pageBlockView->sectionKey === 'contact_header') {
                 return [
                     'title'       => (string) ($pageBlockView->data['pageTitle'] ?? $pageBlockView->data['title'] ?? ''),
-                    'description' => (string) ($pageBlockView->data['pageDescription'] ?? $pageBlockView->data['body'] ?? ''),
+                    'description' => (string) ($pageBlockView->data['pageDescription'] ?? $this->plainText($pageBlockView->data['body'] ?? '')),
                 ];
             }
         }
@@ -305,6 +308,17 @@ final class PageBlockProvider implements ResetInterface
     }
 
     /**
+     * Plain text of a sanitized HTML body (meta description fallback): tags removed, entities decoded once.
+     * The result is text, so the host must print it escaped (`{{ meta.description }}`), never with `|raw`.
+     */
+    private function plainText(mixed $html): string
+    {
+        $html = is_string($html) ? $html : '';
+
+        return trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    }
+
+    /**
      * @param array<string, mixed> $data
      *
      * @return array<string, mixed>
@@ -325,15 +339,8 @@ final class PageBlockProvider implements ResetInterface
             $data['afterText'] = $sanitizer->sanitize($data['afterText']);
         }
 
-        if (isset($data['items']) && is_array($data['items'])) {
-            foreach ($data['items'] as $index => $item) {
-                if (!is_array($item) || !isset($item['body']) || !is_string($item['body']) || $item['body'] === '') {
-                    continue;
-                }
-
-                $data['items'][$index]['body'] = $sanitizer->sanitize($item['body']);
-            }
-        }
+        // Card / list item bodies are plain text (one "title | body" line each) printed with Twig auto-escaping:
+        // they are not HTML-sanitized, which would encode them twice (`Don&#039;t`).
 
         return $data;
     }

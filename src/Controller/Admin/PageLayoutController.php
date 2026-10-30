@@ -38,7 +38,7 @@ final class PageLayoutController extends AbstractController
     ) {
     }
 
-    #[Route('/admin/pages/{pageKey}/layout', name: 'admin_page_layout', requirements: ['pageKey' => '[a-z0-9_-]+'])]
+    #[Route('/admin/pages/{pageKey}/layout', name: 'admin_page_layout', requirements: ['pageKey' => '[a-z0-9_-]+'], methods: ['GET', 'POST'])]
     public function layout(string $pageKey, Request $request): Response
     {
         /** @var list<string> $pages */

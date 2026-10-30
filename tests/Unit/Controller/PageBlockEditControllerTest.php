@@ -37,6 +37,7 @@ use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -182,6 +183,61 @@ final class PageBlockEditControllerTest extends TestCase
         });
 
         self::assertSame('/admin/pages/home/layout', $response->getTargetUrl());
+    }
+
+    /**
+     * Regression for the 2026-10-30 audit (Appendix BJ, L1): the post-save redirect followed any Referer.
+     */
+    #[DataProvider('refererRedirects')]
+    public function testUpdateOnlyFollowsSameHostReferer(string $referer, string $expectedTarget): void
+    {
+        $block = $this->withId(new PageCompareBlock(), 12);
+        $form  = $this->createConfiguredMock(FormInterface::class, ['isSubmitted' => true, 'isValid' => true]);
+
+        $request = Request::create('https://cms.example.test/admin/page-blocks/compare/12', 'POST');
+        $request->headers->set('Referer', $referer);
+        $request->setSession(new Session(new MockArraySessionStorage()));
+
+        $urls = $this->createMock(UrlGeneratorInterface::class);
+        $urls->method('generate')->willReturnCallback(static fn (string $route): string => match ($route) {
+            'home'                     => '/generated/home',
+            'admin_page_blocks_update' => '/update',
+            default                    => throw new RouteNotFoundException($route),
+        });
+
+        $controller = new PageBlockEditController(
+            $this->createRegistry([PageBlockType::Compare->value => [12 => $block]]),
+            $this->createMock(EntityManagerInterface::class),
+            $this->pageLocales(),
+            new PublicPageUrlResolver($urls),
+        );
+        $container = $this->createControllerContainer(form: $form, request: $request);
+        $container->set('router', $urls);
+        $controller->setContainer($container);
+
+        $response = $controller->update('compare', 12, $request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame($expectedTarget, $response->getTargetUrl());
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function refererRedirects(): iterable
+    {
+        yield 'same origin page' => ['https://cms.example.test/es/servicios?x=1', 'https://cms.example.test/es/servicios?x=1'];
+        yield 'same origin root' => ['https://cms.example.test', 'https://cms.example.test'];
+        yield 'same origin query' => ['https://cms.example.test?x=1', 'https://cms.example.test?x=1'];
+        yield 'root-relative path' => ['/es/servicios', '/es/servicios'];
+        yield 'other host' => ['https://evil.example/phish', '/generated/home'];
+        yield 'host prefix trick' => ['https://cms.example.test.evil.example/x', '/generated/home'];
+        yield 'userinfo trick' => ['https://cms.example.test@evil.example/x', '/generated/home'];
+        yield 'other scheme same host' => ['http://cms.example.test/x', '/generated/home'];
+        yield 'protocol-relative' => ['//evil.example/x', '/generated/home'];
+        yield 'backslash' => ['/\\evil.example/x', '/generated/home'];
+        yield 'control character' => ["/\tx", '/generated/home'];
+        yield 'javascript' => ['javascript:alert(1)', '/generated/home'];
     }
 
     public function testUpdateFlashIsTranslated(): void

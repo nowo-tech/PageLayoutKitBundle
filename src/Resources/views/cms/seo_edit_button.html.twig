@@ -1,4 +1,4 @@
-{% if is_granted('ROLE_EDITOR') and pageKey|default('') != '' %}
+{% if nowo_page_layout_kit_can_edit() and pageKey|default('') != '' %}
   <button
     type="button"
     class="cms-edit-button"

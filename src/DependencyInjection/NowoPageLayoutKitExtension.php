@@ -151,17 +151,21 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
     private function registerPageLayoutProtection(ContainerBuilder $container, array $config): void
     {
         /** @var array<string, mixed> $html */
-        $html = $config['html']['sanitize'];
+        $html            = $config['html']['sanitize'];
+        $strategy        = HtmlSanitizeStrategy::from((string) $html['strategy']);
+        $customSanitizer = $this->optionalServiceId($html['service'] ?? null);
+
+        if ($strategy === HtmlSanitizeStrategy::Service && $customSanitizer === null) {
+            throw new LogicException('NowoPageLayoutKitBundle: html.sanitize.strategy is "service" but html.sanitize.service is empty. Set the id of a service implementing PageLayoutHtmlSanitizerInterface, or use the "allowlist" strategy.');
+        }
 
         $container->register(PageLayoutProtectionConfig::class)
             ->setAutowired(false)
             ->setAutoconfigured(false)
             ->setArguments([
-                HtmlSanitizeStrategy::from((string) $html['strategy']),
-                $this->optionalServiceId($html['service'] ?? null),
+                $strategy,
+                $customSanitizer,
             ]);
-
-        $customSanitizer = $this->optionalServiceId($html['service'] ?? null);
 
         $container->register(PageLayoutProtection::class)
             ->setAutowired(false)
