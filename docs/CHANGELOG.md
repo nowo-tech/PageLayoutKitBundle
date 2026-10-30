@@ -31,6 +31,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Security: stored XSS bypasses of the `allowlist` and `strip` HTML sanitizers fixed (M1, M2; backport from 2.0.0). New dependency `symfony/html-sanitizer`. See [UPGRADING](UPGRADING.md#unreleased).
+
+### Security
+
+Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`, Appendix BJ).
+
+- **M1 (Medium, CWE-79) — `allowlist` sanitizer bypasses (affects 1.0.4–1.9.0; default strategy since 1.2.0).**
+  `AllowlistPageLayoutHtmlSanitizer` let through `<section><img src=x onerror=…></section>` (children of unwrapped
+  elements were moved up but never sanitized, at any nesting depth), `<iframe src="javascript://www.youtube.com/%0a…">`
+  (host-only check), `<!--><img … onerror=…>-->` (comments kept; libxml's HTML4 parser disagrees with browsers) and
+  raw-text `<style>` content, all rendered with `|raw` by the `text`, `cards` and `compare` block templates. It is
+  now built on **symfony/html-sanitizer** (new dependency) with the HTML5 parser and the same allowlist: only element
+  and text nodes survive, every text node and attribute is re-encoded, structural elements are unwrapped with
+  sanitized children, `script` / `style` / `template` / `noscript` / `textarea` / `xmp` / `svg` / `math` / forms /
+  unknown elements are dropped with their content, links stay `http(s)` / `mailto` / root-relative, images
+  `http(s)` / root-relative, and iframes need `https://` on an allowlisted host with `allow` reduced to player
+  permissions (`PageLayoutUrlAttributeSanitizer`). Stored content is re-sanitized at render.
+- **M2 (Medium, CWE-116) — `strip` strategy revived encoded markup (1.0.4+).** `StripPageLayoutHtmlSanitizer`
+  decoded entities after `strip_tags()`, so `&amp;lt;img src=x onerror=…&amp;gt;` became a live tag after the
+  render-time pass. It now returns `strip_tags()` output HTML-escaped (existing entities kept, never decoded).
+
 ## [1.9.0] - 2026-10-28
 
 Security: allow_unauthenticated is refused in production (prod or non-debug kernels). See [UPGRADING](UPGRADING.md#to-190).

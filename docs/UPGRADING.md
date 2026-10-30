@@ -26,6 +26,23 @@
 
 ## Unreleased
 
+From **1.9.0** (security patch, no API change):
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+- **New dependency `symfony/html-sanitizer`** (`^7.4 || ^8.0`), installed by Composer.
+- **`allowlist` output** keeps the same elements and attributes but is canonical HTML (`<br />`, attribute values
+  and text entity-encoded, e.g. `mailto:a&#64;b.test`); browsers render it the same. Content that relied on the
+  bypasses (event handlers, comments, `<style>`, `javascript:` / non-allowlisted iframes, protocol-relative links) is
+  removed. Children of unknown or custom elements are dropped (structural elements such as `section`, `article`,
+  `font`, `h1`, `small` are still unwrapped). Iframes need `https://` on an allowlisted video host; their `allow`
+  attribute is reduced to player permissions. Stored content is re-sanitized at render and rewritten in the
+  database the next time each block is saved.
+- **`strip` output** is HTML-escaped text (`Tom & Jerry` → `Tom &amp; Jerry`, rendered identically through `|raw`).
+  Code that read the stored value as plain text must decode it.
+
 ## To 1.9.0
 
 From **1.8.1**:
