@@ -58,6 +58,10 @@ final readonly class PageLayoutUrlAttributeSanitizer implements AttributeSanitiz
     {
         $value = trim($value);
 
+        if ($attribute !== 'allow' && $this->isAmbiguousUrl($value)) {
+            return null;
+        }
+
         return match (true) {
             $element === 'a' && $attribute === 'href'       => $this->isRootRelative($value) || preg_match('#^(https?|mailto):#i', $value) === 1 ? $value : null,
             $element === 'img' && $attribute === 'src'      => $this->isRootRelative($value) || preg_match('#^https?://#i', $value) === 1 ? $value : null,
@@ -65,6 +69,25 @@ final readonly class PageLayoutUrlAttributeSanitizer implements AttributeSanitiz
             $element === 'iframe' && $attribute === 'allow' => $this->allowedPermissions($value),
             default                                         => $value,
         };
+    }
+
+    /**
+     * Refuses URLs that parsers disagree on, whatever symfony/html-sanitizer version is installed (CVE-2026-45066):
+     * a backslash (browsers read `\` as `/`, so `https://evil.tld\@www.youtube.com/` loads evil.tld while
+     * `parse_url()` sees youtube, and `/\evil.tld` is protocol-relative), ASCII control characters or whitespace,
+     * and userinfo (`@`) in the authority of a hierarchical URL.
+     */
+    private function isAmbiguousUrl(string $url): bool
+    {
+        if (preg_match('#[\\\\\x00-\x20\x7f]#', $url) === 1) {
+            return true;
+        }
+
+        if (preg_match('#^(?:[a-z][a-z0-9+.-]*:)?//([^/?\#]*)#i', $url, $match) === 1) {
+            return str_contains($match[1], '@');
+        }
+
+        return false;
     }
 
     private function isRootRelative(string $url): bool

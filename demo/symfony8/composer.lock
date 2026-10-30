@@ -1232,7 +1232,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/page-layout-kit-bundle",
-                "reference": "8463eb0513afb07e844b492fcf60ed1824edbead"
+                "reference": "2d3b00a2a9aff06971919acdc0c98f5e860e5095"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
@@ -1245,7 +1245,7 @@
                 "symfony/dependency-injection": "^7.4 || ^8.0",
                 "symfony/form": "^7.4 || ^8.0",
                 "symfony/framework-bundle": "^7.4 || ^8.0",
-                "symfony/html-sanitizer": "^7.4 || ^8.0",
+                "symfony/html-sanitizer": "^7.4.12 || ^8.0.12",
                 "symfony/http-foundation": "^7.4 || ^8.0",
                 "symfony/http-kernel": "^7.4 || ^8.0",
                 "symfony/routing": "^7.4 || ^8.0",

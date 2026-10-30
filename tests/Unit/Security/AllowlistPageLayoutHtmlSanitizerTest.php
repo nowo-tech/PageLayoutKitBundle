@@ -182,6 +182,8 @@ final class AllowlistPageLayoutHtmlSanitizerTest extends TestCase
         yield 'meta refresh' => ['<meta http-equiv="refresh" content="0;url=javascript:alert(1)">'];
         yield 'base href' => ['<base href="javascript:alert(1)//">'];
         yield 'unclosed tag' => ['<img src=x onerror=alert(1)//'];
+        yield 'backslash userinfo iframe' => ['<iframe src="https://evil.tld\\@www.youtube.com/"></iframe>'];
+        yield 'backslash root-relative link' => ['<a href="/\\evil.tld">x</a>'];
         yield 'null byte' => ["<img src=x on\0error=alert(1)>"];
     }
 
