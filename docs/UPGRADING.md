@@ -27,6 +27,8 @@
 
 ## Unreleased
 
+No action needed when you import `@NowoPageLayoutKitBundle/Resources/config/routing.yaml` (the documented setup). If on Symfony >= 7.3 the layout admin routes appeared without that import (through the default `controllers: { resource: routing.controllers }` of `config/routes.yaml`), they are gone now: import the bundle routes explicitly (see [INSTALLATION](INSTALLATION.md)).
+
 ## To 1.9.1
 
 From **1.9.0**:
