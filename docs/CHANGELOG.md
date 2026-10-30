@@ -37,7 +37,7 @@ Security: stored XSS bypasses of the `allowlist` and `strip` sanitizers fixed (M
 
 Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`, Appendix BJ).
 
-- **M1 (Medium, CWE-79) — `allowlist` sanitizer bypasses (affects 1.0.4–1.9.0; default strategy since 1.2.0).**
+- **M1 (Medium, CWE-79) — `allowlist` sanitizer bypasses (affects 1.0.3–1.9.0; opt-in in 1.0.3–1.1.1, default strategy since 1.2.0).**
   `AllowlistPageLayoutHtmlSanitizer` let through `<section><img src=x onerror=…></section>` (children of unwrapped
   elements were moved up but never sanitized, at any nesting depth), `<iframe src="javascript://www.youtube.com/%0a…">`
   (host-only check), `<!--><img … onerror=…>-->` (comments kept; libxml's HTML4 parser disagrees with browsers) and
@@ -48,9 +48,17 @@ Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.m
   `http(s)` / `mailto` / root-relative, images `http(s)` / root-relative, and iframes need `https://` on an
   allowlisted host with `allow` reduced to player permissions (`PageLayoutUrlAttributeSanitizer`). The output is
   canonical HTML (`<br />`, attribute values entity-encoded). Stored content is re-sanitized at render.
-- **M2 (Medium, CWE-116) — `strip` strategy revived encoded markup (1.0.4+).** `StripPageLayoutHtmlSanitizer`
+- **M2 (Medium, CWE-116) — `strip` strategy revived encoded markup (1.0.3+).** `StripPageLayoutHtmlSanitizer`
   decoded entities after `strip_tags()`, so `&amp;lt;img src=x onerror=…&amp;gt;` became a live tag after the
   render-time pass. It now returns `strip_tags()` output HTML-escaped (existing entities kept, never decoded).
+- **N1 (Low) — URL parser differentials.** `symfony/html-sanitizer` is required at `^7.4.12 || ^8.0.12` (before
+  CVE-2026-45066 `https://evil.tld\@www.youtube.com/` passed the iframe host check while browsers load `evil.tld`),
+  and `PageLayoutUrlAttributeSanitizer` itself refuses URLs with `\`, ASCII control / whitespace characters or
+  userinfo (`@`) in the authority.
+- **N2 — double encoding in escaped contexts.** Card / list item bodies are plain text printed with Twig
+  auto-escaping; `PageBlockProvider` no longer HTML-sanitizes them (they showed `Don&#039;t`). The `pageMeta()`
+  description fallback (contact header body) is now plain text (tags stripped, entities decoded once) for an
+  escaped `<meta>` attribute.
 - **L1 — open redirect after saving a block.** `PageBlockEditController::update()` follows the `Referer` only when it
   is root-relative or has the request's scheme + host + port; otherwise it redirects to the first public page.
 - **L2 — `html.sanitize.strategy: service` without `html.sanitize.service`** silently disabled sanitizing; the

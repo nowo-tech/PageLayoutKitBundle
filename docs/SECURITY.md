@@ -93,6 +93,7 @@ Allowlist policy:
 | Event handlers / `style` attribute | Never kept |
 | `a[href]` | `http:`, `https:`, `mailto:` or root-relative `/…` (not `//…`); `rel="noopener noreferrer"` forced |
 | `img[src]` | `http(s)://` or root-relative `/…` |
+| Any URL | Refused when it contains `\`, an ASCII control or whitespace character, or userinfo (`@`) in the authority (parser differentials, CVE-2026-45066) |
 | `iframe` | Kept only with `src` = `https://` on `www.youtube.com`, `youtube.com`, `www.youtube-nocookie.com`, `player.vimeo.com`; `allow` reduced to `accelerometer autoplay clipboard-write encrypted-media fullscreen gyroscope picture-in-picture web-share` (no origin lists); `srcdoc` / handlers dropped |
 
 Flex recipe and PHP defaults use `strategy: allowlist`. Set `none` only for fully trusted staff editors. Demo/dev may still opt into `none`.
@@ -100,6 +101,9 @@ Flex recipe and PHP defaults use `strategy: allowlist`. Set `none` only for full
 Additional guidance:
 
 - Only trusted editors should be able to update rich-text fields.
+- Field contracts: `body` (text, cards, CTA) and compare `beforeText` / `afterText` are **sanitized HTML** (print with
+  `|raw`, as the bundle templates do; the CTA `text` passed to the host `components/cta.html.twig` too); card / list
+  item bodies, titles and `pageMeta()` values are **plain text** (print escaped, never `|raw`).
 - Content stored before 2.0.0 / 1.9.1 is re-sanitized at render with the fixed sanitizer; it is rewritten in the
   database the next time the block is saved.
 - Template overrides should keep escaping behaviour explicit and reviewed.
@@ -153,8 +157,9 @@ Never commit application secrets, `.env` files with credentials, or private keys
 | Grade | **Pass (good)** after the fixes below (was Pass (conditional) / Medium) |
 | Overall risk | **Low** |
 | Open Critical / High / Medium | None |
-| Medium | M1 `AllowlistPageLayoutHtmlSanitizer` bypasses (unwrapped children never sanitized, `javascript:` iframe on an allowlisted host, comment / HTML4-vs-HTML5 parsing differentials, raw-text elements; affects 1.0.4–1.9.0); M2 `strip` decoded entities after `strip_tags()` (1.0.4+) → **Fixed in 2.0.0** (backported to 1.9.1) |
+| Medium | M1 `AllowlistPageLayoutHtmlSanitizer` bypasses (unwrapped children never sanitized, `javascript:` iframe on an allowlisted host, comment / HTML4-vs-HTML5 parsing differentials, raw-text elements; affects 1.0.3–1.9.0, opt-in until 1.1.1, default since 1.2.0); M2 `strip` decoded entities after `strip_tags()` (1.0.3+) → **Fixed in 2.0.0** (backported to 1.9.1) |
 | Low | L1 open redirect through the `Referer` after saving a block; L2 `strategy: service` without a service fell back to no sanitizing; L3 tests / demo / tooling shipped in dist archives → **Fixed in 2.0.0** |
+| Verification (N1, N2) | N1 `symfony/html-sanitizer` floor raised to `^7.4.12 \|\| ^8.0.12` (CVE-2026-45066) and `PageLayoutUrlAttributeSanitizer` refuses `\`, ASCII control / whitespace characters and userinfo (`@`) in URL authorities; N2 card item bodies are plain text (auto-escaped, no HTML sanitizing), meta description fallback is plain text → **Fixed in 2.0.0 and 1.9.1** |
 | Info | CMS buttons use the access checker instead of `is_granted('ROLE_EDITOR')`; modal URL segments `encodeURIComponent`-encoded; `admin_page_layout` limited to GET / POST; demo bound to 127.0.0.1. Open: the deprecated `nowo_page_layout_kit_can_edit` Twig **global** is still frozen per environment in workers without `services_resetter` (use the function); starter `hero` / `cta` templates reference host routes |
 | Residuals | `strategy: none` renders editor HTML as-is (opt-in, trusted editors only); keep host `access_control` on admin paths |
 | Record | Monorepo `BUNDLES_SECURITY_ANALYSIS.md`, Appendix BJ |

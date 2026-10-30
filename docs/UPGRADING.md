@@ -35,7 +35,8 @@ composer update nowo-tech/page-layout-kit-bundle
 
 **Security fixes (also in 1.9.1).**
 
-- **New dependency `symfony/html-sanitizer`** (`^7.4 || ^8.0`), installed by Composer. The `allowlist` strategy
+- **New dependency `symfony/html-sanitizer`** (`^7.4.12 || ^8.0.12`, versions with the CVE-2026-45066 fix), installed
+  by Composer. The `allowlist` strategy
   keeps the same elements and attributes, but its output is canonical HTML (`<br />`, attribute values and text
   entity-encoded, e.g. `mailto:a&#64;b.test`); browsers render it the same. Content that relied on the bypasses
   (event handlers, comments, `<style>`, `javascript:` / non-allowlisted iframes, protocol-relative links) is removed.
@@ -43,6 +44,10 @@ composer update nowo-tech/page-layout-kit-bundle
   Children of unknown or custom elements are dropped (structural elements such as `section`, `article`, `font`,
   `h1`, `small` are still unwrapped). Iframes need `https://` on an allowlisted video host; their `allow`
   attribute is reduced to player permissions.
+- **Field contracts:** `body` / compare texts are sanitized HTML (print `|raw`; this includes the CTA `text` the
+  starter `blocks/cta.html.twig` passes to your `components/cta.html.twig`). Card / list item bodies are plain text
+  and are no longer HTML-sanitized: print them escaped (`{{ item.body }}`), never `|raw`. `pageMeta()['description']`
+  falls back to the plain text of the contact header body (print escaped).
 - **`strip` strategy:** the result is HTML-escaped text (`Tom & Jerry` → `Tom &amp; Jerry`, rendered identically
   through `|raw`). Code that read the stored value as plain text must decode it.
 - **`html.sanitize.strategy: service` requires `html.sanitize.service`:** the container refuses to compile
