@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.2] - 2026-10-30](#192---2026-10-30)
 - [[1.9.1] - 2026-10-30](#191---2026-10-30)
 - [[1.9.0] - 2026-10-28](#190---2026-10-28)
 - [[1.8.1] - 2026-10-28](#181---2026-10-28)
@@ -32,9 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-10-30
+
+Backport of 2.1.1: bundle routes are opt-in again; controllers are no longer autoconfigured, so a host's routing.controllers import does not expose them (REQ-SF-004 rule 7). See [UPGRADING](UPGRADING.md#to-192).
+
 ### Fixed
 
 - **Bundle routes registered without being imported (REQ-SF-004 rule 7):** on Symfony >= 7.3 the `#[Route]` admin controllers were autoconfigured with the `routing.controller` tag, so a host whose `config/routes.yaml` has the default `controllers: { resource: routing.controllers }` got `admin_page_layout` and `admin_page_blocks_*` even when it never imported `@NowoPageLayoutKitBundle/Resources/config/routing.yaml` (still behind the admin access check). The controllers are no longer autoconfigured (`autoconfigure: false`, explicit `controller.service_arguments` + `container.service_subscriber`); the routes exist only where the host imports `routing.yaml`. Regression test with a kernel that only loads `routing.controllers`. Backport of 2.1.1.
+
+[1.9.2]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.9.2
 
 ## [1.9.1] - 2026-10-30
 

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.9.2](#to-192)
 - [To 1.9.1](#to-191)
 - [To 1.9.0](#to-190)
 - [To 1.8.1](#to-181)
@@ -26,6 +27,14 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+## To 1.9.2
+
+From **1.9.1**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 No action needed when you import `@NowoPageLayoutKitBundle/Resources/config/routing.yaml` (the documented setup). If on Symfony >= 7.3 the layout admin routes appeared without that import (through the default `controllers: { resource: routing.controllers }` of `config/routes.yaml`), they are gone now: import the bundle routes explicitly (see [INSTALLATION](INSTALLATION.md)).
 
