@@ -88,8 +88,8 @@ final class PageBlockEditController extends AbstractController
         $this->entityManager->flush();
         $this->addFlash('success', $this->translate('admin.flash.block_updated', 'Block updated.'));
 
-        $referer = $request->headers->get('Referer');
-        if ($referer !== null && $referer !== '') {
+        $referer = $this->sameHostReferer($request);
+        if ($referer !== null) {
             return $this->redirect($referer);
         }
 
@@ -123,6 +123,29 @@ final class PageBlockEditController extends AbstractController
             'back_url'      => $pageKey !== null ? $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]) : null,
             'view_page_url' => $pageKey !== null ? $this->publicPageUrls?->resolve($pageKey) : null,
         ]);
+    }
+
+    /**
+     * The Referer header when it points back to this application (root-relative path or same scheme + host + port),
+     * so the post-save redirect can never send the editor to another site (open redirect). Null otherwise.
+     */
+    private function sameHostReferer(Request $request): ?string
+    {
+        $referer = $request->headers->get('Referer');
+
+        if ($referer === null || $referer === '' || preg_match('#[\\\\\x00-\x20\x7f]#', $referer) === 1) {
+            return null;
+        }
+
+        if (str_starts_with($referer, '/')) {
+            return str_starts_with($referer, '//') ? null : $referer;
+        }
+
+        $origin = $request->getSchemeAndHttpHost();
+
+        return $referer === $origin || str_starts_with($referer, $origin . '/') || str_starts_with($referer, $origin . '?')
+            ? $referer
+            : null;
     }
 
     /**

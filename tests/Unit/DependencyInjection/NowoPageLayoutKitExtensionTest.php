@@ -346,6 +346,25 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         );
     }
 
+    public function testLoadRejectsServiceStrategyWithoutService(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('html.sanitize.strategy is "service" but html.sanitize.service is empty');
+
+        (new NowoPageLayoutKitExtension())->load([
+            [
+                'security' => [
+                    'allow_unauthenticated' => true,
+                ],
+                'html' => [
+                    'sanitize' => [
+                        'strategy' => 'service',
+                    ],
+                ],
+            ],
+        ], new ContainerBuilder());
+    }
+
     public function testAliasMatchesBundleConfigurationAlias(): void
     {
         self::assertSame('nowo_page_layout_kit', (new NowoPageLayoutKitExtension())->getAlias());
