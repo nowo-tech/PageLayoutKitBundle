@@ -30,21 +30,34 @@ var CmsModalController = class CmsModalController extends Controller {
 		blogEditUrl: String
 	};
 	previousActiveElement = null;
+	/** The modal element whose `close` event is observed (kept so disconnect() works once the target is gone). */
+	observedModal = null;
 	static ckeditorAutoInitPatched = false;
 	static ckeditorInitRoot = null;
 	static ckeditorMountLocks = /* @__PURE__ */ new WeakSet();
 	connect() {
 		this.patchCkeditorAutoInit();
 		document.addEventListener("keydown", this.onKeydown);
+		this.observedModal = this.modalTarget;
+		this.observedModal.addEventListener("close", this.onDialogClose);
 	}
 	disconnect() {
 		document.removeEventListener("keydown", this.onKeydown);
+		this.observedModal?.removeEventListener("close", this.onDialogClose);
+		this.observedModal = null;
 	}
 	/**
-	* Closes the open modal on Escape (bound once per instance so disconnect() can remove it).
+	* Closes the open modal on Escape (bound once per instance so disconnect() can remove it). A native `<dialog>`
+	* closes itself on Escape and fires `close`, handled by onDialogClose.
 	*/
 	onKeydown = (event) => {
-		if (event.key === "Escape" && !this.modalTarget.hidden) this.close();
+		if (event.key === "Escape" && !this.isDialog() && !this.modalTarget.hidden) this.close();
+	};
+	/**
+	* Resets the modal when the native `<dialog>` closes (Escape, the UiKit close buttons, `dialog.close()`).
+	*/
+	onDialogClose = () => {
+		this.reset();
 	};
 	open(event) {
 		event.preventDefault();
@@ -59,15 +72,48 @@ var CmsModalController = class CmsModalController extends Controller {
 		const url = this.resolveUrl(resource, mode, id, blockType, faqId, pageKey);
 		if (!url) return;
 		this.setTitle(button.dataset.cmsModalTitleParam ?? "");
-		this.loadUrl(url, resource, id, blockType);
 		this.previousActiveElement = button;
+		this.loadUrl(url, resource, id, blockType);
 	}
 	close() {
-		this.modalTarget.hidden = true;
+		const modal = this.modalTarget;
+		if (modal instanceof HTMLDialogElement) {
+			if (modal.open && typeof modal.close === "function") {
+				modal.close();
+				return;
+			}
+			modal.removeAttribute("open");
+			this.reset();
+			return;
+		}
+		modal.hidden = true;
+		this.reset();
+	}
+	/**
+	* The modal target is the UiKit `<dialog>` of `cms/modal_shell.html.twig` (2.1); a host override of the 2.0 shell
+	* (a `<div hidden>`) is still shown and hidden through the `hidden` attribute.
+	*/
+	isDialog() {
+		return this.modalTarget instanceof HTMLDialogElement;
+	}
+	show() {
+		const modal = this.modalTarget;
+		if (modal instanceof HTMLDialogElement) {
+			if (!modal.open) {
+				if (typeof modal.showModal === "function") modal.showModal();
+				else modal.setAttribute("open", "");
+			}
+			return;
+		}
+		modal.hidden = false;
+	}
+	reset() {
 		document.body.classList.remove("cms-modal-open");
 		this.bodyTarget.innerHTML = "";
 		this.setSubmitEnabled(false);
-		this.previousActiveElement?.focus();
+		const previous = this.previousActiveElement;
+		this.previousActiveElement = null;
+		previous?.focus();
 	}
 	resolveUrl(resource, mode, id, blockType, faqId, pageKey) {
 		if ("page-block" === resource && blockType && id) return this.pageBlockUrlValue.replace("__TYPE__", segment(blockType)).replace("__ID__", segment(id));
@@ -85,7 +131,7 @@ var CmsModalController = class CmsModalController extends Controller {
 		if (this.hasTitleTarget && "" !== title) this.titleTarget.textContent = title;
 	}
 	async loadUrl(url, resource, id, blockType) {
-		this.modalTarget.hidden = false;
+		this.show();
 		document.body.classList.add("cms-modal-open");
 		this.setSubmitEnabled(false);
 		this.bodyTarget.innerHTML = "<p class=\"cms-modal__loading\">Loading…</p>";

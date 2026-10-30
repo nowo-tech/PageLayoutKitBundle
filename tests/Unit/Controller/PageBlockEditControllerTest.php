@@ -37,6 +37,7 @@ use Nowo\PageLayoutKitBundle\Repository\PageListBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use Nowo\UiKitBundle\View\ShowPage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -383,6 +384,10 @@ final class PageBlockEditControllerTest extends TestCase
         self::assertSame('/admin/pages/contact/layout', $parameters['back_url']);
         self::assertSame('/public/contact', $parameters['view_page_url']);
         self::assertSame(PageBlockType::List, $parameters['block_type']);
+        self::assertInstanceOf(ShowPage::class, $parameters['page']);
+        self::assertSame('/admin/pages/contact/layout', $parameters['page']->header->back?->href);
+        self::assertSame('NowoPageLayoutKitBundle', $parameters['page']->bundle);
+        self::assertNull($parameters['nowo_page_layout_kit_legacy_layout']);
     }
 
     public function testEditStubFallsBackToTheFirstConfiguredPageWhenTheBlockIsNotInAnyLayout(): void

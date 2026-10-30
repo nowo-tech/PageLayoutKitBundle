@@ -11,6 +11,7 @@ use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -35,6 +36,7 @@ final class PageLayoutController extends AbstractController
         private readonly FormFactoryInterface $formFactory,
         private readonly ?PublicPageUrlResolver $publicPageUrls = null,
         private readonly ?TranslatorInterface $translator = null,
+        private readonly PageLayoutKitPages $pages = new PageLayoutKitPages(),
     ) {
     }
 
@@ -56,13 +58,22 @@ final class PageLayoutController extends AbstractController
             return $this->redirectToRoute('admin_page_layout', ['pageKey' => $pageKey]);
         }
 
-        return $this->render('@NowoPageLayoutKitBundle/admin/layout/index.html.twig', [
-            'page_title'    => sprintf('Layout: %s', $pageKey),
+        $viewPageUrl = $this->publicPageUrls?->resolve($pageKey);
+        $formView    = $reorderForm->createView();
+
+        return $this->render($this->pages->template('layout_index'), $this->pages->context([
+            'page'         => $this->pages->layoutPage($pageKey, $formView, $entries !== [], $viewPageUrl),
+            'layout_table' => $this->pages->layoutTable($entries, fn (PageLayoutEntry $entry): string => $this->generateUrl('admin_page_blocks_edit', [
+                'type' => $entry->getBlockType()->value,
+                'id'   => $entry->getBlockId(),
+            ])),
+            'layout_empty'  => $this->pages->layoutEmpty(),
+            'page_title'    => $this->translator?->trans('admin.layout.title', ['%page%' => $pageKey], 'NowoPageLayoutKitBundle') ?? sprintf('Layout: %s', $pageKey),
             'page_key'      => $pageKey,
             'entries'       => $entries,
-            'reorder_form'  => $reorderForm,
-            'view_page_url' => $this->publicPageUrls?->resolve($pageKey),
-        ]);
+            'reorder_form'  => $formView,
+            'view_page_url' => $viewPageUrl,
+        ]));
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Twig;
 
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
+use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
@@ -20,12 +21,15 @@ final class PageLayoutKitExtension extends AbstractExtension implements GlobalsI
         '@NowoCkeditor5EditorBundle/Form/ckeditor5_editor_theme.html.twig',
     ];
 
+    /** Value of the deprecated `nowo_page_layout_kit_css_framework` global when `web_ui.css_framework` is not set (2.0 default). */
+    public const string DEFAULT_CSS_FRAMEWORK = 'tailwind';
+
     /**
      * @param list<string> $pages
      */
     public function __construct(
-        private readonly string $layoutTemplate,
-        private readonly string $cssFramework,
+        private readonly ?string $layoutTemplate,
+        private readonly ?string $cssFramework,
         private readonly array $pages,
         private readonly string $defaultLocale,
         private readonly PageLayoutKitAccessCheckerInterface $accessChecker,
@@ -68,15 +72,20 @@ final class PageLayoutKitExtension extends AbstractExtension implements GlobalsI
     }
 
     /**
-     * The `nowo_page_layout_kit_can_edit` global is deprecated: Twig resolves globals once per
-     * environment, so in long-running workers without `services_resetter` it keeps the first
-     * user's value. Use the `nowo_page_layout_kit_can_edit()` function instead.
+     * Deprecated globals (removed in 3.0):
+     * - `nowo_page_layout_kit_can_edit`: Twig resolves globals once per environment, so in long-running workers
+     *   without `services_resetter` it keeps the first user's value. Use the `nowo_page_layout_kit_can_edit()` function.
+     * - `nowo_page_layout_kit_layout` (since 2.1, REQ-UI-003: bundles must not add layout globals; the bundle pages
+     *   extend UiKit scaffolds): `web_ui.layout_template`, else the deprecated 2.0 layout (which extends the UiKit
+     *   admin layout), for copies of the 2.0 pages that fill `{% block admin %}`.
+     * - `nowo_page_layout_kit_css_framework` (since 2.1: the CSS stack comes from `nowo_ui_kit.css_framework`):
+     *   `web_ui.css_framework`, else `tailwind` (the 2.0 default).
      */
     public function getGlobals(): array
     {
         return [
-            'nowo_page_layout_kit_layout'         => $this->layoutTemplate,
-            'nowo_page_layout_kit_css_framework'  => $this->cssFramework,
+            'nowo_page_layout_kit_layout'         => $this->layoutTemplate ?? PageLayoutKitPages::LEGACY_DEFAULT_LAYOUT,
+            'nowo_page_layout_kit_css_framework'  => $this->cssFramework ?? self::DEFAULT_CSS_FRAMEWORK,
             'nowo_page_layout_kit_pages'          => $this->pages,
             'nowo_page_layout_kit_default_locale' => $this->defaultLocale,
             'nowo_page_layout_kit_can_edit'       => $this->accessChecker->canAccess(),

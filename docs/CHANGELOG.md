@@ -32,6 +32,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+UiKit page contract (REQ-UI-003) for the admin pages, BC-safe: the 2.0 layout, globals and options are deprecated,
+not removed. See [UPGRADING](UPGRADING.md#unreleased).
+
+### Added
+
+- `Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages`: builds the UiKit view models of the admin pages, resolves their
+  layout (`web_ui.layout_template`, null = `nowo_ui_kit.layouts.admin`) and the per-page template overrides.
+- `web_ui.templates` (`layout_index`, `block_edit`): per-page template overrides; unknown ids fail the compilation.
+- `admin/_legacy_layout.html.twig`: deprecated bridge that wraps a 2.0 host layout (`{% block admin %}`).
+- Page contract test (`tests/Integration/Contract/PageContractTest.php`, UiKit `PageContractTestCase`).
+- Translation key `admin.blocks.edit.page` (de, en, es, fr, it, nl, pt).
+
+### Changed
+
+- **Template contract:** the reorder screen extends the UiKit form scaffold (entries table through the UiKit `table`
+  partial, row action Edit, empty state through the `empty` partial, no form when the page has no entries) and the
+  block page the show scaffold (type, id, page key; "View page" action and back link in the page header). Both read
+  theme slots only (no framework utility classes) and their titles are translated (`admin.layout.title`).
+- `web_ui.layout_template` defaults to `null` (= `nowo_ui_kit.layouts.admin`); the 2.0 default
+  `@NowoPageLayoutKitBundle/admin/layout.html.twig` is normalised to `null`.
+- `admin/layout.html.twig` no longer loads Bootstrap from a CDN nor prints its own `<html>`: it extends the UiKit admin
+  layout and maps `title` / `page_title` / `admin` into the canonical blocks (for copies of 2.0 pages).
+- `cms/modal_shell.html.twig` is the UiKit `dialog` partial (native `<dialog id="cms-modal">`, same `cms-modal`
+  targets and labels) and loads UiKit's `dialog` and `tabs` runtimes; `cms_modal_controller.ts` opens it with
+  `showModal()`, resets it on the dialog `close` event and still drives a 2.0 `<div hidden>` shell (rebuilt with Vite).
+- The default FormKit profile `page_layout_kit` is theme-neutral (`attr.class: nowo-ui-input`, no `row_attr`).
+- Requires `nowo-tech/ui-kit-bundle` `^2.17.2` (was `^2.5.1`).
+
+### Deprecated
+
+- `web_ui.css_framework` (the pages use `nowo_ui_kit.css_framework`; default now `null`), the Twig globals
+  `nowo_page_layout_kit_layout` and `nowo_page_layout_kit_css_framework`, `admin/layout.html.twig` and 2.0 layouts
+  without the UiKit canonical blocks (bridged with a deprecation). Removal planned for 3.0, together with the
+  `nowo_page_layout_kit_can_edit` global (deprecated since 1.x).
+
 ## [2.0.0] - 2026-10-30
 
 PageLayoutKit 2.0.0: UiKit page contract (BC break), SEC-004 BJ: html-sanitizer allowlist, strip no decode, same-host Referer redirect, service strategy fail-closed, export-ignore See [UPGRADING](UPGRADING.md#to-200).

@@ -12,6 +12,7 @@ admin.layout.save_order: Volgorde opslaan
 admin.blocks.edit.title: Blok bewerken
 admin.blocks.edit.lead: 'Volledige bewerking van %type%-blokken komt binnenkort.'
 admin.blocks.edit.back_to_layout: Terug naar indeling
+admin.blocks.edit.page: Paginasleutel
 admin.action.back: Terug
 admin.action.save: Opslaan
 admin.flash.saved: Opgeslagen.

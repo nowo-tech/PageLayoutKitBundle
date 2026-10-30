@@ -39,6 +39,15 @@ final class PageLayoutKitExtensionTest extends TestCase
         );
     }
 
+    public function testDeprecatedLayoutGlobalsFallBackToThe20Defaults(): void
+    {
+        $extension = new PageLayoutKitExtension(null, null, ['home'], 'en', $this->createStub(PageLayoutKitAccessCheckerInterface::class));
+        $globals   = $extension->getGlobals();
+
+        self::assertSame('@NowoPageLayoutKitBundle/admin/layout.html.twig', $globals['nowo_page_layout_kit_layout']);
+        self::assertSame('tailwind', $globals['nowo_page_layout_kit_css_framework']);
+    }
+
     public function testCanEditFunctionIsEvaluatedPerRenderOnTheSameTwigEnvironment(): void
     {
         $currentUserIsEditor = true;

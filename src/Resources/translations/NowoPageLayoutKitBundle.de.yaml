@@ -12,6 +12,7 @@ admin.layout.save_order: Reihenfolge speichern
 admin.blocks.edit.title: Block bearbeiten
 admin.blocks.edit.lead: 'Die vollständige Bearbeitung von %type%-Blöcken ist bald verfügbar.'
 admin.blocks.edit.back_to_layout: Zurück zum Layout
+admin.blocks.edit.page: Seitenschlüssel
 admin.action.back: Zurück
 admin.action.save: Speichern
 admin.flash.saved: Gespeichert.

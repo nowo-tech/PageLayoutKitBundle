@@ -48,6 +48,12 @@ services:
         arguments:
             $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
 
+    Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages:
+        arguments:
+            $layoutTemplate: '%nowo_page_layout_kit.web_ui.layout_template%'
+            $templates: '%nowo_page_layout_kit.web_ui.templates%'
+            $twig: '@?twig'
+
     Nowo\PageLayoutKitBundle\Twig\PageLayoutKitExtension:
         arguments:
             $layoutTemplate: '%nowo_page_layout_kit.web_ui.layout_template%'

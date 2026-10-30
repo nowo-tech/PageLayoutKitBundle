@@ -59,6 +59,9 @@ export default class CmsModalController extends Controller {
 
     private previousActiveElement: HTMLElement | null = null;
 
+    /** The modal element whose `close` event is observed (kept so disconnect() works once the target is gone). */
+    private observedModal: HTMLElement | null = null;
+
     private static ckeditorAutoInitPatched = false;
     private static ckeditorInitRoot: ((root: HTMLElement) => Promise<void>) | null = null;
     private static readonly ckeditorMountLocks = new WeakSet<HTMLElement>();
@@ -66,19 +69,31 @@ export default class CmsModalController extends Controller {
     connect(): void {
         this.patchCkeditorAutoInit();
         document.addEventListener('keydown', this.onKeydown);
+        this.observedModal = this.modalTarget;
+        this.observedModal.addEventListener('close', this.onDialogClose);
     }
 
     disconnect(): void {
         document.removeEventListener('keydown', this.onKeydown);
+        this.observedModal?.removeEventListener('close', this.onDialogClose);
+        this.observedModal = null;
     }
 
     /**
-     * Closes the open modal on Escape (bound once per instance so disconnect() can remove it).
+     * Closes the open modal on Escape (bound once per instance so disconnect() can remove it). A native `<dialog>`
+     * closes itself on Escape and fires `close`, handled by onDialogClose.
      */
     private readonly onKeydown = (event: KeyboardEvent): void => {
-        if (event.key === 'Escape' && !this.modalTarget.hidden) {
+        if (event.key === 'Escape' && !this.isDialog() && !this.modalTarget.hidden) {
             this.close();
         }
+    };
+
+    /**
+     * Resets the modal when the native `<dialog>` closes (Escape, the UiKit close buttons, `dialog.close()`).
+     */
+    private readonly onDialogClose = (): void => {
+        this.reset();
     };
 
     open(event: Event): void {
@@ -99,16 +114,62 @@ export default class CmsModalController extends Controller {
         }
 
         this.setTitle(button.dataset.cmsModalTitleParam ?? '');
-        void this.loadUrl(url, resource, id, blockType);
         this.previousActiveElement = button;
+        void this.loadUrl(url, resource, id, blockType);
     }
 
     close(): void {
-        this.modalTarget.hidden = true;
+        const modal = this.modalTarget;
+        if (modal instanceof HTMLDialogElement) {
+            if (modal.open && typeof modal.close === 'function') {
+                // Fires `close`: onDialogClose resets the modal.
+                modal.close();
+
+                return;
+            }
+
+            modal.removeAttribute('open');
+            this.reset();
+
+            return;
+        }
+
+        modal.hidden = true;
+        this.reset();
+    }
+
+    /**
+     * The modal target is the UiKit `<dialog>` of `cms/modal_shell.html.twig` (2.1); a host override of the 2.0 shell
+     * (a `<div hidden>`) is still shown and hidden through the `hidden` attribute.
+     */
+    private isDialog(): boolean {
+        return this.modalTarget instanceof HTMLDialogElement;
+    }
+
+    private show(): void {
+        const modal = this.modalTarget;
+        if (modal instanceof HTMLDialogElement) {
+            if (!modal.open) {
+                if (typeof modal.showModal === 'function') {
+                    modal.showModal();
+                } else {
+                    modal.setAttribute('open', '');
+                }
+            }
+
+            return;
+        }
+
+        modal.hidden = false;
+    }
+
+    private reset(): void {
         document.body.classList.remove('cms-modal-open');
         this.bodyTarget.innerHTML = '';
         this.setSubmitEnabled(false);
-        this.previousActiveElement?.focus();
+        const previous = this.previousActiveElement;
+        this.previousActiveElement = null;
+        previous?.focus();
     }
 
     private resolveUrl(
@@ -164,7 +225,7 @@ export default class CmsModalController extends Controller {
         id?: string,
         blockType?: string,
     ): Promise<void> {
-        this.modalTarget.hidden = false;
+        this.show();
         document.body.classList.add('cms-modal-open');
         this.setSubmitEnabled(false);
         this.bodyTarget.innerHTML = '<p class="cms-modal__loading">Loading…</p>';

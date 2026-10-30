@@ -25,7 +25,7 @@ final class PageLayoutReorderRowType extends AbstractPageLayoutFormType
             $this->addNamedField('position', 'integer', [
                 'label' => false,
                 'attr'  => [
-                    'class' => 'form-control nowo-ui-input',
+                    'class' => 'nowo-ui-input',
                     'min'   => 0,
                     'style' => 'width:5rem',
                 ],

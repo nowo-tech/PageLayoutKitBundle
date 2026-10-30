@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\DependencyInjection;
 
 use Nowo\PageLayoutKitBundle\DependencyInjection\Configuration;
+use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
@@ -17,6 +20,53 @@ final class ConfigurationTest extends TestCase
         self::assertContains('custom', Configuration::CSS_FRAMEWORKS);
     }
 
+    public function testWebUiDefaultsToTheUiKitLayout(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[]]);
+
+        self::assertNull($config['web_ui']['layout_template']);
+        self::assertNull($config['web_ui']['css_framework']);
+        self::assertSame([], $config['web_ui']['templates']);
+    }
+
+    public function testTheDeprecated20DefaultLayoutMeansTheUiKitLayout(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'web_ui' => ['layout_template' => PageLayoutKitPages::LEGACY_DEFAULT_LAYOUT],
+        ]]);
+
+        self::assertNull($config['web_ui']['layout_template']);
+    }
+
+    public function testPerPageTemplateOverridesAreValidated(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'web_ui' => ['templates' => ['layout_index' => 'admin/page_layout.html.twig', 'block_edit' => 'admin/block.html.twig']],
+        ]]);
+
+        self::assertSame(['layout_index' => 'admin/page_layout.html.twig', 'block_edit' => 'admin/block.html.twig'], $config['web_ui']['templates']);
+
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('Unknown nowo_page_layout_kit.web_ui.templates page id(s) "index"; allowed: layout_index, block_edit.');
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'web_ui' => ['templates' => ['index' => 'admin/index.html.twig']],
+        ]]);
+    }
+
+    #[IgnoreDeprecations]
+    public function testCssFrameworkIsDeprecated(): void
+    {
+        $this->expectUserDeprecationMessageMatches('/"nowo_page_layout_kit\.web_ui\.css_framework" option is deprecated/');
+
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'web_ui' => ['css_framework' => 'bootstrap5'],
+        ]]);
+
+        self::assertSame('bootstrap5', $config['web_ui']['css_framework']);
+    }
+
+    #[IgnoreDeprecations]
     public function testConfigurationAppliesDefaultsAndCustomValues(): void
     {
         $processor = new Processor();

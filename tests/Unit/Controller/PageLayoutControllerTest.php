@@ -16,6 +16,9 @@ use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use Nowo\UiKitBundle\View\EmptyState;
+use Nowo\UiKitBundle\View\FormPage;
+use Nowo\UiKitBundle\View\Table;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -109,6 +112,10 @@ final class PageLayoutControllerTest extends TestCase
 
             self::assertArrayHasKey('view_page_url', $captured);
             self::assertSame($expected, $captured['view_page_url'], $pageKey);
+            self::assertInstanceOf(FormPage::class, $captured['page']);
+            self::assertCount($expected === null ? 0 : 1, $captured['page']->header->actions, $pageKey);
+            self::assertInstanceOf(Table::class, $captured['layout_table']);
+            self::assertInstanceOf(EmptyState::class, $captured['layout_empty']);
         }
     }
 

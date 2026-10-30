@@ -12,6 +12,7 @@ admin.layout.save_order: Save order
 admin.blocks.edit.title: Edit block
 admin.blocks.edit.lead: 'Full editing of %type% blocks is coming soon.'
 admin.blocks.edit.back_to_layout: Back to layout
+admin.blocks.edit.page: Page key
 admin.action.back: Back
 admin.action.save: Save
 admin.flash.saved: Saved.

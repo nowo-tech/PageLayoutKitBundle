@@ -12,6 +12,7 @@ admin.layout.save_order: Salva ordine
 admin.blocks.edit.title: Modifica blocco
 admin.blocks.edit.lead: 'La modifica completa dei blocchi %type% sarà disponibile a breve.'
 admin.blocks.edit.back_to_layout: Torna al layout
+admin.blocks.edit.page: Chiave della pagina
 admin.action.back: Indietro
 admin.action.save: Salva
 admin.flash.saved: Salvato.

@@ -71,8 +71,7 @@ nowo_page_layout_kit:
         access_roles: [ROLE_EDITOR]
         allow_unauthenticated: false
     web_ui:
-        layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
-        css_framework: tailwind
+        layout_template: null   # null = nowo_ui_kit.layouts.admin (set your admin layout once in UiKit)
     doctrine:
         table_prefix: ''
         connection: default

@@ -25,9 +25,10 @@ nowo_page_layout_kit:
         access_checker: null
         allow_unauthenticated: false
     web_ui:
-        layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
-        css_framework: tailwind
+        layout_template: null    # null = nowo_ui_kit.layouts.admin (REQ-UI-003)
         page_routes: {}          # e.g. { home: app_home, contact: app_contact }
+        templates: {}            # per-page overrides: { layout_index: ..., block_edit: ... }
+        # css_framework: deprecated since 2.1 (the pages use nowo_ui_kit.css_framework)
     doctrine:
         table_prefix: ''
         connection: default
@@ -76,11 +77,13 @@ The container also refuses to compile without form CSRF protection (`security.cs
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `layout_template` | `@NowoPageLayoutKitBundle/admin/layout.html.twig` | Base layout used by the reorder UI. Point this to your own layout or bridge template to embed the admin screen in host chrome. |
-| `css_framework` | `tailwind` | Styling hint exposed to Twig. Allowed values: `bootstrap`, `bootstrap4`, `bootstrap5`, `tabler`, `tailwind`, `foundation`, `custom`, `none`. |
+| `layout_template` | `null` | Layout the admin pages (UiKit scaffolds, REQ-UI-003) extend. `null` = `nowo_ui_kit.layouts.admin`: set your admin layout (or a one-file bridge rendering the UiKit canonical blocks) once in UiKit for every bundle. A layout here must render the canonical blocks; a 2.0 layout that renders `{% block admin %}` is wrapped in a deprecated bridge (see [TEMPLATES.md](TEMPLATES.md#layout-bridge-20-layouts)). The 2.0 default `@NowoPageLayoutKitBundle/admin/layout.html.twig` means `null`. |
+| `css_framework` | `null` | **Deprecated since 2.1** (the admin pages take the CSS stack from `nowo_ui_kit.css_framework`). Only feeds the deprecated `nowo_page_layout_kit_css_framework` global (`null` → `tailwind`). Allowed values: `bootstrap`, `bootstrap4`, `bootstrap5`, `tabler`, `tailwind`, `foundation`, `custom`, `none`. |
+| `templates` | `{}` | Per-page template overrides (REQ-UI-003): `layout_index` (reorder screen), `block_edit` (block page). Prefer a thin `{% extends '@!NowoPageLayoutKitBundle/...' %}` overriding one data block. Unknown ids fail the container compilation. |
 | `page_routes` | `{}` | Public route name per page key, used for the "View page" link on the reorder screen and as redirect target after saving a block when no `Referer` is sent. Unmapped keys try a route with the same name as the page key (`home` → route `home`). When no route resolves (or it needs parameters) the link is hidden; an empty string disables it. |
 
-The reorder screen lives at `@NowoPageLayoutKitBundle/admin/layout/index.html.twig` and extends `nowo_page_layout_kit_layout`.
+The reorder screen (`@NowoPageLayoutKitBundle/admin/layout/index.html.twig`) extends the UiKit form scaffold and the
+block page (`admin/blocks/edit_stub.html.twig`) the show scaffold; see [TEMPLATES.md](TEMPLATES.md).
 
 ## doctrine
 
@@ -103,8 +106,8 @@ The bundle Twig extension publishes:
 
 | Global | Meaning |
 | --- | --- |
-| `nowo_page_layout_kit_layout` | Active admin layout template |
-| `nowo_page_layout_kit_css_framework` | Selected CSS framework hint |
+| `nowo_page_layout_kit_layout` | **Deprecated since 2.1** (the pages extend UiKit scaffolds). `web_ui.layout_template`, else the deprecated `@NowoPageLayoutKitBundle/admin/layout.html.twig` (extends the UiKit admin layout) for copies of 2.0 pages |
+| `nowo_page_layout_kit_css_framework` | **Deprecated since 2.1** (read `nowo_ui_kit.css_framework`). `web_ui.css_framework`, else `tailwind` |
 | `nowo_page_layout_kit_pages` | Configured page keys |
 | `nowo_page_layout_kit_default_locale` | Configured default locale |
 | `nowo_page_layout_kit_can_edit` | **Deprecated**, use `nowo_page_layout_kit_can_edit()`. Whether the current user may use inline CMS editing |
@@ -147,10 +150,11 @@ nowo_page_layout_kit:
 **Host layout integration:**
 
 ```yaml
-nowo_page_layout_kit:
-    web_ui:
-        layout_template: 'admin/layout.html.twig'
-        css_framework: bootstrap5
+# Once for every UiKit-based bundle (REQ-UI-003): your layout or bridge renders the UiKit canonical blocks.
+nowo_ui_kit:
+    css_framework: bootstrap5
+    layouts:
+        admin: 'admin/layout.html.twig'
 ```
 
 See also [USAGE.md](USAGE.md) and [SECURITY.md](SECURITY.md).
