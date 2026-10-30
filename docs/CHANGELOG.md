@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.1.0] - 2026-10-30](#210---2026-10-30)
 - [[2.0.0] - 2026-10-30](#200---2026-10-30)
 - [[1.9.0] - 2026-10-28](#190---2026-10-28)
 - [[1.8.1] - 2026-10-28](#181---2026-10-28)
@@ -31,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [2.1.0] - 2026-10-30
+
+PageLayoutKit: UiKit page contract for the admin pages (form/show scaffolds, UiKit dialog modal, no CDN); 2.0 layouts via a deprecated bridge See [UPGRADING](UPGRADING.md#to-210).
 
 UiKit page contract (REQ-UI-003) for the admin pages, BC-safe: the 2.0 layout, globals and options are deprecated,
 not removed. See [UPGRADING](UPGRADING.md#unreleased).
