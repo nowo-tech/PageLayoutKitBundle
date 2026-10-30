@@ -142,6 +142,10 @@ describe('cms_modal_controller: URL resolution', () => {
         [{ resource: 'case', id: '6' }, '/admin/cases/6/edit'],
         [{ resource: 'case', mode: 'edit' }, '/admin/cases/0/edit'],
         [{ resource: 'page-seo', 'page-key': 'home' }, '/admin/pages/home/seo'],
+        // Interpolated values are encoded path segments: they cannot climb the path or inject a query / fragment.
+        [{ resource: 'page-block', 'block-type': '../../users', id: '5?x=1#y' }, '/admin/page-blocks/..%2F..%2Fusers/5%3Fx%3D1%23y/edit-modal'],
+        [{ resource: 'service-faq', id: '4/../9', 'faq-id': '8&a=b' }, '/admin/services/4%2F..%2F9/faqs/8%26a%3Db/edit'],
+        [{ resource: 'page-seo', 'page-key': 'home/../../x' }, '/admin/pages/home%2F..%2F..%2Fx/seo'],
         [{ resource: 'blog', id: '2' }, '/admin/blog/2/edit'],
         [{ resource: 'blog' }, '/admin/blog/0/edit'],
     ])('loads %o from %s', async (params, expectedUrl) => {

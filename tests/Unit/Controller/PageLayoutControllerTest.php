@@ -17,6 +17,7 @@ use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use ReflectionProperty;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -37,6 +39,14 @@ use Twig\Environment;
 
 final class PageLayoutControllerTest extends TestCase
 {
+    public function testLayoutRouteOnlyAcceptsGetAndPost(): void
+    {
+        $route = (new ReflectionMethod(PageLayoutController::class, 'layout'))->getAttributes(Route::class)[0]->newInstance();
+
+        self::assertSame('admin_page_layout', $route->name);
+        self::assertSame(['GET', 'POST'], $route->methods);
+    }
+
     public function testLayoutThrowsForUnknownPageKey(): void
     {
         $controller = new PageLayoutController(

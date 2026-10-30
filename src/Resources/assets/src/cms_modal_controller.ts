@@ -19,6 +19,12 @@ declare global {
  * Register it under the `cms-modal` identifier used by the bundle templates:
  * `application.register('cms-modal', CmsModalController)`.
  */
+/**
+ * Encodes a value interpolated into a URL template path segment: a data-attribute value such as `../x` or `a?b#c`
+ * cannot change the path, query or fragment of the request.
+ */
+const segment = (value: string): string => encodeURIComponent(value);
+
 export default class CmsModalController extends Controller {
     static targets = ['modal', 'body', 'title', 'submit'];
 
@@ -114,33 +120,33 @@ export default class CmsModalController extends Controller {
         pageKey?: string,
     ): string | null {
         if ('page-block' === resource && blockType && id) {
-            return this.pageBlockUrlValue.replace('__TYPE__', blockType).replace('__ID__', id);
+            return this.pageBlockUrlValue.replace('__TYPE__', segment(blockType)).replace('__ID__', segment(id));
         }
 
         if ('service' === resource) {
-            return 'create' === mode ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace('__ID__', id ?? '0');
+            return 'create' === mode ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace('__ID__', segment(id ?? '0'));
         }
 
         if ('service-faq' === resource && id) {
             if ('create' === mode) {
-                return this.serviceFaqCreateUrlValue.replace('__ID__', id);
+                return this.serviceFaqCreateUrlValue.replace('__ID__', segment(id));
             }
 
             return this.serviceFaqEditUrlValue
-                .replace('__ID__', id)
-                .replace('__FAQ_ID__', faqId ?? '0');
+                .replace('__ID__', segment(id))
+                .replace('__FAQ_ID__', segment(faqId ?? '0'));
         }
 
         if ('case' === resource) {
-            return 'create' === mode ? this.caseCreateUrlValue : this.caseEditUrlValue.replace('__ID__', id ?? '0');
+            return 'create' === mode ? this.caseCreateUrlValue : this.caseEditUrlValue.replace('__ID__', segment(id ?? '0'));
         }
 
         if ('page-seo' === resource && pageKey) {
-            return this.pageSeoEditUrlValue.replace('__PAGE_KEY__', pageKey);
+            return this.pageSeoEditUrlValue.replace('__PAGE_KEY__', segment(pageKey));
         }
 
         if ('blog' === resource) {
-            return this.blogEditUrlValue.replace('__ID__', id ?? '0');
+            return this.blogEditUrlValue.replace('__ID__', segment(id ?? '0'));
         }
 
         return null;

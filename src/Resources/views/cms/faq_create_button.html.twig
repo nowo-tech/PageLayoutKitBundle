@@ -1,4 +1,4 @@
-{% if is_granted('ROLE_EDITOR') and serviceId|default(0) > 0 %}
+{% if nowo_page_layout_kit_can_edit() and serviceId|default(0) > 0 %}
   <button
     type="button"
     class="cms-create-button"

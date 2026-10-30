@@ -1,0 +1,40 @@
+# Keep the Composer dist / `git archive` (GitHub "Source code" downloads) to the runtime package:
+# src/, docs, README, CHANGELOG, LICENSE, composer.json. Development, demo, test and CI files are not shipped
+# (REQ-SEC-004 2026-10-30, Appendix BJ L3: the demo carries demo credentials and secrets).
+
+# Demo application (Symfony 8 + FrankenPHP) and its Playwright e2e suite
+/demo export-ignore
+
+# Tests, specs and tooling
+/tests export-ignore
+/specs export-ignore
+/.specify export-ignore
+/.scripts export-ignore
+/.githooks export-ignore
+/.cursor export-ignore
+/.cursorignore export-ignore
+/src/Resources/assets/**/*.test.ts export-ignore
+
+# CI and code-quality configuration
+/.github export-ignore
+/.coderabbit.yaml export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/.twig-cs-fixer.php export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+/rector.php export-ignore
+/igor.json export-ignore
+
+# Local Docker / build tooling (the built cms_modal_controller.js is committed under src/Resources/public)
+/Dockerfile export-ignore
+/.dockerignore export-ignore
+/docker-compose.yml export-ignore
+/Makefile export-ignore
+/composer.lock export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/package.json export-ignore
+/pnpm-lock.yaml export-ignore
+/tsconfig.json export-ignore
+/vite.config.ts export-ignore
+/vitest.config.ts export-ignore
