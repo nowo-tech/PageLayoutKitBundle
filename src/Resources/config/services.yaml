@@ -15,12 +15,17 @@ services:
             - '../../Security/PageLayoutProtectionConfig.php'
             - '../../Security/Html/'
 
+    # REQ-SF-004 rule 7: controllers are registered explicitly, NOT autoconfigured. On Symfony >= 7.3 a #[Route]
+    # class is autoconfigured with the routing.controller tag and the host's `routing.controllers` resource would
+    # expose the admin routes even when the host never imports the bundle routing.yaml.
     Nowo\PageLayoutKitBundle\Controller\:
         resource: '../../Controller/'
-        tags: ['controller.service_arguments']
+        autoconfigure: false
+        tags: ['controller.service_arguments', 'container.service_subscriber']
 
     Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController:
-        tags: ['controller.service_arguments']
+        autoconfigure: false
+        tags: ['controller.service_arguments', 'container.service_subscriber']
         arguments:
             $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
 
