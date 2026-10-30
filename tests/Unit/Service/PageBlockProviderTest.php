@@ -314,8 +314,10 @@ final class PageBlockProviderTest extends TestCase
         self::assertStringNotContainsString('script', $layout[0]->data['body']);
     }
 
-    public function testAllowlistSanitizerStripsScriptFromCardItemBodies(): void
+    public function testCardItemBodiesArePlainTextAndNotHtmlSanitized(): void
     {
+        // Regression (Appendix BJ N2): item bodies are printed with Twig auto-escaping; HTML-sanitizing them as well
+        // encoded them twice (`Don&#039;t`).
         $cardsEntry     = $this->createLayoutEntry('home', PageBlockType::Cards, 12, 0, 503);
         $state          = new stdClass();
         $state->queries = 0;
@@ -333,7 +335,7 @@ final class PageBlockProviderTest extends TestCase
                     'block_id' => 12,
                     'position' => 0,
                     'title'    => 'Card',
-                    'body'     => '<p>Card</p><script>alert(1)</script>',
+                    'body'     => 'Don\'t "Q&A" 2+2=4',
                 ]],
             ], $state),
             $this->createRequestStack('es'),
@@ -342,8 +344,36 @@ final class PageBlockProviderTest extends TestCase
         );
 
         $layout = $provider->getLayout('home', 'es');
-        self::assertStringContainsString('<p>Card</p>', $layout[0]->data['items'][0]['body']);
-        self::assertStringNotContainsString('script', $layout[0]->data['items'][0]['body']);
+        self::assertSame('Don\'t "Q&A" 2+2=4', $layout[0]->data['items'][0]['body']);
+    }
+
+    public function testMetaDescriptionFallbackIsPlainTextOfTheSanitizedBody(): void
+    {
+        $textEntry      = $this->createLayoutEntry('contact', PageBlockType::Text, 11, 0, 502);
+        $state          = new stdClass();
+        $state->queries = 0;
+
+        $provider = new PageBlockProvider(
+            $this->createPageLayoutEntryRepository([
+                'contact' => [$textEntry],
+            ]),
+            $this->createPageBlockSqlRepository([
+                'FROM content_page_text_block b' => [[
+                    'block_id'   => 11,
+                    'sectionKey' => 'contact_header',
+                    'title'      => 'Contact',
+                    'body'       => "<p>Don't wait,</p>\n<p>write <strong>Q&amp;A</strong></p><script>alert(1)</script>",
+                ]],
+            ], $state),
+            $this->createRequestStack('en'),
+            new PageLocales('es', ['es', 'en']),
+            $this->createProtection(HtmlSanitizeStrategy::Allowlist),
+        );
+
+        self::assertSame(
+            ['title' => 'Contact', 'description' => "Don't wait, write Q&A"],
+            $provider->pageMeta('contact', 'en'),
+        );
     }
 
     private function createProtection(HtmlSanitizeStrategy $strategy = HtmlSanitizeStrategy::None): PageLayoutProtection

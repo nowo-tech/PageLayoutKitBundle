@@ -53,12 +53,12 @@ final class PageLayoutProtectionTest extends TestCase
         self::assertSame('custom:<p>x</p>', $protection->htmlSanitizer()->sanitize('<p>x</p>'));
     }
 
-    public function testServiceStrategyFallsBackToNullSanitizerWithoutCustom(): void
+    public function testServiceStrategyFailsClosedToAllowlistWithoutCustom(): void
     {
         $protection = new PageLayoutProtection(
             new PageLayoutProtectionConfig(HtmlSanitizeStrategy::Service, 'app.sanitizer'),
         );
 
-        self::assertInstanceOf(NullPageLayoutHtmlSanitizer::class, $protection->htmlSanitizer());
+        self::assertInstanceOf(AllowlistPageLayoutHtmlSanitizer::class, $protection->htmlSanitizer());
     }
 }

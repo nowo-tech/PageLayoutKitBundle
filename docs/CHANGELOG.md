@@ -31,6 +31,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Security: stored XSS bypasses of the `allowlist` and `strip` HTML sanitizers fixed (M1, M2; backport from 2.0.0); `strategy: service` without a service fails closed. New dependency `symfony/html-sanitizer`. See [UPGRADING](UPGRADING.md#unreleased).
+
+### Security
+
+Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`, Appendix BJ).
+
+- **M1 (Medium, CWE-79) — `allowlist` sanitizer bypasses (affects 1.0.3–1.9.0; opt-in in 1.0.3–1.1.1, default strategy since 1.2.0).**
+  `AllowlistPageLayoutHtmlSanitizer` let through `<section><img src=x onerror=…></section>` (children of unwrapped
+  elements were moved up but never sanitized, at any nesting depth), `<iframe src="javascript://www.youtube.com/%0a…">`
+  (host-only check), `<!--><img … onerror=…>-->` (comments kept; libxml's HTML4 parser disagrees with browsers) and
+  raw-text `<style>` content, all rendered with `|raw` by the `text`, `cards` and `compare` block templates. It is
+  now built on **symfony/html-sanitizer** (new dependency) with the HTML5 parser and the same allowlist: only element
+  and text nodes survive, every text node and attribute is re-encoded, structural elements are unwrapped with
+  sanitized children, `script` / `style` / `template` / `noscript` / `textarea` / `xmp` / `svg` / `math` / forms /
+  unknown elements are dropped with their content, links stay `http(s)` / `mailto` / root-relative, images
+  `http(s)` / root-relative, and iframes need `https://` on an allowlisted host with `allow` reduced to player
+  permissions (`PageLayoutUrlAttributeSanitizer`). Stored content is re-sanitized at render.
+- **M2 (Medium, CWE-116) — `strip` strategy revived encoded markup (1.0.3+).** `StripPageLayoutHtmlSanitizer`
+  decoded entities after `strip_tags()`, so `&amp;lt;img src=x onerror=…&amp;gt;` became a live tag after the
+  render-time pass. It now returns `strip_tags()` output HTML-escaped (existing entities kept, never decoded).
+- **N1 (Low) — URL parser differentials.** `symfony/html-sanitizer` is required at `^7.4.12 || ^8.0.12` (before
+  CVE-2026-45066 `https://evil.tld\@www.youtube.com/` passed the iframe host check while browsers load `evil.tld`),
+  and `PageLayoutUrlAttributeSanitizer` itself refuses URLs with `\`, ASCII control / whitespace characters or
+  userinfo (`@`) in the authority.
+- **N2 — double encoding in escaped contexts.** Card / list item bodies are plain text printed with Twig
+  auto-escaping; `PageBlockProvider` no longer HTML-sanitizes them (they showed `Q&amp;amp;A`). The `pageMeta()`
+  description fallback (contact header body) is now plain text (tags stripped, entities decoded once).
+- **L2 (Low) — `html.sanitize.strategy: service` without `html.sanitize.service`** sanitized nothing; it now fails
+  closed to the allowlist sanitizer (2.0.0 also refuses the configuration at compile time).
+
 ## [1.9.0] - 2026-10-28
 
 Security: allow_unauthenticated is refused in production (prod or non-debug kernels). See [UPGRADING](UPGRADING.md#to-190).

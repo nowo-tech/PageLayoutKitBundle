@@ -4,28 +4,24 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Security\Html;
 
-use DOMAttr;
-use DOMDocument;
-use DOMElement;
-use DOMNode;
-
-use function in_array;
-use function is_string;
-use function sprintf;
-
-use const ENT_QUOTES;
-use const ENT_SUBSTITUTE;
-use const LIBXML_HTML_NODEFDTD;
-use const LIBXML_HTML_NOIMPLIED;
-use const PHP_URL_HOST;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerAction;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 
 /**
  * Allowlist sanitizer for CMS block bodies (`allowlist` strategy).
+ *
+ * Built on symfony/html-sanitizer, which parses with the HTML5 parser (the browser's tree, not libxml's HTML4 one),
+ * keeps only element and text nodes (comments, processing instructions and CDATA are dropped) and re-serializes
+ * every text node and attribute value encoded. Common structural / phrasing elements outside the allowlist are
+ * unwrapped (their sanitized children are kept); every other element (raw text, script-capable, foreign content,
+ * document-level, custom elements) is dropped with its content.
  */
-final class AllowlistPageLayoutHtmlSanitizer implements PageLayoutHtmlSanitizerInterface
+final readonly class AllowlistPageLayoutHtmlSanitizer implements PageLayoutHtmlSanitizerInterface
 {
     /** @var array<string, list<string>> */
-    private const ALLOWED_ELEMENTS = [
+    public const array ALLOWED_ELEMENTS = [
         'p'          => ['class'],
         'br'         => [],
         'strong'     => ['class'],
@@ -60,13 +56,44 @@ final class AllowlistPageLayoutHtmlSanitizer implements PageLayoutHtmlSanitizerI
         'iframe'     => ['src', 'title', 'allow', 'allowfullscreen', 'frameborder', 'width', 'height', 'class'],
     ];
 
-    /** @var list<string> */
-    private const ALLOWED_EMBED_HOSTS = [
-        'www.youtube.com',
-        'youtube.com',
-        'www.youtube-nocookie.com',
-        'player.vimeo.com',
+    /**
+     * Elements outside the allowlist that are unwrapped: the element goes, its sanitized children stay.
+     * Any element in neither list is dropped together with its content.
+     *
+     * @var list<string>
+     */
+    public const array UNWRAPPED_ELEMENTS = [
+        'abbr', 'acronym', 'address', 'article', 'aside', 'audio', 'bdi', 'bdo', 'big', 'body', 'caption', 'center',
+        'cite', 'colgroup', 'data', 'dd', 'details', 'dfn', 'dialog', 'dir', 'dl', 'dt', 'fieldset', 'font', 'footer',
+        'h1', 'h5', 'h6', 'header', 'hgroup', 'html', 'ins', 'kbd', 'label', 'legend', 'listing', 'main', 'map', 'mark',
+        'marquee', 'menu', 'meter', 'nav', 'nobr', 'output', 'picture', 'progress', 'q', 'rb', 'rp', 'rt', 'rtc', 'ruby',
+        'samp', 'search', 'section', 'small', 'strike', 'sub', 'summary', 'sup', 'tfoot', 'time', 'tt', 'var', 'video',
     ];
+
+    private HtmlSanitizerInterface $sanitizer;
+
+    public function __construct()
+    {
+        $config = new HtmlSanitizerConfig()
+            ->defaultAction(HtmlSanitizerAction::Drop)
+            ->allowLinkSchemes(['http', 'https', 'mailto'])
+            ->allowRelativeLinks()
+            ->allowMediaSchemes(['http', 'https'])
+            ->allowRelativeMedias()
+            ->forceAttribute('a', 'rel', 'noopener noreferrer')
+            ->withAttributeSanitizer(new PageLayoutUrlAttributeSanitizer())
+            ->withMaxInputLength(-1);
+
+        foreach (self::ALLOWED_ELEMENTS as $element => $attributes) {
+            $config = $config->allowElement($element, $attributes);
+        }
+
+        foreach (self::UNWRAPPED_ELEMENTS as $element) {
+            $config = $config->blockElement($element);
+        }
+
+        $this->sanitizer = new HtmlSanitizer($config);
+    }
 
     public function sanitize(string $html): string
     {
@@ -76,125 +103,13 @@ final class AllowlistPageLayoutHtmlSanitizer implements PageLayoutHtmlSanitizerI
             return '';
         }
 
-        $document       = new DOMDocument();
-        $internalErrors = libxml_use_internal_errors(true);
-
-        $document->loadHTML(
-            sprintf('<?xml encoding="UTF-8"><div>%s</div>', $html),
-            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD,
-        );
-
-        libxml_clear_errors();
-        libxml_use_internal_errors($internalErrors);
-
-        $container = $document->getElementsByTagName('div')->item(0);
-
-        if (!$container instanceof DOMElement) {
-            return htmlspecialchars($html, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); // @codeCoverageIgnore
-        }
-
-        $this->sanitizeNode($container);
-
-        $result = '';
-
-        foreach ($container->childNodes as $child) {
-            $result .= $document->saveHTML($child) ?: '';
-        }
-
-        return $result;
-    }
-
-    private function sanitizeNode(DOMElement $node): void
-    {
-        $child = $node->firstChild;
-
-        while ($child instanceof DOMNode) {
-            $next = $child->nextSibling;
-
-            if ($child instanceof DOMElement) {
-                $tag = strtolower($child->nodeName);
-
-                if (!isset(self::ALLOWED_ELEMENTS[$tag])) {
-                    while ($child->firstChild instanceof DOMNode) {
-                        $node->insertBefore($child->firstChild, $child);
-                    }
-
-                    $node->removeChild($child);
-                } else {
-                    $this->sanitizeAttributes($child, $tag);
-                    $this->sanitizeNode($child);
-
-                    if ($tag === 'iframe' && !$this->isAllowedIframe($child)) {
-                        $node->removeChild($child);
-                    }
-                }
-            }
-
-            $child = $next;
-        }
-    }
-
-    private function sanitizeAttributes(DOMElement $element, string $tag): void
-    {
-        $allowed = self::ALLOWED_ELEMENTS[$tag];
-
-        if ($element->hasAttributes()) {
-            /** @var DOMAttr $attribute */
-            foreach (iterator_to_array($element->attributes) as $attribute) {
-                if (!in_array(strtolower($attribute->name), $allowed, true)) {
-                    $element->removeAttribute($attribute->name);
-                }
-            }
-        }
-
-        if ($tag === 'a') {
-            $href = trim($element->getAttribute('href'));
-            if (!$this->isAllowedHref($href)) {
-                $element->removeAttribute('href');
-            } else {
-                $element->setAttribute('rel', 'noopener noreferrer');
-            }
-        }
-
-        if ($tag === 'img') {
-            $src = trim($element->getAttribute('src'));
-            if (!$this->isAllowedSrc($src)) {
-                $element->removeAttribute('src');
-            }
-        }
-    }
-
-    private function isAllowedIframe(DOMElement $element): bool
-    {
-        $src  = trim($element->getAttribute('src'));
-        $host = parse_url($src, PHP_URL_HOST);
-
-        return is_string($host) && in_array($host, self::ALLOWED_EMBED_HOSTS, true);
-    }
-
-    private function isAllowedHref(string $href): bool
-    {
-        if ($href === '') {
-            return false;
-        }
-
-        if (str_starts_with($href, '/')) {
-            return !str_starts_with($href, '//');
-        }
-
-        return (bool) preg_match('#^(https?:|mailto:)#i', $href);
-    }
-
-    private function isAllowedSrc(string $src): bool
-    {
-        if ($src === '' || str_starts_with($src, '//')) {
-            return false;
-        }
-
-        if (str_starts_with($src, '/')) {
-            return true;
-        }
-
-        return (bool) preg_match('#^https?://#i', $src);
+        // An embed whose src was refused (scheme, host) is removed entirely rather than left as an empty frame.
+        // The input is the sanitizer's own canonical output: attribute values and text are entity-encoded, so a
+        // literal `>` or `"` can only delimit markup.
+        return trim((string) preg_replace_callback(
+            '#<iframe\b([^>]*)>(.*?)</iframe>#s',
+            static fn (array $match): string => str_contains($match[1], ' src="') ? $match[0] : '',
+            $this->sanitizer->sanitize($html),
+        ));
     }
 }
