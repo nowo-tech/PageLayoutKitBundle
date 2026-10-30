@@ -6,8 +6,7 @@ nowo_page_layout_kit:
         access_roles: [ROLE_ADMIN]
         allow_unauthenticated: false
     web_ui:
-        layout_template: '@NowoPageLayoutKitBundle/admin/layout.html.twig'
-        css_framework: bootstrap5
+        # layout_template: null (default) = nowo_ui_kit.layouts.admin (layouts/admin.html.twig, REQ-UI-003).
         # pageKey => route name for the admin "View page" link and post-save redirect (since 1.3.0).
         page_routes:
             home: home

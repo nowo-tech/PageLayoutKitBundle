@@ -1305,8 +1305,9 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         allow_unauthenticated?: bool|Param, // Default: false
  *     },
  *     web_ui?: array{
- *         layout_template?: scalar|Param|null, // Default: "@NowoPageLayoutKitBundle/admin/layout.html.twig"
- *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tabler"|"tailwind"|"foundation"|"custom"|"none"|Param, // Default: "tailwind"
+ *         layout_template?: scalar|Param|null, // Layout the admin pages extend (REQ-UI-003). Null (default) = nowo_ui_kit.layouts.admin. A 2.0 layout without the UiKit canonical blocks (it renders {% block admin %}) is wrapped in a deprecated bridge. // Default: null
+ *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tabler"|"tailwind"|"foundation"|"custom"|"none"|Param|null, // Deprecated: The "nowo_page_layout_kit.web_ui.css_framework.css_framework" option is deprecated: the admin pages use nowo_ui_kit.css_framework (REQ-UI-003). Remove it. // Deprecated since 2.1: the admin pages take the CSS stack from nowo_ui_kit.css_framework. Only feeds the deprecated nowo_page_layout_kit_css_framework Twig global (null = tailwind). // Default: null
+ *         templates?: array<string, scalar|Param|null>,
  *         page_routes?: array<string, scalar|Param|null>,
  *     },
  *     doctrine?: array{

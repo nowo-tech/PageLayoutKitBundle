@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c22fcfe5acaa143c892e9653db9533d",
+    "content-hash": "66c2ba7374643eb4a1e56473c10e4497",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1232,13 +1232,13 @@
             "dist": {
                 "type": "path",
                 "url": "/var/page-layout-kit-bundle",
-                "reference": "01207c1cf6a44de9aeb50351de6cbe8ffe0c4e5d"
+                "reference": "f38b9090d713790c6d9f4e07f5b7724af24fc997"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
                 "doctrine/orm": "^3.7",
                 "nowo-tech/form-kit-bundle": "^2.13",
-                "nowo-tech/ui-kit-bundle": "^2.5.1",
+                "nowo-tech/ui-kit-bundle": "^2.17.2",
                 "php": ">=8.4 <8.6",
                 "psr/log": "^1.1 || ^2.0 || ^3.0",
                 "symfony/config": "^7.4 || ^8.0",
