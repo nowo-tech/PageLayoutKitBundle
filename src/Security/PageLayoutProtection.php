@@ -12,6 +12,8 @@ use Nowo\PageLayoutKitBundle\Security\Html\StripPageLayoutHtmlSanitizer;
 
 /**
  * Resolves YAML HTML sanitize strategy into a live sanitizer implementation.
+ *
+ * `strategy: service` without a sanitizer service fails closed to the allowlist sanitizer (it used to sanitize nothing).
  */
 final readonly class PageLayoutProtection
 {
@@ -27,7 +29,7 @@ final readonly class PageLayoutProtection
             HtmlSanitizeStrategy::None      => new NullPageLayoutHtmlSanitizer(),
             HtmlSanitizeStrategy::Strip     => new StripPageLayoutHtmlSanitizer(),
             HtmlSanitizeStrategy::Allowlist => new AllowlistPageLayoutHtmlSanitizer(),
-            HtmlSanitizeStrategy::Service   => $this->customSanitizer ?? new NullPageLayoutHtmlSanitizer(),
+            HtmlSanitizeStrategy::Service   => $this->customSanitizer ?? new AllowlistPageLayoutHtmlSanitizer(),
         };
     }
 }
