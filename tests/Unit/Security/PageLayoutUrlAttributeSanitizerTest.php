@@ -31,6 +31,24 @@ final class PageLayoutUrlAttributeSanitizerTest extends TestCase
         self::assertSame('https://WWW.YouTube.com/embed/x', $sanitizer->sanitizeAttribute('iframe', 'src', 'https://WWW.YouTube.com/embed/x', $config));
         self::assertNull($sanitizer->sanitizeAttribute('iframe', 'src', 'https:///www.youtube.com', $config));
         self::assertNull($sanitizer->sanitizeAttribute('iframe', 'allow', 'camera; microphone', $config));
+        // Appendix BJ N1: parser-differential URLs are refused whatever symfony/html-sanitizer version is installed.
+        foreach ([
+            ['iframe', 'src', 'https://evil.tld\\@www.youtube.com/'],
+            ['iframe', 'src', 'https://evil.tld@www.youtube.com/'],
+            ['iframe', 'src', "https://www.youtube.com/embed/x\ty"],
+            ['a', 'href', '/\\evil.tld'],
+            ['a', 'href', 'https://user@evil.tld/'],
+            ['a', 'href', '//user@evil.tld/'],
+            ['a', 'href', "/a\x00b"],
+            ['img', 'src', 'https://cdn.test/a b.png'],
+            ['img', 'src', "/a\x7fb.png"],
+        ] as [$element, $attribute, $url]) {
+            self::assertNull($sanitizer->sanitizeAttribute($element, $attribute, $url, $config), $url);
+        }
+
+        self::assertSame('mailto:hi@example.com', $sanitizer->sanitizeAttribute('a', 'href', 'mailto:hi@example.com', $config));
+        self::assertSame('https://example.com/a?x=@y', $sanitizer->sanitizeAttribute('a', 'href', 'https://example.com/a?x=@y', $config));
+
         // Combinations outside the policy (not reachable with the bundle's allowlist) pass through unchanged.
         self::assertSame('x', $sanitizer->sanitizeAttribute('a', 'src', 'x', $config));
     }
