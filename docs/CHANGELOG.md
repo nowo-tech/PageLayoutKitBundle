@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.1] - 2026-10-30](#191---2026-10-30)
 - [[1.9.0] - 2026-10-28](#190---2026-10-28)
 - [[1.8.1] - 2026-10-28](#181---2026-10-28)
 - [[1.8.0] - 2026-10-28](#180---2026-10-28)
@@ -30,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [1.9.1] - 2026-10-30
+
+PageLayoutKit: allowlist HTML sanitizer rebuilt on symfony/html-sanitizer (XSS bypasses fixed), strip strategy no longer decodes entities, service strategy falls back to allowlist. See [UPGRADING](UPGRADING.md#to-191).
 
 Security: stored XSS bypasses of the `allowlist` and `strip` HTML sanitizers fixed (M1, M2; backport from 2.0.0); `strategy: service` without a service fails closed. New dependency `symfony/html-sanitizer`. See [UPGRADING](UPGRADING.md#unreleased).
 
@@ -60,6 +65,8 @@ Independent AI security review 2026-10-30 (monorepo `BUNDLES_SECURITY_ANALYSIS.m
   description fallback (contact header body) is now plain text (tags stripped, entities decoded once).
 - **L2 (Low) — `html.sanitize.strategy: service` without `html.sanitize.service`** sanitized nothing; it now fails
   closed to the allowlist sanitizer (2.0.0 also refuses the configuration at compile time).
+
+[1.9.1]: https://github.com/nowo-tech/PageLayoutKitBundle/releases/tag/v1.9.1
 
 ## [1.9.0] - 2026-10-28
 
