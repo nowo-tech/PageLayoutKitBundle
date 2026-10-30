@@ -27,6 +27,49 @@
 
 ## Unreleased
 
+From **2.0.0**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+Requires **nowo-tech/ui-kit-bundle ^2.17.2** (installed by Composer). The admin pages follow the UiKit page contract
+(REQ-UI-003); nothing is removed, the 2.0 surfaces are deprecated (removed in 3.0).
+
+**Template contract** (see [TEMPLATES.md](TEMPLATES.md)):
+
+- The reorder screen (`admin/layout/index.html.twig`) extends `@NowoUiKit/page/form.html.twig` and the block page
+  (`admin/blocks/edit_stub.html.twig`) `@NowoUiKit/page/show.html.twig`. They no longer fill `title` / `page_title` /
+  `admin`; they receive the view models `page` (`FormPage` / `ShowPage`), `layout_table` (`Table`) and `layout_empty`
+  (`EmptyState`) plus the 2.0 variables. Overrides of these two files keep rendering (they are frozen copies that
+  extend `nowo_page_layout_kit_layout`); to pick up the new pages, delete them and use `nowo_ui_kit.theme` or
+  `web_ui.templates.<page>` (new) with a thin `{% extends '@!NowoPageLayoutKitBundle/...' %}`.
+- **Layout:** `web_ui.layout_template` defaults to `null` = `nowo_ui_kit.layouts.admin`. Set your admin layout once in
+  UiKit (`nowo_ui_kit.layouts.admin`, a layout or one-file bridge that renders the UiKit canonical blocks — see
+  `@NowoUiKit/layout/_bridge.html.twig`). Without it the pages render in UiKit's own admin layout
+  (`@NowoUiKit/layout/admin.html.twig`, UiKit CSS only) instead of the 2.0 bundle shell. The 2.0 default value
+  `@NowoPageLayoutKitBundle/admin/layout.html.twig` is treated as `null`.
+- **No more CDN:** `admin/layout.html.twig` no longer loads Bootstrap from `cdn.jsdelivr.net` nor prints its own
+  `<html>`: it extends the UiKit admin layout (deprecated, kept for copies of 2.0 pages). Load Bootstrap (or your CSS
+  framework) in your own layout.
+- **Custom 2.0 layouts** (`web_ui.layout_template` rendering `{% block admin %}`) keep working through the deprecated
+  bridge `admin/_legacy_layout.html.twig` (a deprecation is logged). Migrate them to the UiKit canonical blocks
+  (`nowo_ui_document_title`, `nowo_ui_styles`, `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`,
+  `nowo_ui_modals`, `nowo_ui_scripts`) or extend `@NowoUiKit/layout/admin.html.twig`.
+- **`web_ui.css_framework` is deprecated** (the pages take the stack from `nowo_ui_kit.css_framework`); its default is
+  `null`. Remove it from your configuration. The Twig globals `nowo_page_layout_kit_layout` and
+  `nowo_page_layout_kit_css_framework` are deprecated too (same values as in 2.0 when unset).
+- **Inline CMS modal:** `cms/modal_shell.html.twig` is now the UiKit `dialog` partial (`<dialog id="cms-modal">` with the
+  same `cms-modal` targets and labels) and loads UiKit's `nowo-ui-dialog.js` / `nowo-ui-tabs.js`. If you register the
+  shipped `cms_modal_controller.js` / `.iife.js` (or import the vendor source), run `assets:install` — nothing else to
+  do. If you **copied** the controller source into your app, re-copy it (a 2.0 copy toggles `hidden` and cannot open a
+  `<dialog>`), or keep a 2.0 copy of `cms/modal_shell.html.twig` as an override (the 2.1 controller still drives it).
+- **FormKit profile:** the default `page_layout_kit` profile (when your app does not define one) sets
+  `attr.class: nowo-ui-input` and no `row_attr` (was `nowo-ui-input form-control` / `mb-2`), and the reorder position
+  input renders the UiKit `input` slot class. Bootstrap styling of those fields now comes from your UiKit theme
+  (`nowo_ui_kit.css_framework` / `theme.classes.input`) or a host profile.
+- New translation key `admin.blocks.edit.page` (all bundled locales); app overrides of the bundle domain may add it.
+
 ## To 2.0.0
 
 From **1.9.1**:

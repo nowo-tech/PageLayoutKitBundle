@@ -145,6 +145,11 @@ load the Stimulus UMD build first, then
 `<script src="/bundles/nowopagelayoutkit/js/cms_modal_controller.iife.js"></script>` and call
 `Stimulus.Application.start().register('cms-modal', window.NowoPageLayoutKitCmsModalController)`.
 
+Since 2.1 `cms/modal_shell.html.twig` is the UiKit `dialog` partial (a native `<dialog>`, loads UiKit's
+`nowo-ui-dialog.js` and `nowo-ui-tabs.js`): use the shipped build (or re-copy the 2.1 source) — a controller copied
+from 2.0 or earlier toggles `hidden` and cannot open a `<dialog>`. The 2.1 controller still drives a 2.0 shell override
+(`<div hidden>` modal target).
+
 CKEditor 5 fields inside the modal are mounted through `window.NowoCkeditor5Editor` when that API is present
 (NowoCkeditor5Bundle); the controller waits up to two seconds for it and otherwise renders plain fields.
 
@@ -212,14 +217,18 @@ rest of the bundle keeps upgrading.
 
 Prefer the upgrade-safe options, from lightest to heaviest:
 
-1. **Configuration, no Twig fork:** point `nowo_page_layout_kit.web_ui.layout_template` at your own admin layout or a
-   bridge template (Twig global `nowo_page_layout_kit_layout`, see [CONFIGURATION.md](CONFIGURATION.md)) and pick
-   `web_ui.css_framework`. The reorder and edit screens then render inside your chrome and keep receiving fixes.
-2. **CSS only:** style the `nowo-ui-*` / `cms-*` classes the templates already emit, or use UiKit theme slots.
+1. **Configuration, no Twig fork:** set `nowo_ui_kit.layouts.admin` (or `nowo_page_layout_kit.web_ui.layout_template`)
+   to your admin layout or a bridge rendering the UiKit canonical blocks, and theme `nowo_ui_kit.theme` (class map,
+   tokens, `theme.bundles.NowoPageLayoutKitBundle`) and `nowo_ui_kit.css_framework` once for every bundle (REQ-UI-003,
+   see [TEMPLATES.md](TEMPLATES.md)). The reorder and block pages then render inside your chrome and keep receiving
+   fixes.
+2. **CSS only:** style the `nowo-ui-*` / `cms-*` classes the templates already emit, or use UiKit theme slots; a UiKit
+   scaffold override (`templates/bundles/NowoUiKitBundle/page/form.html.twig`) re-skins every bundle page at once.
 3. **Own public templates:** `PageBlockProvider::getLayout()` returns `PageBlockView` objects with `type`, `sectionKey`
    and `data`; your page template can include your own partial per `block.type.value` instead of overriding
    `blocks/*.html.twig`, and still include `@NowoPageLayoutKitBundle/cms/edit_button.html.twig` for the pencil.
-4. **Surgical override:** copy one small partial (for example `cms/edit_button.html.twig` or a single
+4. **Surgical override:** `web_ui.templates.<page>` with a thin `{% extends '@!NowoPageLayoutKitBundle/...' %}` that
+   overrides one data block (`nowo_ui_form_body`, `nowo_ui_show_sections`), or copy one small partial (for example `cms/edit_button.html.twig` or a single
    `blocks/<type>.html.twig`) rather than a whole page.
 5. **Full-file override:** copy a page (`admin/layout/index.html.twig`, `admin/_modal_form.html.twig`) only for a deep
    redesign, and accept that it is frozen.
@@ -242,9 +251,10 @@ Example: to restyle the hero block, create `templates/bundles/NowoPageLayoutKitB
 
 | `<subpath>` (under `src/Resources/views/`) | Purpose |
 | --- | --- |
-| `admin/layout.html.twig` | Default admin HTML shell; prefer `web_ui.layout_template` over overriding it |
-| `admin/layout/index.html.twig` | Reorder screen for one page key (`/admin/pages/{pageKey}/layout`) |
-| `admin/blocks/edit_stub.html.twig` | Fallback admin page for a block without an inline modal form |
+| `admin/layout.html.twig` | **Deprecated since 2.1**: the 2.0 admin layout, now extending the UiKit admin layout, for copies of 2.0 pages (`nowo_page_layout_kit_layout`) |
+| `admin/_legacy_layout.html.twig` | **Deprecated since 2.1**: bridge around a 2.0 host layout (`web_ui.layout_template` rendering `{% block admin %}`) |
+| `admin/layout/index.html.twig` | Reorder screen for one page key (`/admin/pages/{pageKey}/layout`), UiKit form scaffold |
+| `admin/blocks/edit_stub.html.twig` | Admin page of one block (type, id, page; back link to the layout), UiKit show scaffold |
 | `admin/_modal_form.html.twig` | Block edit modal body fetched over AJAX (form + FormKit locale tabs) |
 | `admin/blocks/_modal_form.html.twig` | Alias that includes `admin/_modal_form.html.twig` (kept for hosts that include this path) |
 | `blocks/_wrapper.html.twig` | Public wrapper per block: edit pencil + the block template from `block.templateName()` |
@@ -254,7 +264,7 @@ Example: to restyle the hero block, create `templates/bundles/NowoPageLayoutKitB
 | `blocks/list.html.twig` | Public list block (starter template) |
 | `blocks/cta.html.twig` | Public call-to-action block (starter template; includes host `components/cta.html.twig`) |
 | `blocks/compare.html.twig` | Public before/after compare block (starter template) |
-| `cms/modal_shell.html.twig` | Modal chrome rendered once in the host page (`cms-modal` Stimulus controller targets) |
+| `cms/modal_shell.html.twig` | Modal chrome rendered once in the host page: the UiKit `dialog` partial with the `cms-modal` Stimulus targets |
 | `cms/edit_button.html.twig` | Inline pencil for a page block (shown when `nowo_page_layout_kit_can_edit()` is true) |
 | `cms/seo_edit_button.html.twig` | Inline pencil for page SEO metadata |
 | `cms/item_create_button.html.twig` | Inline "add" button for host resources (services, cases, blog) |
