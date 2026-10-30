@@ -26,11 +26,32 @@
 
 ## Unreleased
 
-From **1.9.0**. This release removes APIs deprecated since 1.1.0 (next major).
+From **1.9.0** (or 1.9.1). This release removes APIs deprecated since 1.1.0 (next major) and ships the security
+fixes of the 2026-10-30 review (see [CHANGELOG](CHANGELOG.md#unreleased)).
 
 ```bash
 composer update nowo-tech/page-layout-kit-bundle
 ```
+
+**Security fixes (also in 1.9.1).**
+
+- **New dependency `symfony/html-sanitizer`** (`^7.4 || ^8.0`), installed by Composer. The `allowlist` strategy
+  keeps the same elements and attributes, but its output is canonical HTML (`<br />`, attribute values and text
+  entity-encoded, e.g. `mailto:a&#64;b.test`); browsers render it the same. Content that relied on the bypasses
+  (event handlers, comments, `<style>`, `javascript:` / non-allowlisted iframes, protocol-relative links) is removed.
+  Stored content is re-sanitized at render; it is rewritten in the database the next time each block is saved.
+  Children of unknown or custom elements are dropped (structural elements such as `section`, `article`, `font`,
+  `h1`, `small` are still unwrapped). Iframes need `https://` on an allowlisted video host; their `allow`
+  attribute is reduced to player permissions.
+- **`strip` strategy:** the result is HTML-escaped text (`Tom & Jerry` → `Tom &amp; Jerry`, rendered identically
+  through `|raw`). Code that read the stored value as plain text must decode it.
+- **`html.sanitize.strategy: service` requires `html.sanitize.service`:** the container refuses to compile
+  without it (it used to sanitize nothing).
+- **Post-save redirect:** a `Referer` from another host is ignored (redirect to the first public page instead).
+- **CMS buttons:** `cms/faq_*`, `cms/item_*` and `cms/seo_edit_button.html.twig` are shown to users allowed by
+  `security.access_roles` / `security.access_checker` (as `cms/edit_button.html.twig`), no longer to every
+  `ROLE_EDITOR`. Add `ROLE_EDITOR` to `access_roles` (it is the default) if your editors relied on it.
+- **`admin_page_layout`** only accepts GET and POST.
 
 **Static `PageLocales` accessors removed.** `PageLocales::bind()`, `PageLocales::default()` and `PageLocales::all()`
 no longer exist and the bundle no longer binds an instance in `boot()`. Inject the service:

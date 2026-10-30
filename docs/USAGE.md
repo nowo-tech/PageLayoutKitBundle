@@ -278,6 +278,6 @@ Some shipped block templates are intentionally thin starter templates and may re
 
 Override those templates in real applications to match your own routes and design system.
 
-Also note that several content fields are rendered with `|raw` in the default templates. Treat editor-authored HTML as trusted CMS content, or add your own sanitization strategy before rendering it publicly.
+Also note that several content fields are rendered with `|raw` in the default templates. They are sanitized first (default `html.sanitize.strategy: allowlist`, see [SECURITY.md](SECURITY.md#rich-text-rendering)); keep a sanitizing strategy unless every editor is fully trusted.
 
 See also [INSTALLATION.md](INSTALLATION.md) and [CONFIGURATION.md](CONFIGURATION.md).

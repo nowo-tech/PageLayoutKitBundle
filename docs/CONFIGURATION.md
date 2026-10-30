@@ -43,10 +43,10 @@ Production (Flex recipe): `html.sanitize.strategy: allowlist` (same as the PHP d
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `strategy` | `allowlist` | `allowlist` (default), `strip`, `service`, or `none` (trusted editors only) |
-| `service` | `null` | Host service implementing `PageLayoutHtmlSanitizerInterface` when `strategy: service` |
+| `strategy` | `allowlist` | `allowlist` (default; symfony/html-sanitizer with the HTML5 parser), `strip` (all tags removed, HTML-escaped text), `service`, or `none` (trusted editors only) |
+| `service` | `null` | Host service implementing `PageLayoutHtmlSanitizerInterface`. **Required** when `strategy: service`: the container refuses to compile without it |
 
-Sanitization runs on Doctrine persist/update for text/compare/cta block translations and again when serving public layouts via `PageBlockProvider`.
+Sanitization runs on Doctrine persist/update for text/compare/cta block translations and again when serving public layouts via `PageBlockProvider`. The allowlist policy (elements, attributes, link / image / iframe rules) is in [SECURITY.md](SECURITY.md#rich-text-rendering).
 
 ## Top-level options
 
