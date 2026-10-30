@@ -1,61 +1,36 @@
-{% extends nowo_page_layout_kit_layout %}
+{#
+  Reorder screen of one page (REQ-UI-003): UiKit form scaffold. Variables: page (View\FormPage from
+  PageLayoutKitPages::layoutPage(): header admin.layout.title / admin.layout.lead with the "View page" action, the
+  reorder form, submit admin.layout.save_order; body-only mode without entries), layout_table (View\Table from
+  PageLayoutKitPages::layoutTable(): columns position / type / id, row action Edit), layout_empty (View\EmptyState).
+  Data block filled: nowo_ui_form_body (the entries table with one position field per row, else the empty state).
+  The controller also passes page_title, page_key, entries, reorder_form and view_page_url for host templates set
+  through web_ui.templates.layout_index.
+#}
+{% extends '@NowoUiKit/page/form.html.twig' %}
 {% trans_default_domain 'NowoPageLayoutKitBundle' %}
-{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-{% set _css_fw = nowo_page_layout_kit_css_framework|default('tailwind') %}
 
-{% block title %}{{ 'admin.layout.title'|trans({'%page%': page_key}) }}{% endblock %}
-{% block page_title %}{{ 'admin.layout.title'|trans({'%page%': page_key}) }}{% endblock %}
-
-{% block admin %}
-<div class="nowo-ui-toolbar nowo-ui-toolbar--split mb-3">
-  <div>
-    <p class="nowo-ui-lead">{{ 'admin.layout.lead'|trans({'%page%': page_key}) }}</p>
-  </div>
-  {% if view_page_url|default(null) %}
-    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
-  {% endif %}
-</div>
-
-{{ form_start(reorder_form, {attr: {class: 'nowo-ui-form'}}) }}
-  <table class="{{ ui.table(_css_fw) }}">
-    <thead>
-      <tr>
-        <th scope="col">{{ 'admin.layout.position'|trans }}</th>
-        <th scope="col">{{ 'admin.layout.type'|trans }}</th>
-        <th scope="col">{{ 'admin.layout.id'|trans }}</th>
-        <th scope="col"><span class="visually-hidden">{{ 'admin.layout.actions'|trans }}</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for rowForm in reorder_form.rows %}
-        {% set entry = entries[loop.index0] %}
-        <tr>
-          <td>
-            {% for child in rowForm %}
-              {% if child.vars.name == 'id' %}
-                {{ form_widget(child) }}
-              {% else %}
-                {{ form_label(child, 'admin.layout.position'|trans) }}
-                {{ form_widget(child) }}
-                {{ form_errors(child) }}
-              {% endif %}
-            {% endfor %}
-          </td>
-          <td>{{ entry.blockType.value }}</td>
-          <td>#{{ entry.blockId }}</td>
-          <td>
-            <a class="{{ ui.btn('secondary', null, _css_fw) }}" href="{{ path('admin_page_blocks_edit', {type: entry.blockType.value, id: entry.blockId}) }}">{{ 'admin.layout.edit'|trans }}</a>
-          </td>
-        </tr>
-      {% else %}
-        <tr><td colspan="4">{{ 'admin.layout.empty'|trans }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% if entries %}
-    <div class="nowo-ui-actions mt-3">
-      <button type="submit" class="{{ ui.btn('primary', null, _css_fw) }}">{{ 'admin.layout.save_order'|trans }}</button>
-    </div>
-  {% endif %}
-{{ form_end(reorder_form) }}
+{% block nowo_ui_form_body %}
+    {% if form is not null and layout_table.rows is not empty %}
+        {% embed nowo_ui_partial('table', bundle) with {table: layout_table, bundle: page.bundle, rows_form: form.rows, nowo_ui_page_type: nowo_ui_page_type} only %}
+            {% block nowo_ui_table_row %}
+                {% set _row_form = rows_form[row_key] %}
+                <td class="{{ nowo_ui_class('table_cell', bundle) }}" data-label="{{ 'admin.layout.position'|trans({}, 'NowoPageLayoutKitBundle') }}" data-required="1">
+                    {% for child in _row_form %}
+                        {% if child.vars.name == 'id' %}
+                            {{ form_widget(child) }}
+                        {% else %}
+                            {{ form_label(child, 'admin.layout.position', {label_attr: {class: 'visually-hidden'}}) }}
+                            {{ form_widget(child, {attr: child.vars.attr|merge({class: nowo_ui_class('input', bundle)})}) }}
+                            {{ form_errors(child) }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td class="{{ nowo_ui_class('table_cell', bundle) }}" data-label="{{ 'admin.layout.type'|trans({}, 'NowoPageLayoutKitBundle') }}"><span class="{{ nowo_ui_class('badge_neutral', bundle) }}">{{ row.blockType.value }}</span></td>
+                <td class="{{ nowo_ui_class('table_cell', bundle) }}" data-label="{{ 'admin.layout.id'|trans({}, 'NowoPageLayoutKitBundle') }}" data-nowo-ui-priority="2"><code class="{{ nowo_ui_class('code', bundle) }}">#{{ row.blockId }}</code></td>
+            {% endblock %}
+        {% endembed %}
+    {% else %}
+        {{ include(nowo_ui_partial('empty', page.bundle), {empty: layout_empty, bundle: page.bundle, region: 'empty', nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% endif %}
 {% endblock %}

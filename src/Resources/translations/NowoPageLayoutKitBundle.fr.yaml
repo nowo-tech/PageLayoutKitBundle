@@ -12,6 +12,7 @@ admin.layout.save_order: "Enregistrer l'ordre"
 admin.blocks.edit.title: Modifier le bloc
 admin.blocks.edit.lead: "L'édition complète des blocs %type% arrive bientôt."
 admin.blocks.edit.back_to_layout: Retour à la mise en page
+admin.blocks.edit.page: Clé de page
 admin.action.back: Retour
 admin.action.save: Enregistrer
 admin.flash.saved: Enregistré.

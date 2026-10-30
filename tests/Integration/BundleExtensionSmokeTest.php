@@ -26,6 +26,8 @@ final class BundleExtensionSmokeTest extends TestCase
         self::assertSame(['es', 'en'], $config['locales']);
         self::assertSame(['home', 'contact'], $config['pages']);
         self::assertSame(['ROLE_EDITOR'], $config['security']['access_roles']);
-        self::assertSame('tailwind', $config['web_ui']['css_framework']);
+        self::assertNull($config['web_ui']['layout_template']);
+        self::assertNull($config['web_ui']['css_framework']);
+        self::assertSame([], $config['web_ui']['templates']);
     }
 }

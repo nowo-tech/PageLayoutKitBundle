@@ -57,8 +57,9 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
                     'alias'              => 'page_layout_kit',
                     'translation_domain' => 'NowoPageLayoutKitBundle',
                     'defaults'           => [
-                        'attr'     => ['class' => 'nowo-ui-input form-control'],
-                        'row_attr' => ['class' => 'mb-2'],
+                        // Theme-neutral (REQ-UI-003): UiKit styles nowo-ui-input; framework classes come from the host theme.
+                        'attr'     => ['class' => 'nowo-ui-input'],
+                        'row_attr' => [],
                     ],
                 ],
             ],
@@ -84,6 +85,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $container->setParameter('nowo_page_layout_kit.web_ui.layout_template', $config['web_ui']['layout_template']);
         $container->setParameter('nowo_page_layout_kit.web_ui.css_framework', $config['web_ui']['css_framework']);
         $container->setParameter('nowo_page_layout_kit.web_ui.page_routes', $config['web_ui']['page_routes']);
+        $container->setParameter('nowo_page_layout_kit.web_ui.templates', $config['web_ui']['templates']);
 
         $container->getDefinition(PageLocales::class)
             ->setArgument('$defaultLocale', $config['default_locale'])

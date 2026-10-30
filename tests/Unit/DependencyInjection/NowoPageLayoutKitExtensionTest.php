@@ -21,6 +21,7 @@ use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -89,8 +90,8 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
                         'alias'              => 'page_layout_kit',
                         'translation_domain' => 'NowoPageLayoutKitBundle',
                         'defaults'           => [
-                            'attr'     => ['class' => 'nowo-ui-input form-control'],
-                            'row_attr' => ['class' => 'mb-2'],
+                            'attr'     => ['class' => 'nowo-ui-input'],
+                            'row_attr' => [],
                         ],
                     ],
                 ],
@@ -126,6 +127,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         self::assertTrue($container->hasDefinition('nowo_page_layout_kit.access_checker.allow_all'));
     }
 
+    #[IgnoreDeprecations]
     public function testLoadPublishesParametersAndRegistersAllowAllAccessChecker(): void
     {
         $container = new ContainerBuilder();
@@ -144,6 +146,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
                     'layout_template' => '@App/layout.html.twig',
                     'css_framework'   => 'custom',
                     'page_routes'     => ['home' => 'app_home'],
+                    'templates'       => ['block_edit' => 'admin/block.html.twig'],
                 ],
                 'doctrine' => [
                     'table_prefix' => 'acme_',
@@ -163,6 +166,7 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
         self::assertSame('@App/layout.html.twig', $container->getParameter('nowo_page_layout_kit.web_ui.layout_template'));
         self::assertSame('custom', $container->getParameter('nowo_page_layout_kit.web_ui.css_framework'));
         self::assertSame(['home' => 'app_home'], $container->getParameter('nowo_page_layout_kit.web_ui.page_routes'));
+        self::assertSame(['block_edit' => 'admin/block.html.twig'], $container->getParameter('nowo_page_layout_kit.web_ui.templates'));
 
         $pageLocales = $container->getDefinition(PageLocales::class);
         self::assertSame('en', $pageLocales->getArgument('$defaultLocale'));

@@ -1,19 +1,8 @@
-{% extends nowo_page_layout_kit_layout %}
-{% trans_default_domain 'NowoPageLayoutKitBundle' %}
-{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-{% set _css_fw = nowo_page_layout_kit_css_framework|default('tailwind') %}
-
-{% block title %}{{ page_title }}{% endblock %}
-{% block page_title %}{{ page_title }}{% endblock %}
-
-{% block admin %}
-<div class="nowo-ui-toolbar nowo-ui-toolbar--split mb-3">
-  <p class="nowo-ui-lead">{{ 'admin.blocks.edit.lead'|trans({'%type%': block_type.value}) }}</p>
-  {% if view_page_url|default(null) %}
-    <a href="{{ view_page_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}" target="_blank" rel="noopener">{{ 'admin.layout.view_page'|trans }}</a>
-  {% endif %}
-</div>
-{% if back_url|default(null) %}
-  <p><a href="{{ back_url }}" class="{{ ui.btn('secondary', null, _css_fw) }}">{{ 'admin.blocks.edit.back_to_layout'|trans }}</a></p>
-{% endif %}
-{% endblock %}
+{#
+  Block page (REQ-UI-003): UiKit show scaffold. Variable: page (View\ShowPage from PageLayoutKitPages::blockEditPage():
+  header admin.blocks.edit.title, intro admin.blocks.edit.lead, "View page" action, back link to the layout of the
+  owning page; one section with the block type, id and page). No data block: the scaffold renders the section.
+  Blocks are edited in the inline CMS modal (cms/modal_shell.html.twig). The controller also passes page_title,
+  block_type, block_id, page_key, back_url and view_page_url for host templates set through web_ui.templates.block_edit.
+#}
+{% extends '@NowoUiKit/page/show.html.twig' %}

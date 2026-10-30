@@ -458,3 +458,129 @@ describe('cms_modal_controller: CKEditor integration', () => {
         expect(window.NowoCkeditor5Editor?.initCkeditor5Root).toBe(patched);
     });
 });
+
+/** The 2.1 shell: the UiKit `dialog` partial (a native `<dialog>`) carries the modal target. */
+function dialogFixture(): string {
+    const values = Object.entries(URL_VALUES)
+        .map(([name, value]) => `data-cms-modal-${name}-value="${value}"`)
+        .join(' ');
+
+    return `
+        <div id="root" data-controller="cms-modal" ${values}>
+            <dialog id="cms-modal" data-nowo-ui-dialog data-cms-modal-target="modal">
+                <h2 data-cms-modal-target="title">Edit block</h2>
+                <div data-cms-modal-target="body"></div>
+                <button type="button" id="cancel" data-action="cms-modal#close">Cancel</button>
+                <button type="submit" data-cms-modal-target="submit" disabled>Save</button>
+            </dialog>
+        </div>`;
+}
+
+function dialog(): HTMLDialogElement {
+    return modal() as HTMLDialogElement;
+}
+
+/** Native dialog behaviour for jsdom: showModal() / close() toggle `open`, close() fires `close`. */
+function nativeDialog(): { showModal: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> } {
+    const showModal = vi.fn(function (this: HTMLDialogElement) {
+        this.setAttribute('open', '');
+    });
+    const close = vi.fn(function (this: HTMLDialogElement) {
+        this.removeAttribute('open');
+        this.dispatchEvent(new Event('close'));
+    });
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, writable: true, value: showModal });
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, writable: true, value: close });
+
+    return { showModal, close };
+}
+
+describe('cms_modal_controller: UiKit dialog shell', () => {
+    afterEach(() => {
+        Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+        Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+    });
+
+    it('opens the dialog with showModal() and closes it through close()', async () => {
+        ckeditorApi();
+        const native = nativeDialog();
+        await mount(dialogFixture());
+        const button = await openWith({ resource: 'page-block', 'block-type': 'hero', id: '5' });
+
+        expect(native.showModal).toHaveBeenCalledTimes(1);
+        expect(dialog().open).toBe(true);
+        expect(dialog().hidden).toBe(false);
+        expect(submitButton().disabled).toBe(false);
+
+        // A second open while the dialog is open does not call showModal() again.
+        button.click();
+        await flush();
+        expect(native.showModal).toHaveBeenCalledTimes(1);
+
+        document.getElementById('cancel')?.click();
+        await flush();
+
+        expect(native.close).toHaveBeenCalledTimes(1);
+        expect(dialog().open).toBe(false);
+        expect(dialog().hidden).toBe(false);
+        expect(body().innerHTML).toBe('');
+        expect(submitButton().disabled).toBe(true);
+        expect(document.body.classList.contains('cms-modal-open')).toBe(false);
+        expect(document.activeElement).toBe(button);
+    });
+
+    it('resets when the dialog closes on its own (Escape, UiKit close buttons) and ignores the document Escape handler', async () => {
+        ckeditorApi();
+        nativeDialog();
+        await mount(dialogFixture());
+        await openWith({ resource: 'page-block', 'block-type': 'hero', id: '5' });
+
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(dialog().open).toBe(true);
+
+        dialog().close();
+        await flush();
+
+        expect(body().innerHTML).toBe('');
+        expect(document.body.classList.contains('cms-modal-open')).toBe(false);
+    });
+
+    it('falls back to the open attribute without showModal() / close()', async () => {
+        ckeditorApi();
+        Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, writable: true, value: undefined });
+        Object.defineProperty(HTMLDialogElement.prototype, 'close', { configurable: true, writable: true, value: undefined });
+        await mount(dialogFixture());
+        await openWith({ resource: 'page-block', 'block-type': 'hero', id: '5' });
+
+        expect(dialog().hasAttribute('open')).toBe(true);
+
+        document.getElementById('cancel')?.click();
+        await flush();
+
+        expect(dialog().hasAttribute('open')).toBe(false);
+        expect(body().innerHTML).toBe('');
+    });
+
+    it('resets a closed dialog when close is requested', async () => {
+        nativeDialog();
+        await mount(dialogFixture());
+        body().innerHTML = '<p>stale</p>';
+
+        document.getElementById('cancel')?.click();
+        await flush();
+
+        expect(body().innerHTML).toBe('');
+    });
+
+    it('stops listening to the dialog close event on disconnect', async () => {
+        await mount(dialogFixture());
+        const element = dialog();
+        document.getElementById('root')?.removeAttribute('data-controller');
+        await flush();
+        body().innerHTML = '<p>kept</p>';
+
+        element.dispatchEvent(new Event('close'));
+
+        expect(body().innerHTML).toBe('<p>kept</p>');
+    });
+});

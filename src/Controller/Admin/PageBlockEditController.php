@@ -22,6 +22,7 @@ use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +41,7 @@ final class PageBlockEditController extends AbstractController
         private readonly PageLocales $pageLocales,
         private readonly ?PublicPageUrlResolver $publicPageUrls = null,
         private readonly ?TranslatorInterface $translator = null,
+        private readonly PageLayoutKitPages $pages = new PageLayoutKitPages(),
     ) {
     }
 
@@ -115,14 +117,18 @@ final class PageBlockEditController extends AbstractController
 
         $pageKey = $this->owningPageKey($pageBlockType, $id);
 
-        return $this->render('@NowoPageLayoutKitBundle/admin/blocks/edit_stub.html.twig', [
+        $backUrl     = $pageKey !== null ? $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]) : null;
+        $viewPageUrl = $pageKey !== null ? $this->publicPageUrls?->resolve($pageKey) : null;
+
+        return $this->render($this->pages->template('block_edit'), $this->pages->context([
+            'page'          => $this->pages->blockEditPage($pageBlockType, $id, $pageKey, $backUrl, $viewPageUrl),
             'page_title'    => $this->translate('admin.blocks.edit.title', 'Edit block'),
             'block_type'    => $pageBlockType,
             'block_id'      => $id,
             'page_key'      => $pageKey,
-            'back_url'      => $pageKey !== null ? $this->generateUrl('admin_page_layout', ['pageKey' => $pageKey]) : null,
-            'view_page_url' => $pageKey !== null ? $this->publicPageUrls?->resolve($pageKey) : null,
-        ]);
+            'back_url'      => $backUrl,
+            'view_page_url' => $viewPageUrl,
+        ]));
     }
 
     /**
