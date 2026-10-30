@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bundle routes registered without being imported (REQ-SF-004 rule 7):** on Symfony >= 7.3 the `#[Route]` admin controllers were autoconfigured with the `routing.controller` tag, so a host whose `config/routes.yaml` has the default `controllers: { resource: routing.controllers }` got `admin_page_layout` and `admin_page_blocks_*` even when it never imported `@NowoPageLayoutKitBundle/Resources/config/routing.yaml` (still behind the admin access check). The controllers are no longer autoconfigured (`autoconfigure: false`, explicit `controller.service_arguments` + `container.service_subscriber`); the routes exist only where the host imports `routing.yaml`. Regression test with a kernel that only loads `routing.controllers`.
+
 ## [2.1.0] - 2026-10-30
 
 PageLayoutKit: UiKit page contract for the admin pages (form/show scaffolds, UiKit dialog modal, no CDN); 2.0 layouts via a deprecated bridge See [UPGRADING](UPGRADING.md#to-210).
