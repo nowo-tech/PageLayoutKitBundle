@@ -16,7 +16,6 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockEditType;
 use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
-use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use Nowo\PageLayoutKitBundle\Twig\PageLayoutKitExtension;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
@@ -53,11 +52,6 @@ use const LIBXML_NOERROR;
 final class ModalFormTemplateTest extends TestCase
 {
     private const string DOMAIN = 'NowoPageLayoutKitBundle';
-
-    protected function setUp(): void
-    {
-        LocaleTestSupport::bindDefaults();
-    }
 
     public function testModalRendersFormKitLocaleTabsWithTheDefaultLocaleFirst(): void
     {
@@ -137,7 +131,7 @@ final class ModalFormTemplateTest extends TestCase
         $views->addPath($root . '/vendor/nowo-tech/form-kit-bundle/src/Resources/views', 'NowoFormKitBundle');
         $views->addPath($root . '/vendor/nowo-tech/ui-kit-bundle/src/Resources/views', 'NowoUiKitBundle');
         $views->addPath($root . '/vendor/nowo-tech/ui-kit-bundle/src/Resources/views', 'NowoUiKit');
-        $bridgeViews = dirname((string) new ReflectionClass(FormExtension::class)->getFileName(), 2) . '/Resources/views/Form';
+        $bridgeViews = dirname((string) (new ReflectionClass(FormExtension::class))->getFileName(), 2) . '/Resources/views/Form';
         $views->addPath($bridgeViews);
 
         // Only bundle, FormKit / UiKit and Symfony templates: no components/admin/* or form/auth_theme.html.twig.

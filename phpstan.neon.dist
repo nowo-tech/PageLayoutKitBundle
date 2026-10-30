@@ -8,11 +8,8 @@ parameters:
         - tests
     excludePaths:
         - demo/*
-    ignoreErrors:
-        # Deprecated static binding kept for BC until 2.0; bundle code injects PageLocales.
-        -
-            identifier: frankenphp.worker.noMutableStaticProperty
-            path: src/Locale/PageLocales.php
+    # REQ-CS-006: never silence findings here — fix the code instead.
+    ignoreErrors: []
 
 services:
     -

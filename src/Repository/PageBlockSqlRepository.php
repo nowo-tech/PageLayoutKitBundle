@@ -36,7 +36,7 @@ final readonly class PageBlockSqlRepository
 
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private ?PageLocales $pageLocales = null,
+        private PageLocales $pageLocales,
     ) {
     }
 
@@ -92,7 +92,7 @@ final readonly class PageBlockSqlRepository
 
     private function defaultLocale(): string
     {
-        return $this->pageLocales?->getDefault() ?? PageLocales::default();
+        return $this->pageLocales->getDefault();
     }
 
     /**

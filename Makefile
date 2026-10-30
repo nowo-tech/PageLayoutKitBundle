@@ -13,7 +13,7 @@ endif
 COMPOSE     := $(COMPOSE_BIN) -f $(COMPOSE_FILE)
 SERVICE_PHP := php
 
-.PHONY: help up down down-dev build shell install test test-coverage test-coverage-100 coverage-php-percent cs-check cs-fix rector rector-dry phpstan igor qa release-check release-check-demos composer-sync clean update validate validate-translations assets setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history demo-smoke check-twig-extra check-no-raw-html-form
+.PHONY: help up down down-dev build shell install test test-coverage test-coverage-100 coverage-php-percent cs-check cs-fix rector rector-dry phpstan igor qa release-check release-check-demos composer-sync clean update validate validate-translations assets assets-test test-ts setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history demo-smoke check-twig-extra check-no-raw-html-form
 
 # Default target
 help:
@@ -38,7 +38,7 @@ help:
 	@echo "  phpstan       Run PHPStan static analysis"
 	@echo "  igor          Run Igor worker-state audit (REQ-CS-008)"
 	@echo "  qa            Run all QA checks (cs-check + test)"
-	@echo "  release-check Pre-release: cs-fix, cs-check, rector-dry, phpstan, igor, test-coverage, demo healthchecks"
+	@echo "  release-check Pre-release: cs-fix, cs-check, rector-dry, phpstan, igor, test-coverage, test-ts, assets, demo healthchecks"
 	@echo "  demo-smoke    Boot demo/symfony8 and assert HTTP 200 (REQ-TEST-011)"
 	@echo "  check-open-prs Fail if unresolved open GitHub PRs remain (REQ-REL-003)"
 	@echo "  composer-sync Validate composer.json and align composer.lock (no install)"
@@ -47,7 +47,9 @@ help:
 	@echo "  update-deps   Update bundle and demo dependencies (REQ-MAKE-008)"
 	@echo "  validate      Run composer validate --strict"
 	@echo "  validate-translations Check translation YAML key parity (REQ-MAKE-004)"
-	@echo "  assets        No-op (no frontend assets in this bundle)"
+	@echo "  assets        Build the TypeScript controller (pnpm + Vite, ES module + IIFE; in Docker)"
+	@echo "  test-ts       Run Vitest with coverage and print the global TS percentage (REQ-TEST-009)"
+	@echo "  assets-test   Alias of test-ts"
 	@echo "  setup-hooks   Install git pre-commit hooks"
 	@echo ""
 	@echo "Demos: use make -C demo or make -C demo/<demo-name>"
@@ -143,7 +145,7 @@ check-twig-extra:
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
-release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form composer-sync cs-fix cs-check rector-dry phpstan igor validate-translations test-coverage release-check-demos
+release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form composer-sync cs-fix cs-check rector-dry phpstan igor validate-translations test-coverage test-ts assets release-check-demos
 
 # REQ-TEST-011 — boot demo stack and assert one HTTP 200
 # classic mode keeps FrankenPHP up before vendor/ is installed on fresh CI checkouts
@@ -177,6 +179,8 @@ clean:
 	rm -rf coverage
 	rm -f coverage.xml
 	rm -f .php-cs-fixer.cache
+	rm -rf node_modules coverage-ts
+	rm -f coverage-ts.txt
 
 # Update composer.lock
 update: ensure-up
@@ -186,9 +190,18 @@ update: ensure-up
 validate: ensure-up
 	$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
 
-# No-op for bundles without frontend assets
-assets:
-	@echo "No frontend assets in this bundle."
+# REQ-ASSETS-001 — pnpm + Vite build of src/Resources/assets/src into src/Resources/public/js
+assets: ensure-up
+	$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install --frozen-lockfile
+	$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm run build
+
+# REQ-TEST-003 / REQ-TEST-009 — Vitest coverage gate, then the global TS percentage
+test-ts: ensure-up
+	$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install --frozen-lockfile
+	$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) sh -c 'set -e; pnpm typecheck; pnpm run test:coverage > coverage-ts.txt 2>&1 || { cat coverage-ts.txt; exit 1; }; cat coverage-ts.txt'
+	./.scripts/ts-coverage-percent.sh coverage-ts.txt
+
+assets-test: test-ts
 
 # Setup git hooks for pre-commit checks
 check-no-cursor-coauthor:

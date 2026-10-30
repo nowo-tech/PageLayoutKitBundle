@@ -36,7 +36,7 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | Area | Status | Notes |
 |------|--------|-------|
 | Mutable state in shared services | ✅ | `PageBlockProvider::$layoutCache` is a `WeakMap` keyed by the main `Request`; it cannot outlive the request (also cleared by `reset()`) |
-| Static properties / `static` locals | ✅ | `PageLocales::$instance` is set once in `boot()` with immutable config (deprecated since 1.1.0, removed in 2.0; kept only for third-party callers, bundle code uses the injected service); no other static state |
+| Static properties / `static` locals | ✅ | None in `src/` (the former `PageLocales::$instance` binding was removed; `PageLocales` is an injected `readonly` service) |
 | `ResetInterface` / `kernel.reset` coverage | ✅ | `PageBlockProvider` implements `ResetInterface` (autoconfigured) and `reset()` clears its only mutable property |
 | Request / user / locale captured in services | ✅ | Nothing is captured in constructors; the edit permission is the Twig function `nowo_page_layout_kit_can_edit()` (legacy global deprecated) |
 | Superglobals, `$_ENV`, `putenv`, `ini_set`, `setlocale`, timezone | ✅ | None used; config is compiled into container parameters |
@@ -61,7 +61,7 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | `EventSubscriber\PageLayoutKitAdminAccessSubscriber` | yes | none (`readonly`), checks access per request | ✅ | ✅ |
 | `EventSubscriber\PageBlockHtmlSanitizeSubscriber` (Doctrine listener) | yes | none (`readonly`) | ✅ | ✅ |
 | `DependencyInjection\TablePrefixListener` (Doctrine listener) | yes | none (`readonly` prefix string) | ✅ | ✅ |
-| `Locale\PageLocales` | yes (public) | none (`readonly` config); static `$instance` (deprecated since 1.1.0) bound once | ✅ | ✅ |
+| `Locale\PageLocales` | yes (public) | none (`final readonly` config, no static state) | ✅ | ✅ |
 | `Repository\PageBlockSqlRepository` | yes | none (`readonly`, holds EntityManager; native SQL, always fresh) | ✅ | ✅ |
 | 17 `ServiceEntityRepository` classes (`Page*Repository`) | yes | none; admin loaders use `HINT_REFRESH` | ✅ | ✅ |
 | `Service\PageBlockRegistry` | yes | none (`readonly`) | ✅ | ✅ (fresh via repository hints) |
@@ -97,7 +97,7 @@ Value objects (`PageBlockView`, form data DTOs) are created per call; `PageBlock
 
 ### Info
 
-- `src/Locale/PageLocales.php:17` stores a static `$instance`, bound once in `src/NowoPageLayoutKitBundle.php:34-40` (`boot()`). The instance only holds `readonly` config from the container, and `boot()` runs once per worker, so there is nothing request-specific in it. The static accessors (`bind()`, `default()`, `all()`) are deprecated since 1.1.0 and will be removed in 2.0; bundle services, forms and the edit controller receive the `PageLocales` service by injection and pass it to `TranslatableBlockTrait` and the entities' `toArray()`, so no bundle code path depends on the static binding. It is kept (bound in `boot()`) only as a fallback for third-party callers that omit the optional `?PageLocales` argument, so PHPStan's two `frankenphp.worker.noMutableStaticProperty` findings on `PageLocales` remain accepted until 2.0.
+- `src/Locale/PageLocales.php` is a `final readonly` service (`getDefault()` / `getAll()` only). The static binding (`$instance`, `bind()`, `default()`, `all()` and the `boot()` call in `NowoPageLayoutKitBundle`) was removed, and every consumer (`TranslatableBlockTrait`, entity `toArray()`, `PageBlockSqlRepository`, `PageBlockMigrator`, `PageBlockEditController`, the inline modal form types) receives the service as a required argument. PHPStan runs `ruleset-worker.neon` with `ignoreErrors: []` and reports no `frankenphp.worker.noMutableStaticProperty` finding. Test: `PageLocalesTest::testHoldsNoStaticState`.
 - `src/Security/Html/AllowlistPageLayoutHtmlSanitizer.php:80-88` toggles `libxml_use_internal_errors()` and restores the previous value right after `loadHTML()`, so process-wide libxml state is not changed across requests.
 - FormKit's `withBuilder()` (dependency `nowo-tech/form-kit-bundle`, `src/Form/FormKitTrait.php`) stores the builder in a property on the shared form type only for the duration of the callback and restores it in a `finally` block, so a failing `buildForm()` does not leave a stale builder behind.
 - The demo ships a worker Caddyfile (`demo/symfony8/docker/frankenphp/Caddyfile:15-18`) and defaults to `FRANKENPHP_MODE=worker`.

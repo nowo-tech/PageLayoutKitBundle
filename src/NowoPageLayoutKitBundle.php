@@ -8,7 +8,6 @@ use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappi
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\CsrfProtectionPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
-use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -29,15 +28,6 @@ class NowoPageLayoutKitBundle extends Bundle
                 ['Nowo\\PageLayoutKitBundle\\Entity'],
                 [$entityDir],
             ));
-        }
-    }
-
-    public function boot(): void
-    {
-        if ($this->container?->has(PageLocales::class) === true) {
-            /** @var PageLocales $locales */
-            $locales = $this->container->get(PageLocales::class);
-            PageLocales::bind($locales);
         }
     }
 

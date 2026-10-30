@@ -37,7 +37,7 @@ final class PageBlockEditController extends AbstractController
     public function __construct(
         private readonly PageBlockRegistry $pageBlockRegistry,
         private readonly EntityManagerInterface $entityManager,
-        private readonly ?PageLocales $pageLocales = null,
+        private readonly PageLocales $pageLocales,
         private readonly ?PublicPageUrlResolver $publicPageUrls = null,
         private readonly ?TranslatorInterface $translator = null,
     ) {

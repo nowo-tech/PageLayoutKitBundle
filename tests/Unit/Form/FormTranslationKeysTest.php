@@ -53,11 +53,6 @@ final class FormTranslationKeysTest extends TestCase
 {
     private const string DOMAIN = 'NowoPageLayoutKitBundle';
 
-    protected function setUp(): void
-    {
-        LocaleTestSupport::bindDefaults();
-    }
-
     /** @return iterable<string, array{string}> */
     public static function catalogueProvider(): iterable
     {
@@ -177,11 +172,11 @@ final class FormTranslationKeysTest extends TestCase
             PageCtaBlockEditType::class,
             PageCompareBlockEditType::class,
             PageBlockLocalePanelType::class,
-            PageCardsBlockInlineModalType::class,
-            PageListBlockInlineModalType::class,
         ] as $class) {
             $types[] = new $class($merger, $map);
         }
+        $types[] = new PageCardsBlockInlineModalType($merger, $map, LocaleTestSupport::defaults());
+        $types[] = new PageListBlockInlineModalType($merger, $map, LocaleTestSupport::defaults());
 
         return Forms::createFormFactoryBuilder()->addTypes($types)->getFormFactory();
     }

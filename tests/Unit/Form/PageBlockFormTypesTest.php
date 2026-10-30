@@ -29,10 +29,13 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockEditType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
+use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function in_array;
 
 final class PageBlockFormTypesTest extends TestCase
 {
@@ -141,18 +144,23 @@ final class PageBlockFormTypesTest extends TestCase
      */
     private function createType(string $typeClass): object
     {
-        return new $typeClass(
-            new FormOptionsMerger([
-                'page_layout_kit' => [
-                    'translation_domain' => 'form',
-                    'defaults'           => [
-                        'attr'     => [],
-                        'row_attr' => [],
-                    ],
-                    'field_types' => [],
+        $merger = new FormOptionsMerger([
+            'page_layout_kit' => [
+                'translation_domain' => 'form',
+                'defaults'           => [
+                    'attr'     => [],
+                    'row_attr' => [],
                 ],
-            ], 'page_layout_kit', new ConstraintDefinitionFactory()),
-            new FormTypeMap(),
-        );
+                'field_types' => [],
+            ],
+        ], 'page_layout_kit', new ConstraintDefinitionFactory());
+
+        $arguments = [$merger, new FormTypeMap()];
+        // The inline modal types also need the locale catalog.
+        if (in_array($typeClass, [PageCardsBlockInlineModalType::class, PageListBlockInlineModalType::class], true)) {
+            $arguments[] = LocaleTestSupport::defaults();
+        }
+
+        return new $typeClass(...$arguments);
     }
 }

@@ -36,7 +36,7 @@ class PageHeroBlock
     }
 
     /** @return array<string, string> */
-    public function toArray(string $locale, ?PageLocales $pageLocales = null): array
+    public function toArray(string $locale, PageLocales $pageLocales): array
     {
         return $this->getTranslationOrFallback($locale, $pageLocales)->toArray();
     }

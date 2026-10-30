@@ -13,9 +13,9 @@ use Nowo\PageLayoutKitBundle\Command\MigratePageBlocksCommand;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
-use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
+use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use ReflectionObject;
@@ -32,7 +32,6 @@ final class MigratePageBlocksCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        PageLocales::bind(new PageLocales('es', ['es', 'en']));
         $this->persisted = [];
         $this->nextId    = 1;
     }
@@ -50,6 +49,7 @@ final class MigratePageBlocksCommandTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [$entry],
             ]),
+            LocaleTestSupport::defaults(),
         ));
 
         $tester = new CommandTester($command);
@@ -64,6 +64,7 @@ final class MigratePageBlocksCommandTest extends TestCase
             $this->createPageLayoutEntryRepository([
                 'home' => [],
             ]),
+            LocaleTestSupport::defaults(),
         ));
 
         $tester = new CommandTester($command);
@@ -79,6 +80,7 @@ final class MigratePageBlocksCommandTest extends TestCase
                 'home'    => [],
                 'contact' => [],
             ]),
+            LocaleTestSupport::defaults(),
             new FakeCommandLegacyProvider([
                 'home:es' => [
                     'hero_title'    => 'Hero',
@@ -104,19 +106,19 @@ final class MigratePageBlocksCommandTest extends TestCase
         $legacy = new FakeCommandLegacyProvider(['home:es' => ['hero_title' => 'Hero', 'detect_items' => [], 'process_items' => []], 'home:en' => [], 'contact:es' => ['h1' => 'Contact', 'expect_items' => []], 'contact:en' => []]);
 
         $logger   = new RecordingMigrationLogger();
-        $migrator = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), $legacy);
+        $migrator = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), LocaleTestSupport::defaults(), $legacy);
         (new CommandTester(new MigratePageBlocksCommand($migrator, $logger)))->execute([]);
         self::assertSame(['info', 'info'], $logger->levels());
 
         $logger = new RecordingMigrationLogger();
-        $notRun = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => []]));
+        $notRun = new PageBlockMigrator($this->entityManagerMock(), $this->createPageLayoutEntryRepository(['home' => []]), LocaleTestSupport::defaults());
         (new CommandTester(new MigratePageBlocksCommand($notRun, $logger)))->execute([]);
         self::assertSame(['info', 'warning'], $logger->levels());
 
         $logger        = new RecordingMigrationLogger();
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->method('flush')->willThrowException(new RuntimeException('db down'));
-        $failing = new PageBlockMigrator($entityManager, $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), $legacy);
+        $failing = new PageBlockMigrator($entityManager, $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]), LocaleTestSupport::defaults(), $legacy);
         try {
             (new CommandTester(new MigratePageBlocksCommand($failing, $logger)))->execute([]);
             self::fail('The migration failure must be rethrown.');

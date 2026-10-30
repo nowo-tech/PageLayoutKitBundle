@@ -28,11 +28,6 @@ use function count;
 
 final class PageBlockInlineModalTypeTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        LocaleTestSupport::bindDefaults();
-    }
-
     public function testCardsInlineModalBuildsCollectionAndHydratesLocalePanels(): void
     {
         $fields    = [];
@@ -106,14 +101,14 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $listeners[FormEvents::SUBMIT]($event);
 
         self::assertCount(1, $block->getItems());
-        self::assertSame('Tarjetas nuevas', $block->getTranslationOrFallback('es')->getTitle());
-        self::assertSame('New cards', $block->getTranslationOrFallback('en')->getTitle());
+        self::assertSame('Tarjetas nuevas', $block->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getTitle());
+        self::assertSame('New cards', $block->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getTitle());
         $item = $block->getItems()->first();
         self::assertInstanceOf(PageCardItem::class, $item);
-        self::assertSame('Primera', $item->getTranslationOrFallback('es')->getTitle());
-        self::assertSame('Cuerpo uno', $item->getTranslationOrFallback('es')->getBody());
-        self::assertSame('First', $item->getTranslationOrFallback('en')->getTitle());
-        self::assertSame('Body one', $item->getTranslationOrFallback('en')->getBody());
+        self::assertSame('Primera', $item->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getTitle());
+        self::assertSame('Cuerpo uno', $item->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getBody());
+        self::assertSame('First', $item->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getTitle());
+        self::assertSame('Body one', $item->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getBody());
     }
 
     public function testCardsInlineModalSubmitCreatesMissingItems(): void
@@ -122,7 +117,7 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $listeners = [];
         $builder   = $this->createBuilder($fields, $listeners);
         $block     = new PageCardsBlock();
-        $block->ensureTranslations();
+        $block->ensureTranslations(LocaleTestSupport::defaults());
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
 
@@ -148,8 +143,8 @@ final class PageBlockInlineModalTypeTest extends TestCase
         self::assertInstanceOf(PageCardItem::class, $secondItem);
         self::assertSame(0, $firstItem->getPosition());
         self::assertSame(1, $secondItem->getPosition());
-        self::assertSame('Dos', $secondItem->getTranslationOrFallback('es')->getTitle());
-        self::assertSame('Body two', $secondItem->getTranslationOrFallback('en')->getBody());
+        self::assertSame('Dos', $secondItem->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getTitle());
+        self::assertSame('Body two', $secondItem->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getBody());
     }
 
     public function testCardsInlineModalSkipsBlankParsedLinesAndKeepsTrailingNonEmptyItems(): void
@@ -185,7 +180,7 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $listeners = [];
         $builder   = $this->createBuilder($fields, $listeners);
         $block     = new PageCardsBlock();
-        $block->ensureTranslations();
+        $block->ensureTranslations(LocaleTestSupport::defaults());
 
         $this->createCardsType()->buildForm($builder, ['block' => $block]);
 
@@ -276,12 +271,12 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $listeners[FormEvents::SUBMIT]($event);
 
         self::assertCount(1, $block->getItems());
-        self::assertSame('Lista nueva', $block->getTranslationOrFallback('es')->getTitle());
-        self::assertSame('New list', $block->getTranslationOrFallback('en')->getTitle());
+        self::assertSame('Lista nueva', $block->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getTitle());
+        self::assertSame('New list', $block->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getTitle());
         $item = $block->getItems()->first();
         self::assertInstanceOf(PageListItem::class, $item);
-        self::assertSame('Paso uno', $item->getTranslationOrFallback('es')->getText());
-        self::assertSame('Step one', $item->getTranslationOrFallback('en')->getText());
+        self::assertSame('Paso uno', $item->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getText());
+        self::assertSame('Step one', $item->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getText());
     }
 
     public function testListInlineModalKeepsTrailingItemsWhenAnotherLocaleStillHasContent(): void
@@ -317,7 +312,7 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $listeners = [];
         $builder   = $this->createBuilder($fields, $listeners);
         $block     = new PageListBlock();
-        $block->ensureTranslations();
+        $block->ensureTranslations(LocaleTestSupport::defaults());
 
         $this->createListType()->buildForm($builder, ['block' => $block]);
 
@@ -343,11 +338,11 @@ final class PageBlockInlineModalTypeTest extends TestCase
         self::assertInstanceOf(PageListItem::class, $secondItem);
         self::assertSame(0, $firstItem->getPosition());
         self::assertSame(1, $secondItem->getPosition());
-        self::assertSame('Dos', $secondItem->getTranslationOrFallback('es')->getText());
-        self::assertSame('Two', $secondItem->getTranslationOrFallback('en')->getText());
+        self::assertSame('Dos', $secondItem->getTranslationOrFallback('es', LocaleTestSupport::defaults())->getText());
+        self::assertSame('Two', $secondItem->getTranslationOrFallback('en', LocaleTestSupport::defaults())->getText());
     }
 
-    public function testCardsInlineModalUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testCardsInlineModalUsesTheInjectedPageLocales(): void
     {
         $fields      = [];
         $listeners   = [];
@@ -355,15 +350,13 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $pageLocales = new PageLocales('fr', ['fr', 'de']);
         $block       = new PageCardsBlock();
 
-        LocaleTestSupport::withoutStaticBinding(function () use ($builder, $block, $pageLocales, &$listeners): void {
-            $this->createCardsType($pageLocales)->buildForm($builder, ['block' => $block]);
+        $this->createCardsType($pageLocales)->buildForm($builder, ['block' => $block]);
 
-            $this->dispatchPostSetData($listeners, ['fr', 'de']);
-            $this->dispatchSubmit($listeners, [
-                new PageBlockLocalePanelData(locale: 'fr', title: 'Cartes', items: "Une | Corps\nDeux | Autre"),
-                new PageBlockLocalePanelData(locale: 'de', title: 'Karten', items: ''),
-            ]);
-        });
+        $this->dispatchPostSetData($listeners, ['fr', 'de']);
+        $this->dispatchSubmit($listeners, [
+            new PageBlockLocalePanelData(locale: 'fr', title: 'Cartes', items: "Une | Corps\nDeux | Autre"),
+            new PageBlockLocalePanelData(locale: 'de', title: 'Karten', items: ''),
+        ]);
 
         self::assertSame('Cartes', $block->getTranslation('fr')?->getTitle());
         self::assertSame('Karten', $block->getTranslation('de')?->getTitle());
@@ -376,7 +369,7 @@ final class PageBlockInlineModalTypeTest extends TestCase
         self::assertNull($item->getTranslation('es'));
     }
 
-    public function testListInlineModalUsesInjectedPageLocalesWithoutStaticBinding(): void
+    public function testListInlineModalUsesTheInjectedPageLocales(): void
     {
         $fields      = [];
         $listeners   = [];
@@ -384,15 +377,13 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $pageLocales = new PageLocales('fr', ['fr', 'de']);
         $block       = new PageListBlock();
 
-        LocaleTestSupport::withoutStaticBinding(function () use ($builder, $block, $pageLocales, &$listeners): void {
-            $this->createListType($pageLocales)->buildForm($builder, ['block' => $block]);
+        $this->createListType($pageLocales)->buildForm($builder, ['block' => $block]);
 
-            $this->dispatchPostSetData($listeners, ['fr', 'de']);
-            $this->dispatchSubmit($listeners, [
-                new PageBlockLocalePanelData(locale: 'fr', title: 'Liste', items: "Un\nDeux"),
-                new PageBlockLocalePanelData(locale: 'de', title: 'Liste DE', items: 'Eins'),
-            ]);
-        });
+        $this->dispatchPostSetData($listeners, ['fr', 'de']);
+        $this->dispatchSubmit($listeners, [
+            new PageBlockLocalePanelData(locale: 'fr', title: 'Liste', items: "Un\nDeux"),
+            new PageBlockLocalePanelData(locale: 'de', title: 'Liste DE', items: 'Eins'),
+        ]);
 
         self::assertSame('Liste', $block->getTranslation('fr')?->getTitle());
         self::assertSame('Liste DE', $block->getTranslation('de')?->getTitle());
@@ -482,7 +473,7 @@ final class PageBlockInlineModalTypeTest extends TestCase
             new FormTypeMap([
                 CollectionType::class => CollectionType::class,
             ]),
-            $pageLocales,
+            $pageLocales ?? LocaleTestSupport::defaults(),
         );
     }
 
@@ -502,21 +493,21 @@ final class PageBlockInlineModalTypeTest extends TestCase
             new FormTypeMap([
                 CollectionType::class => CollectionType::class,
             ]),
-            $pageLocales,
+            $pageLocales ?? LocaleTestSupport::defaults(),
         );
     }
 
     private function createCardsBlockWithOneItem(): PageCardsBlock
     {
         $block = new PageCardsBlock();
-        $block->ensureTranslations();
-        $block->getTranslationOrFallback('es')->setTitle('Tarjetas');
-        $block->getTranslationOrFallback('en')->setTitle('Cards');
+        $block->ensureTranslations(LocaleTestSupport::defaults());
+        $block->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setTitle('Tarjetas');
+        $block->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setTitle('Cards');
 
         $item = new PageCardItem();
-        $item->ensureTranslations();
-        $item->getTranslationOrFallback('es')->setTitle('Uno')->setBody("Linea uno\nLinea dos");
-        $item->getTranslationOrFallback('en')->setTitle('One')->setBody("Line one\nLine two");
+        $item->ensureTranslations(LocaleTestSupport::defaults());
+        $item->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setTitle('Uno')->setBody("Linea uno\nLinea dos");
+        $item->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setTitle('One')->setBody("Line one\nLine two");
         $block->addItem($item);
 
         return $block;
@@ -527,9 +518,9 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $block = $this->createCardsBlockWithOneItem();
 
         $second = new PageCardItem();
-        $second->ensureTranslations();
-        $second->getTranslationOrFallback('es')->setTitle('Eliminar')->setBody('Quitar');
-        $second->getTranslationOrFallback('en')->setTitle('Delete')->setBody('Remove');
+        $second->ensureTranslations(LocaleTestSupport::defaults());
+        $second->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setTitle('Eliminar')->setBody('Quitar');
+        $second->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setTitle('Delete')->setBody('Remove');
         $block->addItem($second);
 
         return $block;
@@ -538,14 +529,14 @@ final class PageBlockInlineModalTypeTest extends TestCase
     private function createListBlockWithOneItem(): PageListBlock
     {
         $block = new PageListBlock();
-        $block->ensureTranslations();
-        $block->getTranslationOrFallback('es')->setTitle('Puntos');
-        $block->getTranslationOrFallback('en')->setTitle('Points');
+        $block->ensureTranslations(LocaleTestSupport::defaults());
+        $block->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setTitle('Puntos');
+        $block->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setTitle('Points');
 
         $item = new PageListItem();
-        $item->ensureTranslations();
-        $item->getTranslationOrFallback('es')->setText('Primer punto');
-        $item->getTranslationOrFallback('en')->setText('First point');
+        $item->ensureTranslations(LocaleTestSupport::defaults());
+        $item->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setText('Primer punto');
+        $item->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setText('First point');
         $block->addItem($item);
 
         return $block;
@@ -556,9 +547,9 @@ final class PageBlockInlineModalTypeTest extends TestCase
         $block = $this->createListBlockWithOneItem();
 
         $second = new PageListItem();
-        $second->ensureTranslations();
-        $second->getTranslationOrFallback('es')->setText('Eliminar');
-        $second->getTranslationOrFallback('en')->setText('Delete');
+        $second->ensureTranslations(LocaleTestSupport::defaults());
+        $second->getTranslationOrFallback('es', LocaleTestSupport::defaults())->setText('Eliminar');
+        $second->getTranslationOrFallback('en', LocaleTestSupport::defaults())->setText('Delete');
         $block->addItem($second);
 
         return $block;

@@ -15,6 +15,9 @@ declare global {
 
 /**
  * Unified modal for inline CMS editing (page blocks, services, cases, service FAQs).
+ *
+ * Register it under the `cms-modal` identifier used by the bundle templates:
+ * `application.register('cms-modal', CmsModalController)`.
  */
 export default class CmsModalController extends Controller {
     static targets = ['modal', 'body', 'title', 'submit'];
@@ -56,11 +59,6 @@ export default class CmsModalController extends Controller {
 
     connect(): void {
         this.patchCkeditorAutoInit();
-        this.onKeydown = (event: KeyboardEvent): void => {
-            if (event.key === 'Escape' && !this.modalTarget.hidden) {
-                this.close();
-            }
-        };
         document.addEventListener('keydown', this.onKeydown);
     }
 
@@ -68,7 +66,14 @@ export default class CmsModalController extends Controller {
         document.removeEventListener('keydown', this.onKeydown);
     }
 
-    private onKeydown: (event: KeyboardEvent) => void = () => {};
+    /**
+     * Closes the open modal on Escape (bound once per instance so disconnect() can remove it).
+     */
+    private readonly onKeydown = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape' && !this.modalTarget.hidden) {
+            this.close();
+        }
+    };
 
     open(event: Event): void {
         event.preventDefault();
@@ -343,11 +348,18 @@ export default class CmsModalController extends Controller {
             });
 
             if (response.redirected || response.ok) {
-                window.location.reload();
+                this.reloadPage();
                 return;
             }
 
             await this.applyModalFormHtml(await response.text(), resource, id, blockType);
         });
+    }
+
+    /**
+     * Reloads the host page after a successful save so the edited block re-renders server-side.
+     */
+    protected reloadPage(): void {
+        window.location.reload();
     }
 }

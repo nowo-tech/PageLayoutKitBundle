@@ -8,10 +8,8 @@ use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappi
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\CsrfProtectionPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
-use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\NowoPageLayoutKitBundle;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,36 +28,15 @@ final class NowoPageLayoutKitBundleTest extends TestCase
         self::assertNotEmpty(array_filter($passes, static fn (object $pass): bool => $pass instanceof DoctrineOrmMappingsPass));
     }
 
-    public function testBootBindsLocalesFromContainer(): void
+    public function testBootDoesNotTouchTheContainer(): void
     {
-        $this->unbindPageLocales();
-
-        $locales   = new PageLocales('es', ['es', 'en']);
         $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())->method('has')->with(PageLocales::class)->willReturn(true);
-        $container->expects(self::once())->method('get')->with(PageLocales::class)->willReturn($locales);
-
-        $bundle = new NowoPageLayoutKitBundle();
-        $bundle->setContainer($container);
-        $bundle->boot();
-
-        self::assertSame('es', PageLocales::default());
-        self::assertSame(['es', 'en'], PageLocales::all());
-    }
-
-    public function testBootSkipsBindingWhenLocalesServiceIsMissing(): void
-    {
-        $this->unbindPageLocales();
-
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())->method('has')->with(PageLocales::class)->willReturn(false);
+        $container->expects(self::never())->method('has');
         $container->expects(self::never())->method('get');
 
         $bundle = new NowoPageLayoutKitBundle();
         $bundle->setContainer($container);
         $bundle->boot();
-
-        self::assertSame('fr', new PageLocales('fr', ['fr'])->getDefault());
     }
 
     public function testGetContainerExtensionReturnsBundleExtensionInstance(): void
@@ -70,12 +47,5 @@ final class NowoPageLayoutKitBundleTest extends TestCase
 
         self::assertInstanceOf(NowoPageLayoutKitExtension::class, $extension);
         self::assertSame($extension, $bundle->getContainerExtension());
-    }
-
-    private function unbindPageLocales(): void
-    {
-        $reflection = new ReflectionClass(PageLocales::class);
-        $property   = $reflection->getProperty('instance');
-        $property->setValue(null, null);
     }
 }

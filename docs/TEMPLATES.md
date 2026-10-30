@@ -1,7 +1,10 @@
 # Templates
 
 Templates live in `src/Resources/views/` (Twig namespace `@NowoPageLayoutKitBundle`). Override one by copying it to
-`templates/bundles/NowoPageLayoutKitBundle/<same path>`.
+`templates/bundles/NowoPageLayoutKitBundle/<same path>`. An application file at the override path always wins and will
+not pick up vendor changes for that path until removed or merged; see
+[USAGE.md — Twig overrides](USAGE.md#twig-overrides) for the upgrade-safe alternatives, the recovery steps and the full
+list of overridable `<subpath>` values.
 
 ## Table of contents
 

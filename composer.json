@@ -11,7 +11,7 @@
         "page-builder",
         "blocks",
         "admin",
-        "nowo"
+        "twig"
     ],
     "homepage": "https://github.com/nowo-tech/PageLayoutKitBundle",
     "support": {
@@ -91,7 +91,9 @@
     "archive": {
         "exclude": [
             "/demo",
-            "/.cursor"
+            "/.cursor",
+            "/node_modules",
+            "/coverage-ts"
         ]
     },
     "scripts": {

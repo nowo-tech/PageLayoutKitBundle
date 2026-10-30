@@ -31,14 +31,14 @@ trait TranslatableBlockTrait
     }
 
     /**
-     * Omitting $pageLocales falls back to the deprecated static PageLocales binding (removed in 2.0).
+     * Returns the translation for $locale, then the configured default locale, then the first stored one.
      *
      * @return T
      */
-    public function getTranslationOrFallback(string $locale, ?PageLocales $pageLocales = null): object
+    public function getTranslationOrFallback(string $locale, PageLocales $pageLocales): object
     {
         $translation = $this->getTranslation($locale)
-            ?? $this->getTranslation($pageLocales?->getDefault() ?? PageLocales::default());
+            ?? $this->getTranslation($pageLocales->getDefault());
 
         if ($translation !== null) {
             return $translation;
@@ -56,11 +56,11 @@ trait TranslatableBlockTrait
     }
 
     /**
-     * Omitting $pageLocales falls back to the deprecated static PageLocales binding (removed in 2.0).
+     * Adds an empty translation for every configured locale that has none yet.
      */
-    public function ensureTranslations(?PageLocales $pageLocales = null): self
+    public function ensureTranslations(PageLocales $pageLocales): self
     {
-        foreach ($pageLocales?->getAll() ?? PageLocales::all() as $locale) {
+        foreach ($pageLocales->getAll() as $locale) {
             if ($this->getTranslation($locale) === null) {
                 $class = $this->translationClass();
                 $this->addTranslation((new $class())->setLocale($locale));
