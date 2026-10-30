@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.0.0] - 2026-10-30](#200---2026-10-30)
 - [[1.9.0] - 2026-10-28](#190---2026-10-28)
 - [[1.8.1] - 2026-10-28](#181---2026-10-28)
 - [[1.8.0] - 2026-10-28](#180---2026-10-28)
@@ -30,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-19](#100---2026-08-19)
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-10-30
+
+PageLayoutKit 2.0.0: UiKit page contract (BC break), SEC-004 BJ: html-sanitizer allowlist, strip no decode, same-host Referer redirect, service strategy fail-closed, export-ignore See [UPGRADING](UPGRADING.md#to-200).
 
 Security: stored XSS bypasses of the `allowlist` and `strip` sanitizers fixed (M1, M2), same-host post-save redirect, `strategy: service` requires a service. Breaking: the deprecated static `PageLocales` binding is removed (inject the service); the inline CMS modal controller is built with pnpm + Vite into `src/Resources/public/js/`. See [UPGRADING](UPGRADING.md#unreleased).
 
