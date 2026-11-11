@@ -14,6 +14,9 @@ services:
             - '../../Entity/'
             - '../../Controller/'
             - '../../NowoPageLayoutKitBundle.php'
+            - '../../Persistence/AfterCommitConnection.php'
+            - '../../Persistence/AfterCommitDriver.php'
+            - '../../Persistence/AfterCommitMiddleware.php'
             - '../../Persistence/PageLayoutEntityManagerFactory.php'
             - '../../Event/'
             - '../../Resources/'
@@ -34,6 +37,11 @@ services:
         tags: ['controller.service_arguments', 'container.service_subscriber']
         arguments:
             $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
+    # LH-PLK-M1: the real transactions of the bundle's connection (AfterCommitMiddlewarePass sets the connection).
+    Nowo\PageLayoutKitBundle\Persistence\AfterCommitMiddleware:
+        arguments: ['@Nowo\PageLayoutKitBundle\Persistence\PageLayoutOutbox']
+        tags: ['doctrine.middleware']
 
     Nowo\PageLayoutKitBundle\Persistence\PageLayoutPendingEventsInterface:
         alias: Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction

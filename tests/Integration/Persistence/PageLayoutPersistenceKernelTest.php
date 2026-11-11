@@ -11,7 +11,9 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Event\PageLayoutChangedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Tests\Fixtures\Host\HostNote;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,8 +21,12 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernel;
+use Symfony\Component\HttpKernel\KernelEvents;
 
+use function array_map;
 use function dirname;
 use function memory_get_usage;
 
@@ -142,6 +148,98 @@ final class PageLayoutPersistenceKernelTest extends TestCase
         self::assertLessThan(4 * 1024 * 1024, memory_get_usage() - $baseline, 'memory stays flat over many requests');
     }
 
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function layouts(): iterable
+    {
+        yield 'single' => [false];
+        yield 'ddd' => [true];
+    }
+
+    #[DataProvider('layouts')]
+    public function testHostRollbackAroundTheRequestDispatchesNothing(bool $dedicated): void
+    {
+        $container = $dedicated
+            ? $this->boot($this->twoManagers(autoMapping: true), ['entity_manager' => 'page_layout'])
+            : $this->boot($this->singleManager(), []);
+        $bundle = $container->get('nowo_page_layout_kit.entity_manager');
+        self::assertInstanceOf(EntityManagerInterface::class, $bundle);
+        $dispatcher = $container->get('event_dispatcher');
+        self::assertInstanceOf(EventDispatcherInterface::class, $dispatcher);
+
+        // Host listeners: a transaction around the request, rolled back at kernel.response (dry run / failed check).
+        $begin = static function (RequestEvent $event) use ($bundle): void {
+            if ($event->isMainRequest()) {
+                $bundle->getConnection()->beginTransaction();
+            }
+        };
+        $rollback = static function (ResponseEvent $event) use ($bundle): void {
+            if ($event->isMainRequest()) {
+                $bundle->getConnection()->rollBack();
+                $bundle->clear();
+            }
+        };
+        $dispatcher->addListener(KernelEvents::REQUEST, $begin, 1024);
+        $dispatcher->addListener(KernelEvents::RESPONSE, $rollback, -1024);
+
+        self::assertSame(302, $this->reorder($container, [10, 5])->getStatusCode());
+        self::assertSame([1, 2], $this->positions($bundle), 'rolled back');
+        self::assertSame([], $this->events, 'LH-PLK-M1: no event for the rolled-back reorder');
+
+        $dispatcher->removeListener(KernelEvents::REQUEST, $begin);
+        $dispatcher->removeListener(KernelEvents::RESPONSE, $rollback);
+        self::assertSame(302, $this->reorder($container, [10, 5])->getStatusCode());
+        self::assertSame([10, 5], $this->positions($bundle));
+        self::assertSame(['home'], $this->eventKeys());
+        self::assertSame([false], $this->inTransaction);
+    }
+
+    public function testSavepointRollbackDropsOnlyItsEvents(): void
+    {
+        $container   = $this->boot($this->singleManager(), []);
+        $transaction = $container->get(PageLayoutTransaction::class);
+        self::assertInstanceOf(PageLayoutTransaction::class, $transaction);
+        $connection = $this->manager($container, 'default')->getConnection();
+
+        $connection->beginTransaction();
+        $transaction->commit(new PageLayoutChangedEvent('kept', [1]));
+        $connection->beginTransaction(); // savepoint
+        $transaction->commit(new PageLayoutChangedEvent('dropped', [2]));
+        $connection->rollBack();
+        self::assertSame(1, $transaction->countPending());
+        $connection->commit();
+        self::assertSame([], $this->events, 'not from inside the DBAL commit');
+        self::assertSame(1, $transaction->dispatchPending());
+
+        self::assertSame(['kept'], $this->eventKeys());
+        self::assertSame([false], $this->inTransaction);
+    }
+
+    #[DataProvider('layouts')]
+    public function testOptionNamingTheHostDefaultNeverClearsOrResetsIt(bool $twoManagers): void
+    {
+        $container = $this->boot($twoManagers ? $this->twoManagers(autoMapping: false) : $this->singleManager(), ['entity_manager' => 'default']);
+        $kernel    = $this->httpKernel($container);
+        $default   = $this->manager($container, 'default');
+
+        $note = new HostNote('pending host change');
+        $default->persist($note);
+        $request  = Request::create('/t/layout');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+        self::assertTrue($default->getUnitOfWork()->isScheduledForInsert($note), 'LH-PLK-M2: the host default is not cleared');
+
+        $request  = Request::create('/t/fail');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+        self::assertFalse($default->isOpen());
+
+        $request = Request::create('/t/layout');
+        $kernel->terminate($request, $kernel->handle($request));
+        self::assertFalse($default->isOpen(), 'LH-PLK-M2: the host default is not reset');
+    }
+
     public function testDefaultPathNeverResetsTheHostManager(): void
     {
         $container = $this->boot($this->singleManager(), []);
@@ -156,6 +254,16 @@ final class PageLayoutPersistenceKernelTest extends TestCase
         self::assertSame(500, $this->reorder($container, [1, 2])->getStatusCode(), 'the host owns its manager: the bundle does not reset it');
         self::assertFalse($default->isOpen());
         self::assertSame([], $this->events);
+    }
+
+    /**
+     * Page keys of the dispatched events (a method call: PHPStan does not narrow it from earlier assertions).
+     *
+     * @return list<string>
+     */
+    private function eventKeys(): array
+    {
+        return array_map(static fn (PageLayoutChangedEvent $e): string => $e->pageKey, $this->events);
     }
 
     /**

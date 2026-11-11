@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\DependencyInjection\Compiler;
 
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
+use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -82,6 +83,13 @@ final readonly class PageLayoutEntityManagerPass implements CompilerPassInterfac
             if ($manager === $name && !$maps) {
                 throw new InvalidConfigurationException(sprintf('The Doctrine entity manager "%s" (nowo_page_layout_kit.doctrine.entity_manager) does not map %s.', $name, self::ENTITY_NAMESPACE));
             }
+        }
+
+        // LH-PLK-M2: only a dedicated manager is the bundle's own (reset when closed, cleared at every boundary);
+        // the host's default manager is never treated as such, even when the option names it.
+        $isHostDefault = $container->hasParameter('doctrine.default_entity_manager') && $container->getParameter('doctrine.default_entity_manager') === $name;
+        if (!$isHostDefault && $container->hasDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)) {
+            $container->getDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)->setArgument('$managerName', $name);
         }
     }
 }

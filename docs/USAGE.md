@@ -98,8 +98,11 @@ nowo_page_layout_kit:
 - Without it, the bundle uses the manager returned by `getManagerForClass()` for its entities and never resets or
   clears it (the host owns it).
 - All writes come from the bundle's own admin UI and migration command, which own their unit of work, so there is no
-  "host controls the transaction" mode. If you wrap them in your own transaction the events wait for your commit
-  (`PageLayoutPendingEventsInterface::dispatchPending()`, or the end of the request / message / command).
+  "host controls the transaction" mode. If you wrap them in your own transaction the events follow it: dropped when it
+  rolls back, dispatched after your commit (`PageLayoutPendingEventsInterface::dispatchPending()`, the next flush, or
+  the end of the request / message / command).
+- `entity_manager` naming your default manager (e.g. `default`) only selects it: the bundle never resets or clears
+  your default manager.
 - XML-mapped hosts: the bundle entities keep their own attribute mapping; register it with `auto_mapping` or an
   explicit `NowoPageLayoutKitBundle` mapping when `auto_mapping` is off. There is no host entity to extend.
 

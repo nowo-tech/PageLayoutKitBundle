@@ -14,8 +14,8 @@ use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Service\ResetInterface;
+use Throwable;
 
-use function array_values;
 use function count;
 
 /**
@@ -23,42 +23,39 @@ use function count;
  *
  * The bundle only writes from its own admin UI and its migration command, so it owns those units of work: it flushes
  * the entity manager that maps the bundle entities (`doctrine.entity_manager`, else the manager returned by
- * `getManagerForClass()`), never the autowired default one by accident, and then dispatches the ID-only write events.
- * Events are never dispatched inside a flush nor while a transaction is open (a host transaction around the call
- * delays them to the next `postFlush` outside a transaction or to the end of the request / message / command). The
- * recorded events are request state: dispatched or discarded at every boundary and on `kernel.reset` (FrankenPHP
- * worker mode without kernel reset).
+ * `getManagerForClass()`), never the autowired default one by accident.
+ *
+ * The ID-only write events follow the **real** commit (LH-PLK-M1): once flushed they go to the {@see PageLayoutOutbox},
+ * which {@see AfterCommitMiddleware} tells about the transactions of the bundle's connection. A rollback (also of a
+ * host transaction around the call, or of a savepoint) drops them; the outermost commit makes them committed.
+ * Committed events are dispatched at the next safe point where DBAL reports no open transaction: right after the
+ * bundle flush, on the next `postFlush`, {@see dispatchPending()}, and at the end of the request / message / command
+ * (also a failed one). Never inside a flush nor inside a transaction. Everything is dropped on `kernel.reset`
+ * (FrankenPHP worker mode without kernel reset).
  *
  * @internal Use {@see PageLayoutPendingEventsInterface}
  */
 #[AsDoctrineListener(event: Events::postFlush)]
-final class PageLayoutTransaction implements PageLayoutPendingEventsInterface, EventSubscriberInterface, ResetInterface
+final readonly class PageLayoutTransaction implements PageLayoutPendingEventsInterface, EventSubscriberInterface, ResetInterface
 {
-    /**
-     * Events of flushed writes, dispatched once the connection has no open transaction.
-     *
-     * @var list<object>
-     */
-    // @igor-ignore - Request-scoped outbox: dispatched or discarded at every request/message/command boundary and reset().
-    private array $pending = [];
-
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ?EventDispatcherInterface $eventDispatcher = null,
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private EntityManagerInterface $entityManager,
+        private ?EventDispatcherInterface $eventDispatcher = null,
+        private LoggerInterface $logger = new NullLogger(),
+        private PageLayoutOutbox $outbox = new PageLayoutOutbox(),
     ) {
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::EXCEPTION  => ['discardPending', -1024],
-            KernelEvents::TERMINATE  => ['onBoundary', 1024],
-            ConsoleEvents::ERROR     => ['discardPending', -1024],
-            ConsoleEvents::TERMINATE => ['onBoundary', 1024],
+            KernelEvents::EXCEPTION  => ['dispatchPending', -1024],
+            KernelEvents::TERMINATE  => ['dispatchPending', 1024],
+            ConsoleEvents::ERROR     => ['dispatchPending', -1024],
+            ConsoleEvents::TERMINATE => ['dispatchPending', 1024],
             // symfony/messenger is optional: event names as strings.
-            'Symfony\Component\Messenger\Event\WorkerMessageHandledEvent' => ['onBoundary', 1024],
-            'Symfony\Component\Messenger\Event\WorkerMessageFailedEvent'  => ['discardPending', -1024],
+            'Symfony\Component\Messenger\Event\WorkerMessageHandledEvent' => ['dispatchPending', 1024],
+            'Symfony\Component\Messenger\Event\WorkerMessageFailedEvent'  => ['dispatchPending', -1024],
         ];
     }
 
@@ -76,24 +73,31 @@ final class PageLayoutTransaction implements PageLayoutPendingEventsInterface, E
      */
     public function record(object ...$events): void
     {
-        $this->pending = [...$this->pending, ...array_values($events)];
+        $this->outbox->hold(...$events);
         $this->dispatchPending();
     }
 
+    /**
+     * Dispatches the events of committed writes when DBAL reports no open transaction on the bundle's connection.
+     * A listener that throws cannot undo the commit: it is logged and the other events are still dispatched.
+     */
     public function dispatchPending(): int
     {
-        if ($this->pending === [] || !$this->entityManager->isOpen()) {
+        if ($this->outbox->countCommitted() === 0 || $this->entityManager->getConnection()->isTransactionActive()) {
             return 0;
         }
 
-        if ($this->entityManager->getConnection()->isTransactionActive()) {
-            return 0;
-        }
-
-        $events        = $this->pending;
-        $this->pending = [];
+        $events = $this->outbox->takeCommitted();
         foreach ($events as $event) {
-            $this->eventDispatcher?->dispatch($event);
+            try {
+                $this->eventDispatcher?->dispatch($event);
+            } catch (Throwable $e) {
+                $this->logger->error('Page layout: a listener failed after the commit.', [
+                    'bundle'    => 'NowoPageLayoutKitBundle',
+                    'event'     => $event::class,
+                    'exception' => $e::class,
+                ]);
+            }
         }
 
         return count($events);
@@ -101,52 +105,19 @@ final class PageLayoutTransaction implements PageLayoutPendingEventsInterface, E
 
     public function countPending(): int
     {
-        return count($this->pending);
+        return $this->outbox->countHeld() + $this->outbox->countCommitted();
     }
 
     /**
-     * Doctrine `postFlush` (any manager): the events wait no longer once no transaction is open.
+     * Doctrine `postFlush` (any manager): committed events wait no longer once no transaction is open.
      */
     public function postFlush(): void
     {
         $this->dispatchPending();
     }
 
-    /**
-     * End of a request, message or command: dispatches what was committed, discards the rest.
-     */
-    public function onBoundary(): void
-    {
-        if ($this->pending === []) {
-            return;
-        }
-
-        try {
-            $this->dispatchPending();
-        } finally {
-            $this->discardPending();
-        }
-    }
-
-    /**
-     * Failed request, message or command: the recorded writes may have been rolled back.
-     */
-    public function discardPending(): void
-    {
-        $count = count($this->pending);
-        if ($count === 0) {
-            return;
-        }
-
-        $this->logger->warning('Page layout write events discarded: the write was not committed before the end of the request, message or command.', [
-            'bundle' => 'NowoPageLayoutKitBundle',
-            'events' => $count,
-        ]);
-        $this->reset();
-    }
-
     public function reset(): void
     {
-        $this->pending = [];
+        $this->outbox->reset();
     }
 }

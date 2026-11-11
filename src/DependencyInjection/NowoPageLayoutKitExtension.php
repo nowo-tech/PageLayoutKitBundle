@@ -9,7 +9,6 @@ use Doctrine\ORM\Events;
 use LogicException;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Configuration as BundleConfiguration;
 use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
-use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutEntityManagerFactory;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
@@ -131,9 +130,8 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
                 ->setFactory([PageLayoutEntityManagerFactory::class, 'create'])
                 ->setArguments([new Reference('doctrine')]);
         } else {
+            // The recovery subscriber gets the name in PageLayoutEntityManagerPass, only when it is not the host default.
             $container->setAlias(self::ENTITY_MANAGER_SERVICE, sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
-            $container->getDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)
-                ->setArgument('$managerName', $entityManagerName);
         }
     }
 

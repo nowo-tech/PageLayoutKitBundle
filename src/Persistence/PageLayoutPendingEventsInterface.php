@@ -7,15 +7,16 @@ namespace Nowo\PageLayoutKitBundle\Persistence;
 /**
  * Write events (`Nowo\PageLayoutKitBundle\Event\*`) recorded by the bundle and not dispatched yet (2.2).
  *
- * Events are dispatched only once the write is committed: right after the bundle's flush, or, when the host wrapped
- * the call in its own transaction, on the next `postFlush` outside a transaction or at the end of the request /
- * Messenger message / console command. A host that commits in the middle of a long process can call
- * {@see dispatchPending()} right after its commit.
+ * Events are dispatched only once the write is committed, tracked on the real transactions of the bundle's connection:
+ * a rollback (also of a host transaction around the call, or of a savepoint) drops them. They are dispatched right
+ * after the bundle's flush, or, when a host transaction was open, after its outermost commit on the next `postFlush`
+ * or at the end of the request / Messenger message / console command. A host that commits in the middle of a long
+ * process can call {@see dispatchPending()} right after its commit.
  */
 interface PageLayoutPendingEventsInterface
 {
     /**
-     * Dispatches the recorded events when the bundle's connection has no open transaction (the write is committed).
+     * Dispatches the events of committed writes when the bundle's connection has no open transaction.
      *
      * @return int The number of events dispatched (0 while a transaction is still open or nothing is pending)
      */
