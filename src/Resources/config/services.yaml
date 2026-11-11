@@ -2,6 +2,10 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+        bind:
+            # 2.2 (rule 6): every bundle read/write uses the manager that maps the bundle entities, never the
+            # autowired default one by accident (doctrine.entity_manager, else resolved by entity class).
+            Doctrine\ORM\EntityManagerInterface: '@nowo_page_layout_kit.entity_manager'
 
     Nowo\PageLayoutKitBundle\:
         resource: '../../*'
@@ -10,6 +14,8 @@ services:
             - '../../Entity/'
             - '../../Controller/'
             - '../../NowoPageLayoutKitBundle.php'
+            - '../../Persistence/PageLayoutEntityManagerFactory.php'
+            - '../../Event/'
             - '../../Resources/'
             - '../../Security/PageLayoutProtection.php'
             - '../../Security/PageLayoutProtectionConfig.php'
@@ -28,6 +34,12 @@ services:
         tags: ['controller.service_arguments', 'container.service_subscriber']
         arguments:
             $pageLocales: '@Nowo\PageLayoutKitBundle\Locale\PageLocales'
+
+    Nowo\PageLayoutKitBundle\Persistence\PageLayoutPendingEventsInterface:
+        alias: Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction
+
+    Nowo\PageLayoutKitBundle\Service\PageLayoutProviderInterface:
+        alias: Nowo\PageLayoutKitBundle\Service\PageBlockProvider
 
     Nowo\PageLayoutKitBundle\Locale\PageLocales:
         public: true

@@ -25,7 +25,7 @@ use const ENT_QUOTES;
 /**
  * Resolves ordered page blocks for configured page keys, with optional legacy JSON fallback.
  */
-final class PageBlockProvider implements ResetInterface
+final class PageBlockProvider implements PageLayoutProviderInterface, ResetInterface
 {
     /**
      * Layouts memoized per main request, so the memo never outlives the request that built it

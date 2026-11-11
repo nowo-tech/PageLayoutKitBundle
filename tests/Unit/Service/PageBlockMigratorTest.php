@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Service;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
@@ -15,14 +16,19 @@ use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Event\PageBlocksMigratedEvent;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionObject;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 final class PageBlockMigratorTest extends TestCase
 {
@@ -128,6 +134,34 @@ final class PageBlockMigratorTest extends TestCase
         );
 
         self::assertTrue($migrator->migrate(true));
+    }
+
+    #[AllowMockObjectsWithoutExpectations] // shared helpers return mocks (same as the neighbouring tests)
+    public function testMigrateRecordsAMigratedEventAfterTheFlush(): void
+    {
+        $entityManager = $this->entityManagerMock();
+        self::assertInstanceOf(MockObject::class, $entityManager);
+        $connection = $this->createStub(Connection::class);
+        $connection->method('isTransactionActive')->willReturn(false);
+        $entityManager->method('isOpen')->willReturn(true);
+        $entityManager->method('getConnection')->willReturn($connection);
+        $dispatcher = new EventDispatcher();
+        $events     = [];
+        $dispatcher->addListener(PageBlocksMigratedEvent::class, static function (PageBlocksMigratedEvent $event) use (&$events): void {
+            $events[] = [$event->pageKeys, $event->forced];
+        });
+        $transaction = new PageLayoutTransaction($entityManager, $dispatcher);
+
+        $migrator = new PageBlockMigrator(
+            $entityManager,
+            $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]),
+            LocaleTestSupport::defaults(),
+            new FakeMigratorLegacyProvider($this->legacyContentMap()),
+            $transaction,
+        );
+
+        self::assertTrue($migrator->migrate());
+        self::assertSame([[['home', 'contact'], false]], $events);
     }
 
     public function testContentForPageReturnsEmptyArrayWhenNoLegacyProviderIsAvailable(): void

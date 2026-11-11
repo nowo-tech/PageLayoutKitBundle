@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\DependencyInjection;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use LogicException;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Configuration as BundleConfiguration;
 use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
+use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutEntityManagerFactory;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
@@ -25,6 +28,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use function array_key_exists;
 use function is_array;
 use function is_string;
+use function sprintf;
 use function str_starts_with;
 
 /**
@@ -32,6 +36,12 @@ use function str_starts_with;
  */
 final class NowoPageLayoutKitExtension extends Extension implements PrependExtensionInterface
 {
+    /** Container parameter holding `doctrine.entity_manager` (null: the manager that maps the bundle entities). */
+    public const string ENTITY_MANAGER_PARAMETER = 'nowo_page_layout_kit.doctrine.entity_manager';
+
+    /** Entity manager used by every bundle read and write (alias of the configured one, or resolved by entity class). */
+    public const string ENTITY_MANAGER_SERVICE = 'nowo_page_layout_kit.entity_manager';
+
     public function prepend(ContainerBuilder $container): void
     {
         if (!$container->hasExtension('nowo_form_kit')) {
@@ -79,6 +89,8 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
         $container->setParameter('nowo_page_layout_kit.pages', $config['pages']);
         $container->setParameter('nowo_page_layout_kit.doctrine.table_prefix', $config['doctrine']['table_prefix']);
         $container->setParameter('nowo_page_layout_kit.doctrine.connection', $config['doctrine']['connection']);
+        $container->setParameter(self::ENTITY_MANAGER_PARAMETER, $config['doctrine']['entity_manager']);
+        $this->registerEntityManager($container, $config['doctrine']['entity_manager']);
         $container->setParameter('nowo_page_layout_kit.security.access_roles', $config['security']['access_roles']);
         $container->setParameter('nowo_page_layout_kit.security.access_checker', $config['security']['access_checker']);
         $container->setParameter('nowo_page_layout_kit.security.allow_unauthenticated', $config['security']['allow_unauthenticated']);
@@ -106,6 +118,22 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
             $definition = new Definition(TablePrefixListener::class, [$tablePrefix]);
             $definition->addTag('doctrine.event_listener', ['event' => Events::loadClassMetadata]);
             $container->setDefinition(TablePrefixListener::class, $definition);
+        }
+    }
+
+    /**
+     * Wires the entity manager of the bundle entities (rule 6, 2.2): never the autowired default by accident.
+     */
+    private function registerEntityManager(ContainerBuilder $container, ?string $entityManagerName): void
+    {
+        if ($entityManagerName === null) {
+            $container->register(self::ENTITY_MANAGER_SERVICE, EntityManagerInterface::class)
+                ->setFactory([PageLayoutEntityManagerFactory::class, 'create'])
+                ->setArguments([new Reference('doctrine')]);
+        } else {
+            $container->setAlias(self::ENTITY_MANAGER_SERVICE, sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
+            $container->getDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)
+                ->setArgument('$managerName', $entityManagerName);
         }
     }
 

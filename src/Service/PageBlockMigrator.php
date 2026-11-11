@@ -23,8 +23,10 @@ use Nowo\PageLayoutKitBundle\Entity\PageListItemTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Event\PageBlocksMigratedEvent;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 
 use function sprintf;
@@ -39,6 +41,7 @@ final readonly class PageBlockMigrator
         private PageLayoutEntryRepository $pageLayoutEntryRepository,
         private PageLocales $pageLocales,
         private ?LegacyPageContentProviderInterface $legacyContentProvider = null,
+        private ?PageLayoutTransaction $transaction = null,
     ) {
     }
 
@@ -63,7 +66,9 @@ final readonly class PageBlockMigrator
 
         $this->migrateHome($this->contentForPage('home'));
         $this->migrateContact($this->contentForPage('contact'));
+        // Bundle-owned CLI write: always flushed, on the manager that maps the bundle entities (2.2).
         $this->entityManager->flush();
+        $this->transaction?->record(new PageBlocksMigratedEvent(['home', 'contact'], $force));
 
         return true;
     }

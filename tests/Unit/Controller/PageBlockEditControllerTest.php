@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Controller;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -22,6 +23,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageListItem;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Event\PageBlockUpdatedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageCompareBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageCtaBlockModalType;
@@ -29,6 +31,7 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageCardsBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageCompareBlockRepository;
 use Nowo\PageLayoutKitBundle\Repository\PageCtaBlockRepository;
@@ -38,12 +41,14 @@ use Nowo\PageLayoutKitBundle\Repository\PageTextBlockRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Nowo\UiKitBundle\View\ShowPage;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -161,6 +166,44 @@ final class PageBlockEditControllerTest extends TestCase
         self::assertSame('/admin/layout/home', $response->getTargetUrl());
         self::assertSame(['Block updated.'], $session->getFlashBag()->get('success'));
         self::assertSame(PageCtaBlockModalType::class, $formCalls[0]['type']);
+    }
+
+    #[AllowMockObjectsWithoutExpectations] // shared helpers return mocks (same as the neighbouring tests)
+    public function testUpdateCommitsThroughTheBundleTransactionAndDispatchesAnIdEvent(): void
+    {
+        $block = $this->withId(new PageCtaBlock(), 9);
+        $form  = $this->createStub(FormInterface::class);
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $formCalls = [];
+
+        $connection = $this->createStub(Connection::class);
+        $connection->method('isTransactionActive')->willReturn(false);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::once())->method('flush');
+        $entityManager->method('isOpen')->willReturn(true);
+        $entityManager->method('getConnection')->willReturn($connection);
+        $dispatcher = new EventDispatcher();
+        $events     = [];
+        $dispatcher->addListener(PageBlockUpdatedEvent::class, static function (PageBlockUpdatedEvent $event) use (&$events): void {
+            $events[] = [$event->blockType, $event->blockId, $event->locale];
+        });
+
+        $request = Request::create('/admin/page-blocks/cta/9', 'POST');
+        $request->headers->set('Referer', '/admin/layout/home');
+        $request->setLocale('es');
+        $request->setSession(new Session(new MockArraySessionStorage()));
+
+        $controller = new PageBlockEditController(
+            $this->createRegistry([PageBlockType::Cta->value => [9 => $block]]),
+            $entityManager,
+            $this->pageLocales(),
+            transaction: new PageLayoutTransaction($entityManager, $dispatcher),
+        );
+        $controller->setContainer($this->createControllerContainer(form: $form, request: $request, formCalls: $formCalls));
+
+        self::assertInstanceOf(RedirectResponse::class, $controller->update('cta', 9, $request));
+        self::assertSame([['cta', 9, 'es']], $events);
     }
 
     public function testUpdateFallsBackToPublicPageUrlWithoutReferer(): void
