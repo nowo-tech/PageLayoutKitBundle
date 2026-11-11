@@ -13,6 +13,7 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Entity\PageListBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
+use Nowo\PageLayoutKitBundle\Event\PageBlockUpdatedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageCompareBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageCtaBlockModalType;
@@ -20,6 +21,7 @@ use Nowo\PageLayoutKitBundle\Form\PageHeroBlockModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageTextBlockModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Service\PageBlockRegistry;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
@@ -42,6 +44,7 @@ final class PageBlockEditController extends AbstractController
         private readonly ?PublicPageUrlResolver $publicPageUrls = null,
         private readonly ?TranslatorInterface $translator = null,
         private readonly PageLayoutKitPages $pages = new PageLayoutKitPages(),
+        private readonly ?PageLayoutTransaction $transaction = null,
     ) {
     }
 
@@ -87,7 +90,12 @@ final class PageBlockEditController extends AbstractController
             ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
-        $this->entityManager->flush();
+        // 2.2 (rules 6/7): the manager that maps the bundle entities, then an ID-only event after the commit.
+        if ($this->transaction instanceof PageLayoutTransaction) {
+            $this->transaction->commit(new PageBlockUpdatedEvent($pageBlockType->value, $id, $locale));
+        } else {
+            $this->entityManager->flush();
+        }
         $this->addFlash('success', $this->translate('admin.flash.block_updated', 'Block updated.'));
 
         $referer = $this->sameHostReferer($request);

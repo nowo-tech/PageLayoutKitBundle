@@ -6,73 +6,77 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\ObjectManager;
-use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 
+/**
+ * 2.2 (rule 6): only the bundle's own manager (`doctrine.entity_manager`) is ever reset or cleared.
+ */
+#[CoversClass(PageLayoutKitEntityManagerRecoverySubscriber::class)]
 final class PageLayoutKitEntityManagerRecoverySubscriberTest extends TestCase
 {
-    public function testSubscribesToMainRequestBeforeRoutingAndSecurity(): void
+    #[Test]
+    public function subscribesToRequestAndBoundaries(): void
     {
-        self::assertSame(
-            ['kernel.request' => ['onKernelRequest', 4096]],
-            PageLayoutKitEntityManagerRecoverySubscriber::getSubscribedEvents(),
-        );
+        $events = PageLayoutKitEntityManagerRecoverySubscriber::getSubscribedEvents();
+        self::assertSame(['onKernelRequest', 4096], $events[KernelEvents::REQUEST]);
+        self::assertSame(['clear', -1024], $events[KernelEvents::TERMINATE]);
+        self::assertCount(6, $events);
     }
 
-    public function testManagerClosedByAFailedFlushInRequestOneIsResetBeforeRequestTwo(): void
+    #[Test]
+    public function neverTouchesAHostManager(): void
     {
-        $open    = true;
-        $manager = $this->createStub(EntityManagerInterface::class);
-        $manager->method('isOpen')->willReturnCallback(static function () use (&$open): bool {
-            return $open;
-        });
-
         $registry = $this->createMock(ManagerRegistry::class);
-        $registry->expects(self::atLeastOnce())
-            ->method('getManagerForClass')
-            ->with(PageLayoutEntry::class)
-            ->willReturn($manager);
-        $registry->method('getManagerNames')->willReturn([
-            'audit'   => 'doctrine.orm.audit_entity_manager',
-            'content' => 'doctrine.orm.content_entity_manager',
-        ]);
-        $registry->method('getManager')->willReturnCallback(
-            fn (?string $name): ObjectManager => $name === 'content' ? $manager : $this->createStub(ObjectManager::class),
-        );
-        $registry->expects(self::once())->method('resetManager')->with('content');
+        $registry->expects(self::never())->method('getManager');
+        $registry->expects(self::never())->method('resetManager');
 
         $subscriber = new PageLayoutKitEntityManagerRecoverySubscriber($registry);
-
-        $subscriber->onKernelRequest($this->createEvent());
-
-        $open = false;
-
-        $subscriber->onKernelRequest($this->createEvent(HttpKernelInterface::SUB_REQUEST));
-        $subscriber->onKernelRequest($this->createEvent());
+        $subscriber->onKernelRequest($this->event(HttpKernelInterface::MAIN_REQUEST));
+        $subscriber->recover();
+        $subscriber->clear();
     }
 
-    public function testUnknownOrUnnamedManagersAreLeftUntouched(): void
+    #[Test]
+    public function resetsTheClosedOwnManagerOnTheMainRequestOnly(): void
     {
-        $closed = $this->createStub(EntityManagerInterface::class);
-        $closed->method('isOpen')->willReturn(false);
+        $em = $this->createStub(EntityManagerInterface::class);
+        $em->method('isOpen')->willReturnOnConsecutiveCalls(false, true);
+        $registry = $this->createMock(ManagerRegistry::class);
+        $registry->expects(self::exactly(2))->method('getManager')->with('page_layout')->willReturn($em);
+        $registry->expects(self::once())->method('resetManager')->with('page_layout');
 
-        foreach ([null, $closed] as $manager) {
-            $registry = $this->createMock(ManagerRegistry::class);
-            $registry->method('getManagerForClass')->willReturn($manager);
-            $registry->method('getManagerNames')->willReturn(['default' => 'doctrine.orm.default_entity_manager']);
-            $registry->method('getManager')->willReturn($this->createStub(ObjectManager::class));
-            $registry->expects(self::never())->method('resetManager');
-
-            (new PageLayoutKitEntityManagerRecoverySubscriber($registry))->onKernelRequest($this->createEvent());
-        }
+        $subscriber = new PageLayoutKitEntityManagerRecoverySubscriber($registry, 'page_layout');
+        $subscriber->onKernelRequest($this->event(HttpKernelInterface::SUB_REQUEST));
+        $subscriber->onKernelRequest($this->event(HttpKernelInterface::MAIN_REQUEST));
+        $subscriber->recover();
     }
 
-    private function createEvent(int $type = HttpKernelInterface::MAIN_REQUEST): RequestEvent
+    #[Test]
+    public function clearsTheOpenOwnManagerOnly(): void
+    {
+        $open = $this->createMock(EntityManagerInterface::class);
+        $open->method('isOpen')->willReturn(true);
+        $open->expects(self::once())->method('clear');
+        $registry = $this->createStub(ManagerRegistry::class);
+        $registry->method('getManager')->willReturn($open);
+        new PageLayoutKitEntityManagerRecoverySubscriber($registry, 'page_layout')->clear();
+
+        $closed = $this->createMock(EntityManagerInterface::class);
+        $closed->method('isOpen')->willReturn(false);
+        $closed->expects(self::never())->method('clear');
+        $registry = $this->createStub(ManagerRegistry::class);
+        $registry->method('getManager')->willReturn($closed);
+        new PageLayoutKitEntityManagerRecoverySubscriber($registry, 'page_layout')->clear();
+    }
+
+    private function event(int $type): RequestEvent
     {
         return new RequestEvent($this->createStub(HttpKernelInterface::class), Request::create('/'), $type);
     }

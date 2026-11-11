@@ -29,6 +29,22 @@
 
 ## Unreleased
 
+### To 2.2.0
+
+Standard hosts: **no configuration change**. The admin keeps flushing its writes on the entity manager that maps the
+bundle entities, your default one with `auto_mapping` or the bundle mapping on it.
+
+- Behaviour change for kept-alive workers (FrankenPHP without kernel reset, no services resetter): the bundle no
+  longer resets your default entity manager when a failed flush closed it. Keep Symfony's services resetter (default)
+  or reset your managers yourself; or move the bundle to its own manager with `doctrine.entity_manager`, which the
+  bundle then recovers and clears itself.
+- New optional `doctrine.entity_manager: <name>`: declare that manager under `doctrine.orm.entity_managers` (no
+  `mappings` needed: the bundle adds its own), keep `default_entity_manager` on your own default, and create or migrate
+  the bundle tables on that manager's connection. An unknown name fails the container build.
+- New ID-only events (`Nowo\PageLayoutKitBundle\Event\*`) and `PageLayoutProviderInterface`: nothing to migrate.
+- If you construct the admin controllers or `PageBlockMigrator` yourself, they accept a new optional last argument
+  `?PageLayoutTransaction $transaction`; without it they flush as before and dispatch no events.
+
 ## To 2.1.1
 
 From **2.1.0**:

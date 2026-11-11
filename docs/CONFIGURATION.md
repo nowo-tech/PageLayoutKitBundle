@@ -31,7 +31,8 @@ nowo_page_layout_kit:
         # css_framework: deprecated since 2.1 (the pages use nowo_ui_kit.css_framework)
     doctrine:
         table_prefix: ''
-        connection: default
+        entity_manager: null   # 2.2: manager that maps the bundle entities (null: resolved by entity class)
+        connection: default    # informational only, never wired to Doctrine
     html:
         sanitize:
             strategy: allowlist # none | strip | allowlist | service
@@ -90,7 +91,8 @@ block page (`admin/blocks/edit_stub.html.twig`) the show scaffold; see [TEMPLATE
 | Key | Default | Description |
 | --- | --- | --- |
 | `table_prefix` | `''` | Prefix applied to all bundle entity tables through `TablePrefixListener`. The batch SQL loader (`PageBlockSqlRepository`) resolves table names from Doctrine metadata, so the prefix also applies to native queries. Column names assume Symfony's default underscore naming strategy. |
-| `connection` | `default` | Connection name recorded in configuration for host alignment. The current release mainly relies on standard Doctrine mapping plus optional table prefixing. |
+| `entity_manager` | `null` | **2.2.** Doctrine entity manager that maps the bundle entities. `null`: the manager returned by `getManagerForClass()` for the bundle entities (your default one in a standard host). When set, the entities are mapped on that manager **only** (also removed from an `auto_mapping: true` default), every bundle read and write uses it, the bundle recovers it when a failed write closed it and clears it at the end of each request / message / command. The build fails when the manager does not exist or does not map the entities. |
+| `connection` | `default` | Informational only: stored as a parameter, never wired to Doctrine. Use `entity_manager` to put the bundle entities on another manager / connection. |
 
 Example:
 

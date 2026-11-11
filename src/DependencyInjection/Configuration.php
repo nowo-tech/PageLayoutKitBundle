@@ -14,7 +14,9 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use function array_diff_key;
 use function array_keys;
 use function implode;
+use function is_string;
 use function sprintf;
+use function trim;
 
 /**
  * Validates and normalizes `nowo_page_layout_kit` configuration.
@@ -112,7 +114,19 @@ final class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('table_prefix')->defaultValue('')->end()
-                        ->scalarNode('connection')->defaultValue('default')->end()
+                        ->scalarNode('connection')
+                            ->defaultValue('default')
+                            ->info('Informational only (stored as a parameter, never wired to Doctrine). To put the bundle entities on another manager / connection use entity_manager (2.2).')
+                        ->end()
+                        ->scalarNode('entity_manager')
+                            ->defaultNull()
+                            ->info('Doctrine entity manager that maps the bundle entities (2.2). Null (default): the manager returned by getManagerForClass() for the bundle entities, the default one in a standard host. When set, the bundle entities are mapped on that manager ONLY, every read and write uses it, and the bundle recovers (resets) it when a failed write closed it; the build fails when the manager does not exist.')
+                            ->validate()
+                                ->ifTrue(static fn (mixed $v): bool => $v !== null && (!is_string($v) || trim($v) === ''))
+                                ->thenInvalid('doctrine.entity_manager must be a non-empty entity manager name or null.')
+                            ->end()
+                        ->end()
+
                     ->end()
                 ->end()
                 ->arrayNode('html')

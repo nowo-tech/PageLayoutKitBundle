@@ -7,8 +7,10 @@ namespace Nowo\PageLayoutKitBundle\Controller\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\PageLayoutKitBundle\Controller\RequiresValidFormTrait;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Event\PageLayoutChangedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
@@ -20,8 +22,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function in_array;
 use function sprintf;
+use function usort;
 
 /**
  * Admin UI for ordering enabled page layout entries (home/contact).
@@ -37,6 +43,7 @@ final class PageLayoutController extends AbstractController
         private readonly ?PublicPageUrlResolver $publicPageUrls = null,
         private readonly ?TranslatorInterface $translator = null,
         private readonly PageLayoutKitPages $pages = new PageLayoutKitPages(),
+        private readonly ?PageLayoutTransaction $transaction = null,
     ) {
     }
 
@@ -53,7 +60,7 @@ final class PageLayoutController extends AbstractController
         $reorderForm = $this->createReorderForm($pageKey, $entries);
 
         if ($request->isMethod('POST')) {
-            $this->reorder($request, $entries, $reorderForm);
+            $this->reorder($request, $pageKey, $entries, $reorderForm);
 
             return $this->redirectToRoute('admin_page_layout', ['pageKey' => $pageKey]);
         }
@@ -100,14 +107,23 @@ final class PageLayoutController extends AbstractController
      * @param list<PageLayoutEntry> $entries
      * @param FormInterface<PageLayoutReorderData|null> $reorderForm
      */
-    private function reorder(Request $request, array $entries, FormInterface $reorderForm): void
+    private function reorder(Request $request, string $pageKey, array $entries, FormInterface $reorderForm): void
     {
         $reorderForm->handleRequest($request);
         $this->requireValidForm($reorderForm);
 
         $reorderForm->getData()?->applyToEntries($entries);
 
-        $this->entityManager->flush();
+        // 2.2 (rules 6/7): the manager that maps the bundle entities, then an ID-only event after the commit.
+        if ($this->transaction instanceof PageLayoutTransaction) {
+            usort($entries, static fn (PageLayoutEntry $a, PageLayoutEntry $b): int => $a->getPosition() <=> $b->getPosition());
+            $this->transaction->commit(new PageLayoutChangedEvent($pageKey, array_values(array_filter(
+                array_map(static fn (PageLayoutEntry $entry): ?int => $entry->getId(), $entries),
+                static fn (?int $id): bool => $id !== null,
+            ))));
+        } else {
+            $this->entityManager->flush();
+        }
         $this->addFlash('success', $this->translator?->trans('admin.flash.reordered', [], 'NowoPageLayoutKitBundle') ?? 'Order updated.');
     }
 }

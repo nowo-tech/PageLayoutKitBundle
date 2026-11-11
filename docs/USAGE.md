@@ -6,6 +6,7 @@ How to manage ordered page blocks, render them publicly, and enable inline CMS e
 
 - [Admin layout management](#admin-layout-management)
 - [Public rendering with PageBlockProvider](#public-rendering-with-pageblockprovider)
+- [Standard Symfony and DDD / hexagonal hosts](#standard-symfony-and-ddd--hexagonal-hosts)
 - [Twig rendering](#twig-rendering)
 - [Inline CMS modals](#inline-cms-modals)
 - [Custom access logic](#custom-access-logic)
@@ -26,7 +27,7 @@ The screen lists the enabled `PageLayoutEntry` rows for that page and lets edito
 
 ## Public rendering with PageBlockProvider
 
-Inject `PageBlockProvider` into your controller or application service:
+Inject `PageBlockProvider` (or, since 2.2, `PageLayoutProviderInterface`) into your controller or application service:
 
 ```php
 use Nowo\PageLayoutKitBundle\Service\PageBlockProvider;
@@ -57,6 +58,53 @@ final class HomeController extends AbstractController
 - `templateName()`
 
 `pageMeta()` extracts page title and description from the resolved layout, with locale fallback.
+
+## Standard Symfony and DDD / hexagonal hosts
+
+Both paths are supported (2.2); the standard one is the zero-config default.
+
+**Standard Symfony host.** Nothing to configure: the admin UI and the migration command write the bundle entities on
+the entity manager that maps them (your default one) and flush right away. React to changes with the ID-only events:
+
+```php
+use Nowo\PageLayoutKitBundle\Event\PageLayoutChangedEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+
+#[AsEventListener]
+final class PurgeLayoutCache
+{
+    public function __invoke(PageLayoutChangedEvent $event): void
+    {
+        // $event->pageKey, $event->entryIds — scalars only
+    }
+}
+```
+
+Events (`Nowo\PageLayoutKitBundle\Event`): `PageLayoutChangedEvent`, `PageBlockUpdatedEvent`,
+`PageBlocksMigratedEvent`. They are dispatched after the commit, never inside a flush or an open transaction.
+
+**DDD / hexagonal host.** Read layouts through `PageLayoutProviderInterface` (DTOs by page key, no entity), react to
+the events, and optionally keep the bundle tables on their own entity manager:
+
+```yaml
+nowo_page_layout_kit:
+    doctrine:
+        entity_manager: page_layout   # maps ONLY the bundle entities; your managers are never flushed, reset or cleared
+```
+
+- With `entity_manager`, the bundle entities are mapped on that manager only (removed from the others, including an
+  `auto_mapping: true` default). In a kept-alive kernel the bundle resets that manager when a failed write closed it
+  and clears it at the end of every request, message and command.
+- Without it, the bundle uses the manager returned by `getManagerForClass()` for its entities and never resets or
+  clears it (the host owns it).
+- All writes come from the bundle's own admin UI and migration command, which own their unit of work, so there is no
+  "host controls the transaction" mode. If you wrap them in your own transaction the events follow it: dropped when it
+  rolls back, dispatched after your commit (`PageLayoutPendingEventsInterface::dispatchPending()`, the next flush, or
+  the end of the request / message / command).
+- `entity_manager` naming your default manager (e.g. `default`) only selects it: the bundle never resets or clears
+  your default manager.
+- XML-mapped hosts: the bundle entities keep their own attribute mapping; register it with `auto_mapping` or an
+  explicit `NowoPageLayoutKitBundle` mapping when `auto_mapping` is off. There is no host entity to extend.
 
 ## Twig rendering
 

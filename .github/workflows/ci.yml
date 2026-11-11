@@ -229,6 +229,10 @@ jobs:
       - name: PHPStan (level and ignoreErrors from phpstan.neon.dist; fails the build on any error)
         run: composer phpstan --no-interaction
 
+      # FrankenPHP worker-state audit (REQ-CS-008): shared services must not keep request state.
+      - name: Igor (worker-state audit)
+        run: composer igor
+
   frontend:
     name: Frontend (Vitest + Vite build)
     runs-on: ubuntu-latest

@@ -34,6 +34,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Target 2.2.0 (architecture bar W1: standard Symfony and DDD hosts, rules 1, 4, 6 and 7).
+
+### Added
+
+- `doctrine.entity_manager` (default `null`): the Doctrine entity manager that maps the bundle entities. When set, the
+  entities are mapped on that manager ONLY (`PageLayoutEntityManagerPass` removes them from every other manager,
+  including an `auto_mapping: true` default), every bundle read and write uses it (admin, migrator, batch SQL loader),
+  and the build fails with a clear message when the manager does not exist or does not map the entities.
+- ID-only write events in `Nowo\PageLayoutKitBundle\Event`, dispatched after the real commit (never inside a flush or
+  an open transaction, never for a rolled-back write: `AfterCommitMiddleware` on the bundle connection and a
+  per-transaction outbox drop the events of a rolled-back transaction or savepoint): `PageLayoutChangedEvent` (page key + entry IDs in the new order), `PageBlockUpdatedEvent`
+  (block type, block ID, locale), `PageBlocksMigratedEvent` (page keys, forced).
+- `PageLayoutProviderInterface` (implemented by `PageBlockProvider`, autowirable): `getLayout()`, `pageMeta()`,
+  `hasLayout()`.
+- `PageLayoutPendingEventsInterface` (`dispatchPending()`, `countPending()`) for hosts that wrap bundle writes in their
+  own transaction.
+- CI runs `composer igor` (worker-state audit, REQ-CS-008).
+
+### Changed
+
+- Rule 6: the admin controllers, `PageBlockMigrator` and `PageBlockSqlRepository` used the autowired *default* entity
+  manager; they now use the manager that maps the bundle entities (`doctrine.entity_manager`, else
+  `getManagerForClass()`), which is still the default one in a standard host.
+- `PageLayoutKitEntityManagerRecoverySubscriber` resets and clears only the bundle's OWN manager
+  (`doctrine.entity_manager` when it is not the host's `default_entity_manager`): reset at the next request / message when a failed write closed it, cleared at the end
+  of every request, message and command. Without the option it no longer resets the host manager that maps
+  `PageLayoutEntry` (the host default one); that is the host's job (DoctrineBundle `kernel.reset`).
+
 ## [2.1.1] - 2026-10-30
 
 Security: Bundle routes are opt-in again: controllers are no longer autoconfigured, so a host's routing.controllers import does not expose them (REQ-SF-004 rule 7). See [UPGRADING](UPGRADING.md#to-211).
