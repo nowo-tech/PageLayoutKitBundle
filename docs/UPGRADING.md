@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.2.0](#to-220)
 - [To 2.1.1](#to-211)
 - [To 2.1.0](#to-210)
 - [To 2.0.0](#to-200)
@@ -29,7 +30,7 @@
 
 ## Unreleased
 
-### To 2.2.0
+## To 2.2.0
 
 Standard hosts: **no configuration change**. The admin keeps flushing its writes on the entity manager that maps the
 bundle entities, your default one with `auto_mapping` or the bundle mapping on it.

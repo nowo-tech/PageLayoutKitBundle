@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.2.0] - 2026-11-11](#220---2026-11-11)
 - [[2.1.1] - 2026-10-30](#211---2026-10-30)
 - [[2.1.0] - 2026-10-30](#210---2026-10-30)
 - [[2.0.0] - 2026-10-30](#200---2026-10-30)
@@ -34,7 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Target 2.2.0 (architecture bar W1: standard Symfony and DDD hosts, rules 1, 4, 6 and 7).
+## [2.2.0] - 2026-11-11
+
+Admin, migrator and loader use the manager that maps the bundle entities (or a dedicated doctrine.entity_manager); layout events with IDs only after the outermost commit; recovery never resets the host's default manager. See [UPGRADING](https://github.com/nowo-tech/PageLayoutKitBundle/blob/v2.2.0/docs/UPGRADING.md#to-220).
+
 
 ### Added
 
