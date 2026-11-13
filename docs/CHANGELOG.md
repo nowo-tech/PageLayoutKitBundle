@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.2.1] - 2026-11-13](#221---2026-11-13)
 - [[2.2.0] - 2026-11-11](#220---2026-11-11)
 - [[2.1.1] - 2026-10-30](#211---2026-10-30)
 - [[2.1.0] - 2026-10-30](#210---2026-10-30)
@@ -35,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-11-13
+
 ### Fixed
 
 - DoctrineBundle 3.4: bundle entities resolved to the default manager when a dedicated manager is configured.
@@ -52,7 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2026-11-11
 
 Admin, migrator and loader use the manager that maps the bundle entities (or a dedicated doctrine.entity_manager); layout events with IDs only after the outermost commit; recovery never resets the host's default manager. See [UPGRADING](https://github.com/nowo-tech/PageLayoutKitBundle/blob/v2.2.0/docs/UPGRADING.md#to-220).
-
 
 ### Added
 
