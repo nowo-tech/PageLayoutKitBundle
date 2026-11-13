@@ -35,6 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- DoctrineBundle 3.4: bundle entities resolved to the default manager when a dedicated manager is configured.
+  DoctrineBundle 3.4 `auto_discover_entities` (on by default for a manager without `mappings` and `auto_mapping`, with
+  `ContainerBuilder::findTaggedResourceIds()` and doctrine/orm 3.6+) gives that manager's metadata driver chain a
+  default attribute driver, which claims every `#[ORM\Entity]` class. With `doctrine.entity_manager` set,
+  `getManagerForClass()` then answered the host's default manager, and the bundle repositories (and any host
+  `EntityType`, `UniqueEntity` or `MapEntity` on the entities) queried its database. `PageLayoutEntityManagerPass` now
+  also registers a driver that maps nothing for the bundle entity namespace on every other manager
+  (`ExcludedEntityNamespaceDriver`, first in the chain, only the public `addDriver()` of the
+  `doctrine.orm.<manager>_metadata_driver` chain), so the entities resolve to the configured manager on DoctrineBundle
+  2.x, 3.3 and 3.4+. Without the option nothing changes. Affected in practice: 2.2.0 to 2.2.0 (the only release with
+  `doctrine.entity_manager`; it allows `doctrine/doctrine-bundle` `^3.0`) with DoctrineBundle 3.4.0 or later.
+
 ## [2.2.0] - 2026-11-11
 
 Admin, migrator and loader use the manager that maps the bundle entities (or a dedicated doctrine.entity_manager); layout events with IDs only after the outermost commit; recovery never resets the host's default manager. See [UPGRADING](https://github.com/nowo-tech/PageLayoutKitBundle/blob/v2.2.0/docs/UPGRADING.md#to-220).

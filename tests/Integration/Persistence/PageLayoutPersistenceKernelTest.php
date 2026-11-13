@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Integration\Persistence;
 
+use Closure;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Event\PageLayoutChangedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
+use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Tests\Fixtures\Host\HostNote;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -93,6 +96,49 @@ final class PageLayoutPersistenceKernelTest extends TestCase
 
         $layout = $this->httpKernel($container)->handle(Request::create('/t/layout'));
         self::assertSame(200, $layout->getStatusCode(), 'public read (batch SQL) runs on the bundle connection');
+    }
+
+    /**
+     * DoctrineBundle 3.4 regression: `auto_discover_entities` (on by default for a manager without `mappings` and
+     * `auto_mapping`) gives the host manager's chain a default attribute driver, which claims every `#[ORM\Entity]`
+     * class, so `getManagerForClass()` answered the host manager and the repositories queried its database. The
+     * explicit catch-all default driver reproduces it on every DoctrineBundle version.
+     */
+    #[DataProvider('hostManagersWithADefaultDriver')]
+    public function testDedicatedManagerWinsOverADefaultDriverOfTheHostManager(bool $explicitDefaultDriver): void
+    {
+        $doctrine                                      = $this->twoManagers(autoMapping: false);
+        $doctrine['orm']['entity_managers']['default'] = ['connection' => 'default', 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware'];
+        $resolvedBeforeInit                            = [];
+        $container                                     = $this->boot($doctrine, ['entity_manager' => 'page_layout'], $explicitDefaultDriver, static function (ManagerRegistry $registry) use (&$resolvedBeforeInit): void {
+            // No manager is initialized yet: DoctrineBundle 3.4 asks the metadata drivers.
+            $resolvedBeforeInit = [$registry->getManagerForClass(PageLayoutEntry::class), $registry->getManagerForClass(PageHeroBlock::class)];
+        });
+        $registry = $container->get('doctrine');
+        self::assertInstanceOf(ManagerRegistry::class, $registry);
+        $default = $this->manager($container, 'default');
+        $bundle  = $this->manager($container, 'page_layout');
+
+        self::assertSame([$bundle, $bundle], $resolvedBeforeInit);
+        self::assertTrue($default->getMetadataFactory()->isTransient(PageLayoutEntry::class), 'not mapped on the host manager');
+        self::assertSame($bundle, $registry->getManagerForClass(PageLayoutEntry::class));
+        self::assertSame($bundle, $registry->getManagerForClass(PageHeroBlock::class));
+
+        self::assertSame(302, $this->reorder($container, [7, 3])->getStatusCode());
+        self::assertSame([7, 3], $this->positions($bundle));
+        self::assertNotContains($bundle->getClassMetadata(PageLayoutEntry::class)->getTableName(), $default->getConnection()->createSchemaManager()->listTableNames());
+        $repository = $container->get(PageLayoutEntryRepository::class);
+        self::assertInstanceOf(PageLayoutEntryRepository::class, $repository);
+        self::assertCount(2, $repository->findEnabledByPageKey('home'), 'the repository reads the bundle database');
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function hostManagersWithADefaultDriver(): iterable
+    {
+        yield 'host manager without mappings (DoctrineBundle 3.4 auto-discovery)' => [false];
+        yield 'host manager with a catch-all default driver' => [true];
     }
 
     public function testManagersWithoutDefaultEntityManagerKeepTheHostDefault(): void
@@ -291,16 +337,20 @@ final class PageLayoutPersistenceKernelTest extends TestCase
     /**
      * @param array<string, mixed> $doctrine
      * @param array<string, mixed> $bundleDoctrine
+     * @param (Closure(ManagerRegistry): void)|null $beforeSchema runs before any manager is initialized
      */
-    private function boot(array $doctrine, array $bundleDoctrine): ContainerInterface
+    private function boot(array $doctrine, array $bundleDoctrine, bool $hostDefaultDriver = false, ?Closure $beforeSchema = null): ContainerInterface
     {
-        $this->kernel = new PersistenceTestKernel($doctrine, $bundleDoctrine);
+        $this->kernel = new PersistenceTestKernel($doctrine, $bundleDoctrine, $hostDefaultDriver);
         $this->kernel->boot();
         $container = $this->kernel->getContainer()->get('test.service_container');
         self::assertInstanceOf(ContainerInterface::class, $container);
 
         $registry = $container->get('doctrine');
         self::assertInstanceOf(ManagerRegistry::class, $registry);
+        if ($beforeSchema instanceof Closure) {
+            $beforeSchema($registry);
+        }
         foreach ($registry->getManagers() as $manager) {
             self::assertInstanceOf(EntityManagerInterface::class, $manager);
             $tool = new SchemaTool($manager);
