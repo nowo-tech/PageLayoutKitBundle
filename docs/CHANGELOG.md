@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Spec Kit baseline: `code-inventory.md` maps all 139 `src/` files again (the 2.2 outbox, write events, entity-manager isolation, UI page contract and asset build outputs were missing; the stale `cms_modal_controller.ts` path is fixed) and `spec.md` gains `FR-ORM-003` and `FR-EVT-001` (REQ-SPECKIT-001/003).
+
 ## [2.2.1] - 2026-11-13
 
 ### Fixed
