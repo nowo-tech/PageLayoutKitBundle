@@ -101,6 +101,8 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | FR-ORM-002 | `table_prefix` prefixes bundle entity tables when configured |
 | FR-I18N-001 | Locale-aware block loading uses requested locale with fallback to `default_locale` |
 | FR-I18N-002 | Admin / CMS UI strings ship in domain `NowoPageLayoutKitBundle` for `de`, `en`, `es`, `fr`, `it`, `nl`, `pt` |
+| FR-ORM-003 | An optional dedicated entity manager (`doctrine.entity_manager`) maps the bundle entities; every other manager maps nothing for the bundle namespace (2.2) |
+| FR-EVT-001 | Write events (`PageLayoutChangedEvent`, `PageBlockUpdatedEvent`, `PageBlocksMigratedEvent`, scalars only) are recorded in a per-transaction outbox and dispatched only after the real commit of the bundle connection (2.2) |
 
 ### Twig integration (`FR-TWIG-*`)
 
@@ -130,7 +132,7 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | SC-01 | Editors can open `/admin/pages/home/layout` and reorder persisted blocks |
 | SC-02 | A host page can inject `PageBlockProvider` and render the returned blocks through Twig |
 | SC-03 | Legacy content can be migrated with `nowo:page-layout:migrate` |
-| SC-04 | `code-inventory.md` maps **117/117** tracked files under `src/` (including worker-mode and HTML-sanitize surfaces) |
+| SC-04 | `code-inventory.md` maps **139/139** tracked files under `src/` (including worker-mode and HTML-sanitize surfaces) |
 | SC-05 | The Symfony 8 demo boots and answers on `http://localhost:8127` |
 | SC-06 | Bundle-owned public and admin flows remain correct under FrankenPHP worker mode without kernel reset (FR-WRK-001) |
 

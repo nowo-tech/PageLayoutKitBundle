@@ -2,7 +2,7 @@
 
 **Baseline spec:** [`spec.md`](spec.md)  
 **Package:** `nowo-tech/page-layout-kit-bundle`  
-**Last audited:** 2026-10-20 (public URL resolver, translation catalogues; removed _locale_tabs view)
+**Last audited:** 2026-11-16 (2.2 outbox, entity manager isolation, UI page contract, asset build outputs)
 
 Maps production files under `src/` (baseline inventory kept in sync for worker-mode and HTML-sanitize surfaces).
 
@@ -34,6 +34,9 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `DependencyInjection/NowoPageLayoutKitExtension.php` | Loads services and publishes parameters | FR-CFG-001, FR-DI-001, FR-SEC-001 |
 | `DependencyInjection/TablePrefixListener.php` | Applies configured table prefix | FR-ORM-002 |
 | `DependencyInjection/Compiler/TwigPathsPass.php` | Registers Twig namespace and host override precedence | FR-TWIG-001, FR-TWIG-002 |
+| `DependencyInjection/Compiler/CsrfProtectionPass.php` | Fails closed when the layout admin runs without form CSRF protection | FR-ADM-003 |
+| `DependencyInjection/Compiler/PageLayoutEntityManagerPass.php` | Keeps the bundle entities on `doctrine.entity_manager` only (2.2) | FR-ORM-003 |
+| `DependencyInjection/Compiler/AfterCommitMiddlewarePass.php` | Attaches the after-commit middleware to the bundle manager's connection only | FR-EVT-001 |
 
 ## Entities
 
@@ -84,6 +87,7 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Security/Html/StripPageLayoutHtmlSanitizer.php` | Strip-tags sanitizer | FR-SEC-004 |
 | `Security/Html/AllowlistPageLayoutHtmlSanitizer.php` | Allowlist sanitizer | FR-SEC-004 |
 | `Enum/HtmlSanitizeStrategy.php` | Sanitize strategy enum | FR-SEC-004 |
+| `Security/Html/PageLayoutUrlAttributeSanitizer.php` | Bundle URL policy on top of symfony/html-sanitizer URL checks | FR-SEC-004 |
 
 ## Forms
 
@@ -116,6 +120,7 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Service/PageBlockRegistry.php` | Loads typed block aggregates by type and id | FR-ADM-002, FR-ORM-001, FR-WRK-001 |
 | `Service/PageBlockMigrator.php` | Converts legacy content into typed blocks and layout entries | FR-LEG-002, FR-CMP-001 |
 | `Service/PublicPageUrlResolver.php` | Public URL of a page key (view links, redirects) | FR-ADM-004 |
+| `Service/PageLayoutProviderInterface.php` | Read port: ordered block DTOs by page key, no entity (2.2) | FR-REN-001 |
 
 ## Repositories
 
@@ -153,7 +158,10 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | --- | --- | --- |
 | `Resources/config/routing.yaml` | Attribute-route import | FR-DI-001 |
 | `Resources/config/services.yaml` | Service and form wiring | FR-DI-001 |
-| `Resources/assets/cms_modal_controller.ts` | Stimulus controller for inline CMS modal flow | FR-ADM-002 |
+| `Resources/assets/src/cms_modal_controller.ts` | Stimulus controller for inline CMS modal flow | FR-ADM-002 |
+| `Resources/assets/src/cms_modal_controller.test.ts` | Co-located Vitest suite of the modal controller (FR-TEST, not shipped to hosts at runtime) | FR-ADM-002, FR-QA-001 |
+| `Resources/public/js/cms_modal_controller.js` | Build output (ESM) of `cms_modal_controller.ts` | FR-ADM-002 |
+| `Resources/public/js/cms_modal_controller.iife.js` | Build output (IIFE) of `cms_modal_controller.ts` | FR-ADM-002 |
 
 ## Resources — admin Twig views
 
@@ -164,6 +172,7 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Resources/views/admin/layout/index.html.twig` | Reorder page layout screen | FR-ADM-001 |
 | `Resources/views/admin/blocks/_modal_form.html.twig` | Block modal body partial | FR-ADM-002 |
 | `Resources/views/admin/blocks/edit_stub.html.twig` | Block edit stub page | FR-ADM-002 |
+| `Resources/views/admin/_legacy_layout.html.twig` | BC bridge for a 2.0 host admin layout (deprecated since 2.1, removed in 3.0) | FR-CFG-002 |
 
 ## Resources — public block Twig views
 
@@ -203,6 +212,34 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Resources/translations/NowoPageLayoutKitBundle.nl.yaml` | UI strings (nl) | FR-I18N-002 |
 | `Resources/translations/NowoPageLayoutKitBundle.pt.yaml` | UI strings (pt) | FR-I18N-002 |
 
+## Write events and transaction outbox
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Event/PageLayoutChangedEvent.php` | Block order of a page layout changed (scalars only) | FR-EVT-001 |
+| `Event/PageBlockUpdatedEvent.php` | A page block was saved from the inline editor (scalars only) | FR-EVT-001 |
+| `Event/PageBlocksMigratedEvent.php` | Legacy content migrated into typed blocks (scalars only) | FR-EVT-001, FR-LEG-002 |
+| `Persistence/AfterCommitMiddleware.php` | DBAL middleware reporting real commits / rollbacks to observers | FR-EVT-001 |
+| `Persistence/AfterCommitDriver.php` | Driver of the after-commit middleware | FR-EVT-001 |
+| `Persistence/AfterCommitConnection.php` | Connection reporting the real transaction and savepoints | FR-EVT-001 |
+| `Persistence/TransactionObserverInterface.php` | Observer contract of the after-commit middleware | FR-EVT-001 |
+| `Persistence/PageLayoutOutbox.php` | Per-transaction outbox of the bundle write events | FR-EVT-001, FR-WRK-001 |
+| `Persistence/PageLayoutPendingEventsInterface.php` | Write events recorded and not dispatched yet | FR-EVT-001 |
+| `Persistence/PageLayoutTransaction.php` | Unit-of-work boundary of the bundle's own writes | FR-EVT-001, FR-WRK-001 |
+
+## Entity manager isolation
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Persistence/PageLayoutEntityManagerFactory.php` | Resolves the manager that maps the bundle entities when none is configured | FR-ORM-003 |
+| `Persistence/ExcludedEntityNamespaceDriver.php` | Maps nothing for the bundle namespace on every other entity manager | FR-ORM-003 |
+
+## UI page contract
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Ui/PageLayoutKitPages.php` | UiKit page view models of the admin screens (REQ-UI-003) | FR-ADM-001, FR-ADM-002 |
+
 ## Coverage summary
 
 | Category | Files | Mapped |
@@ -210,17 +247,20 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | Bundle entry | 1 | 1 |
 | Command | 1 | 1 |
 | Controllers | 3 | 3 |
-| Dependency injection and compiler | 4 | 4 |
+| Dependency injection and compiler | 7 | 7 |
 | Entities | 17 | 17 |
 | Enums, locale, and model helpers | 5 | 5 |
-| Event subscriber and security | 13 | 13 |
+| Event subscriber and security | 14 | 14 |
 | Forms | 17 | 17 |
-| Services | 5 | 5 |
+| Services | 6 | 6 |
 | Repositories | 19 | 19 |
 | Twig extension | 1 | 1 |
-| Resources — config and assets | 3 | 3 |
-| Resources — admin Twig views | 5 | 5 |
+| Resources — config and assets | 6 | 6 |
+| Resources — admin Twig views | 6 | 6 |
 | Resources — public block Twig views | 7 | 7 |
 | Resources — CMS Twig views | 9 | 9 |
 | Resources — translations | 7 | 7 |
-| **Total production sources** | **117** | **117** |
+| Write events and transaction outbox | 10 | 10 |
+| Entity manager isolation | 2 | 2 |
+| UI page contract | 1 | 1 |
+| **Total production sources** | **139** | **139** |
