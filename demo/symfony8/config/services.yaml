@@ -7,6 +7,10 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    # FormKit form types need the container (the FormOptionsTrait collaborators are injected by autoconfiguration).
+    App\Form\:
+        resource: '../src/Form/'
+
     App\PageLayout\DemoPageContentProvider: ~
 
     # Seed source for `nowo:page-layout:migrate --if-empty` (run by `make up`).

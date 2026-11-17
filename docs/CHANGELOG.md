@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Demo: the shell is UiKit's admin layout with the UiKit masthead and flashes (no Bootstrap or icon CDN, no global token overrides), the pages use UiKit classes, `demo/symfony8/composer.json` requires `nowo-tech/ui-kit-bundle` ^2.53 (REQ-DEMO-014).
+- Demo: the login form is a FormKit form (profile `demo`) (REQ-DEMO-015).
+
 ### Documentation
 
 - Spec Kit baseline: `code-inventory.md` maps all 139 `src/` files again (the 2.2 outbox, write events, entity-manager isolation, UI page contract and asset build outputs were missing; the stale `cms_modal_controller.ts` path is fixed) and `spec.md` gains `FR-ORM-003` and `FR-EVT-001` (REQ-SPECKIT-001/003).

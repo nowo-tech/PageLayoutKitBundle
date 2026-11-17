@@ -18,7 +18,7 @@ test.describe('PageLayoutKit screenshots', () => {
   test('page-blocks — public page composed from ordered blocks', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/');
-    await expect(page.locator('main article.card').first()).toBeVisible();
+    await expect(page.locator('main article.nowo-ui-card').first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Edit block' }).first()).toBeVisible();
     await waitForWebProfiler(page);
     await page.screenshot({ path: resolve(outDir, 'page-blocks.png') });
