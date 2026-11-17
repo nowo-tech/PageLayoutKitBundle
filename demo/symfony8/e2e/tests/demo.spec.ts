@@ -6,7 +6,7 @@ test.describe('PageLayoutKit demo', () => {
   test('public home renders the seeded page blocks', async ({ page }) => {
     const response = await page.goto('/');
     expect(response?.ok()).toBeTruthy();
-    await expect(page.locator('main article.card').first()).toBeVisible();
+    await expect(page.locator('main article.nowo-ui-card').first()).toBeVisible();
     await expect(page.locator('main article h2', { hasText: /hero/i }).first()).toBeVisible();
   });
 

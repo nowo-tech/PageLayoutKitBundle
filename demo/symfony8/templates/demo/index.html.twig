@@ -3,124 +3,109 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block body %}
-<div class="row g-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+    <section class="nowo-ui-card" data-testid="page-summary">
+        <div class="nowo-ui-card__body">
+            <span class="nowo-ui-badge nowo-ui-badge--primary">{{ page_key }}</span>
+            <h1 class="nowo-ui-card__title">{{ page_title }}</h1>
+            <p class="nowo-ui-muted">{{ page_description }}</p>
+            <div class="nowo-ui-row-actions">
+                <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('admin_page_layout', {pageKey: page_key}) }}">Admin layout</a>
+                {% if not app.user %}
+                    <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('app_login') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {% if layout is empty %}
+        <div class="nowo-ui-flash nowo-ui-flash--info">
+            No page layout blocks are configured yet for <strong>{{ page_key }}</strong>.
+            Sign in with <code class="nowo-ui-code">admin</code> / <code class="nowo-ui-code">admin</code> and open the admin layout screen to add or reorder blocks.
+        </div>
+    {% else %}
+        {% for block in layout %}
+            <article class="nowo-ui-card" data-testid="page-block">
+                <div class="nowo-ui-card__header">
                     <div>
-                        <span class="badge text-bg-primary text-uppercase">{{ page_key }}</span>
-                        <h1 class="h3 mt-3 mb-2">{{ page_title }}</h1>
-                        <p class="text-muted mb-0">{{ page_description }}</p>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 align-content-start">
-                        <a class="btn btn-outline-primary" href="{{ path('admin_page_layout', {pageKey: page_key}) }}">Admin layout</a>
-                        {% if not app.user %}
-                            <a class="btn btn-primary" href="{{ path('app_login') }}">Login</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-xl-8">
-        {% if layout is empty %}
-            <div class="alert alert-info shadow-sm mb-0">
-                No page layout blocks are configured yet for <strong>{{ page_key }}</strong>.
-                Sign in with <code>admin</code> / <code>admin</code> and open the admin layout screen to add or reorder blocks.
-            </div>
-        {% else %}
-            <div class="d-grid gap-3">
-                {% for block in layout %}
-                    <article class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                                <div>
-                                    <h2 class="h5 mb-1 text-capitalize">{{ block.type.value|replace({'_': ' '}) }}</h2>
-                                    <p class="text-muted mb-0">
-                                        Block #{{ block.blockId }}
-                                        {% if block.sectionKey %}
-                                            · section <code>{{ block.sectionKey }}</code>
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                {% if app.user %}
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('admin_page_blocks_edit', {type: block.type.value, id: block.blockId}) }}">Edit block</a>
-                                {% endif %}
-                            </div>
-
-                            {% if block.type.value == 'hero' %}
-                                <h3 class="h4">{{ block.data.title|default('Untitled hero') }}</h3>
-                                {% if block.data.subtitle is defined and block.data.subtitle %}
-                                    <p class="mb-2">{{ block.data.subtitle }}</p>
-                                {% endif %}
-                                <div class="d-flex flex-wrap gap-2 text-muted small">
-                                    {% if block.data.eyebrow is defined and block.data.eyebrow %}<span>Eyebrow: {{ block.data.eyebrow }}</span>{% endif %}
-                                    {% if block.data.ctaPrimary is defined and block.data.ctaPrimary %}<span>Primary CTA: {{ block.data.ctaPrimary }}</span>{% endif %}
-                                    {% if block.data.ctaSecondary is defined and block.data.ctaSecondary %}<span>Secondary CTA: {{ block.data.ctaSecondary }}</span>{% endif %}
-                                </div>
-                            {% elseif block.type.value == 'text' %}
-                                <h3 class="h4">{{ block.data.title|default('Untitled text block') }}</h3>
-                                <div class="mb-0">{{ block.data.body|default('')|nl2br }}</div>
-                            {% elseif block.type.value == 'cards' %}
-                                <h3 class="h4">{{ block.data.title|default('Cards') }}</h3>
-                                <div class="row g-3">
-                                    {% for item in block.data.items|default([]) %}
-                                        <div class="col-md-6">
-                                            <div class="border rounded p-3 h-100">
-                                                <h4 class="h6">{{ item.title|default('Item') }}</h4>
-                                                <p class="mb-0 text-muted">{{ item.body|default('') }}</p>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% elseif block.type.value == 'list' %}
-                                <h3 class="h4">{{ block.data.title|default('List') }}</h3>
-                                <ul class="mb-0">
-                                    {% for item in block.data.items|default([]) %}
-                                        <li>{{ item.text|default('') }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% elseif block.type.value == 'cta' %}
-                                <h3 class="h4">{{ block.data.title|default('Call to action') }}</h3>
-                                <p class="mb-0">{{ block.data.body|default('') }}</p>
-                            {% elseif block.type.value == 'compare' %}
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="border rounded p-3 h-100">
-                                            <h3 class="h6 text-danger">{{ block.data.beforeLabel|default('Before') }}</h3>
-                                            <div class="mb-0">{{ block.data.beforeText|default('')|nl2br }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="border rounded p-3 h-100">
-                                            <h3 class="h6 text-success">{{ block.data.afterLabel|default('After') }}</h3>
-                                            <div class="mb-0">{{ block.data.afterText|default('')|nl2br }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <pre class="mb-0">{{ block.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                        <h2 class="nowo-ui-card__title">{{ block.type.value|replace({'_': ' '})|capitalize }}</h2>
+                        <p class="nowo-ui-muted">
+                            Block #{{ block.blockId }}
+                            {% if block.sectionKey %}
+                                · section <code class="nowo-ui-code">{{ block.sectionKey }}</code>
                             {% endif %}
+                        </p>
+                    </div>
+                    {% if app.user %}
+                        <a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="{{ path('admin_page_blocks_edit', {type: block.type.value, id: block.blockId}) }}">Edit block</a>
+                    {% endif %}
+                </div>
+                <div class="nowo-ui-card__body">
+                    {% if block.type.value == 'hero' %}
+                        <h3>{{ block.data.title|default('Untitled hero') }}</h3>
+                        {% if block.data.subtitle is defined and block.data.subtitle %}
+                            <p>{{ block.data.subtitle }}</p>
+                        {% endif %}
+                        <p class="nowo-ui-muted">
+                            {% if block.data.eyebrow is defined and block.data.eyebrow %}<span>Eyebrow: {{ block.data.eyebrow }}</span> {% endif %}
+                            {% if block.data.ctaPrimary is defined and block.data.ctaPrimary %}<span>Primary CTA: {{ block.data.ctaPrimary }}</span> {% endif %}
+                            {% if block.data.ctaSecondary is defined and block.data.ctaSecondary %}<span>Secondary CTA: {{ block.data.ctaSecondary }}</span>{% endif %}
+                        </p>
+                    {% elseif block.type.value == 'text' %}
+                        <h3>{{ block.data.title|default('Untitled text block') }}</h3>
+                        <div>{{ block.data.body|default('')|nl2br }}</div>
+                    {% elseif block.type.value == 'cards' %}
+                        <h3>{{ block.data.title|default('Cards') }}</h3>
+                        <div class="nowo-ui-cards">
+                            {% for item in block.data.items|default([]) %}
+                                <div class="nowo-ui-card">
+                                    <div class="nowo-ui-card__body">
+                                        <h4>{{ item.title|default('Item') }}</h4>
+                                        <p class="nowo-ui-muted">{{ item.body|default('') }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
+                    {% elseif block.type.value == 'list' %}
+                        <h3>{{ block.data.title|default('List') }}</h3>
+                        <ul>
+                            {% for item in block.data.items|default([]) %}
+                                <li>{{ item.text|default('') }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% elseif block.type.value == 'cta' %}
+                        <h3>{{ block.data.title|default('Call to action') }}</h3>
+                        <p>{{ block.data.body|default('') }}</p>
+                    {% elseif block.type.value == 'compare' %}
+                        <div class="nowo-ui-cards">
+                            <div class="nowo-ui-card">
+                                <div class="nowo-ui-card__body">
+                                    <h3>{{ block.data.beforeLabel|default('Before') }}</h3>
+                                    <div>{{ block.data.beforeText|default('')|nl2br }}</div>
+                                </div>
+                            </div>
+                            <div class="nowo-ui-card">
+                                <div class="nowo-ui-card__body">
+                                    <h3>{{ block.data.afterLabel|default('After') }}</h3>
+                                    <div>{{ block.data.afterText|default('')|nl2br }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <pre class="nowo-ui-code-block">{{ block.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    {% endif %}
 
-    <div class="col-12 col-xl-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h2 class="h5">Demo notes</h2>
-                <ul class="mb-0">
-                    <li>The bundle admin routes live under <code>/admin/pages/&lt;pageKey&gt;/layout</code>.</li>
-                    <li>This public demo renders stored block data with Bootstrap cards instead of the host app's private Twig components.</li>
-                    <li>Configured pages: <code>home</code> and <code>contact</code>.</li>
-                </ul>
-            </div>
+    <section class="nowo-ui-card">
+        <div class="nowo-ui-card__header"><h2 class="nowo-ui-card__title">Demo notes</h2></div>
+        <div class="nowo-ui-card__body">
+            <ul>
+                <li>The bundle admin routes live under <code class="nowo-ui-code">/admin/pages/&lt;pageKey&gt;/layout</code>.</li>
+                <li>This public demo renders stored block data with UiKit cards instead of the host app's private Twig components.</li>
+                <li>Configured pages: <code class="nowo-ui-code">home</code> and <code class="nowo-ui-code">contact</code>.</li>
+            </ul>
         </div>
-    </div>
-</div>
+    </section>
 {% endblock %}
