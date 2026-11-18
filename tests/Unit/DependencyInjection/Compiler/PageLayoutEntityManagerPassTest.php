@@ -6,7 +6,10 @@ namespace Nowo\PageLayoutKitBundle\Tests\Unit\DependencyInjection\Compiler;
 
 use Nowo\PageLayoutKitBundle\DependencyInjection\Compiler\PageLayoutEntityManagerPass;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
+use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
 use Nowo\PageLayoutKitBundle\Persistence\ExcludedEntityNamespaceDriver;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
+use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -94,6 +97,38 @@ final class PageLayoutEntityManagerPassTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage('does not map');
         new PageLayoutEntityManagerPass()->process($container);
+    }
+
+    /**
+     * 2.3 (REQ-RUNTIME-003 rule 2): the bundle's own manager gets the runner that may reset it after a failed unit;
+     * the host's default manager keeps PageLayoutTransaction's forHostEntityManager() default.
+     */
+    #[Test]
+    public function onlyTheBundleOwnManagerGetsTheResettingRunner(): void
+    {
+        $container = $this->container(['default' => 'x', 'page_builder' => 'y']);
+        $container->setDefinition('doctrine.orm.page_builder_metadata_driver', $this->chain(true, false));
+        $container->register(PageLayoutTransaction::class)->setArgument('$runner', null);
+        $container->register(PageLayoutKitEntityManagerRecoverySubscriber::class);
+        $container->setParameter('doctrine.default_entity_manager', 'default');
+
+        new PageLayoutEntityManagerPass()->process($container);
+
+        $runner = $container->getDefinition(PageLayoutTransaction::class)->getArgument('$runner');
+        self::assertInstanceOf(Definition::class, $runner);
+        self::assertSame([DoctrineTransactionRunner::class, 'forEntityManager'], $runner->getFactory());
+        self::assertSame('doctrine.orm.page_builder_entity_manager', (string) $runner->getArgument(0));
+        self::assertSame('doctrine', (string) $runner->getArgument(1));
+        self::assertSame('page_builder', $runner->getArgument(2));
+        self::assertSame('page_builder', $container->getDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)->getArgument('$managerName'));
+
+        $host = $this->container(['default' => 'x']);
+        $host->setParameter(NowoPageLayoutKitExtension::ENTITY_MANAGER_PARAMETER, 'default');
+        $host->setParameter('doctrine.default_entity_manager', 'default');
+        $host->setDefinition('doctrine.orm.default_metadata_driver', $this->chain(true, false));
+        $host->register(PageLayoutTransaction::class)->setArgument('$runner', null);
+        new PageLayoutEntityManagerPass()->process($host);
+        self::assertNull($host->getDefinition(PageLayoutTransaction::class)->getArgument('$runner'), 'never the resetting runner on the host default manager');
     }
 
     /**

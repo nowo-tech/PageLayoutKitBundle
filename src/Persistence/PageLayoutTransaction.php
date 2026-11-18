@@ -7,6 +7,9 @@ namespace Nowo\PageLayoutKitBundle\Persistence;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
+use Nowo\TransactionContract\TransactionRunnerInterface;
+use Nowo\TransactionContract\TransientStorageFailure;
+use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -33,6 +36,12 @@ use function count;
  * (also a failed one). Never inside a flush nor inside a transaction. Everything is dropped on `kernel.reset`
  * (FrankenPHP worker mode without kernel reset).
  *
+ * Write units that read before they write (the layout reorder, one page of the migration) go through {@see run()}
+ * (2.3, REQ-RUNTIME-003 rule 1): one transaction of nowo-tech/transaction-doctrine's runner, flushed before the
+ * commit. On the host's manager the runner is `forHostEntityManager()` (an open manager is never closed, cleared or
+ * reset; it refuses to start while the manager holds unflushed changes); on the bundle's own manager
+ * (`doctrine.entity_manager`) it is `forEntityManager()`, wired by PageLayoutEntityManagerPass.
+ *
  * @internal Use {@see PageLayoutPendingEventsInterface}
  */
 #[AsDoctrineListener(event: Events::postFlush)]
@@ -43,6 +52,7 @@ final readonly class PageLayoutTransaction implements PageLayoutPendingEventsInt
         private ?EventDispatcherInterface $eventDispatcher = null,
         private LoggerInterface $logger = new NullLogger(),
         private PageLayoutOutbox $outbox = new PageLayoutOutbox(),
+        private ?TransactionRunnerInterface $runner = null,
     ) {
     }
 
@@ -66,6 +76,25 @@ final readonly class PageLayoutTransaction implements PageLayoutPendingEventsInt
     {
         $this->entityManager->flush();
         $this->record(...$events);
+    }
+
+    /**
+     * Runs one write unit in one transaction of the bundle's connection and flushes the bundle entity manager before
+     * the commit. Nothing of a failed unit stays pending; a deadlock, lock wait timeout or serialization failure is
+     * rethrown as {@see TransientStorageFailure} (answered 409 + CONFLICT_001 / CONFLICT_002 on the bundle's routes).
+     * The caller records the unit's events once this returned.
+     *
+     * @template T
+     *
+     * @param callable(): T $operation Loads what it changes (one attempt, no replay)
+     *
+     * @throws TransientStorageFailure When the storage failed transiently (nothing of the unit is committed)
+     *
+     * @return T
+     */
+    public function run(callable $operation): mixed
+    {
+        return ($this->runner ?? DoctrineTransactionRunner::forHostEntityManager($this->entityManager, null, null, 1, $this->logger))->run($operation);
     }
 
     /**

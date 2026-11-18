@@ -4,280 +4,246 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Tests\Unit\Service;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Query;
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageCardItem;
 use Nowo\PageLayoutKitBundle\Entity\PageCardsBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageHeroBlockTranslation;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
+use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Event\PageBlocksMigratedEvent;
+use Nowo\PageLayoutKitBundle\Exception\PageMigrationInProgressException;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
+use Nowo\PageLayoutKitBundle\Persistence\PageMigrationLock;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
 use Nowo\PageLayoutKitBundle\Tests\Support\LocaleTestSupport;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
-use PHPUnit\Framework\MockObject\MockObject;
+use Nowo\PageLayoutKitBundle\Tests\Support\SqliteEntityManagerFactory;
+use Nowo\TransactionContract\TransactionRunnerInterface;
+use Nowo\TransactionContract\TransientStorageFailure;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
-use ReflectionObject;
+use RuntimeException;
+use stdClass;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+
+use function array_map;
+use function array_values;
+use function sort;
 
 final class PageBlockMigratorTest extends TestCase
 {
-    private int $nextId = 1;
-
-    /** @var list<object> */
-    private array $persisted = [];
-
-    protected function setUp(): void
+    public function testIsEmptyFollowsTheEnabledHomeLayout(): void
     {
-        $this->nextId    = 1;
-        $this->persisted = [];
-    }
-
-    public function testIsEmptyWhenNoLayoutEntries(): void
-    {
-        $migrator = new PageBlockMigrator(
-            $this->entityManagerMock(),
-            $this->createPageLayoutEntryRepository([
-                'home' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-        );
-
+        $manager  = SqliteEntityManagerFactory::create();
+        $migrator = $this->migrator($manager);
         self::assertTrue($migrator->isEmpty());
-    }
 
-    public function testIsEmptyFalseWhenLayoutExists(): void
-    {
-        $entry = (new PageLayoutEntry())
-            ->setPageKey('home')
-            ->setBlockType(PageBlockType::Hero)
-            ->setBlockId(1)
-            ->setPosition(0);
-
-        $migrator = new PageBlockMigrator(
-            $this->entityManagerMock(),
-            $this->createPageLayoutEntryRepository([
-                'home' => [$entry],
-            ]),
-            LocaleTestSupport::defaults(),
-        );
-
+        $this->entry($manager, 'home', 1);
         self::assertFalse($migrator->isEmpty());
     }
 
     public function testMigrateReturnsFalseWhenNoLegacyProviderIsAvailable(): void
     {
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::never())->method('persist');
-        $entityManager->expects(self::never())->method('flush');
+        $manager = SqliteEntityManagerFactory::create();
 
-        $migrator = new PageBlockMigrator(
-            $entityManager,
-            $this->createPageLayoutEntryRepository([
-                'home' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-        );
-
-        self::assertFalse($migrator->migrate());
+        self::assertFalse($this->migrator($manager, false)->migrate());
+        self::assertSame(0, $this->rowCount($manager, PageLayoutEntry::class));
     }
 
-    public function testMigrateReturnsFalseWhenNotEmptyAndNotForced(): void
+    public function testMigrateBuildsBothPagesAndRecordsOneEventAfterTheCommits(): void
     {
-        $entry = (new PageLayoutEntry())
-            ->setPageKey('home')
-            ->setBlockType(PageBlockType::Hero)
-            ->setBlockId(1)
-            ->setPosition(0);
-
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::never())->method('persist');
-
-        $migrator = new PageBlockMigrator(
-            $entityManager,
-            $this->createPageLayoutEntryRepository([
-                'home' => [$entry],
-            ]),
-            LocaleTestSupport::defaults(),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-        );
-
-        self::assertFalse($migrator->migrate(false));
-    }
-
-    public function testMigrateForceClearsExistingBeforeReimporting(): void
-    {
-        $entry = (new PageLayoutEntry())
-            ->setPageKey('home')
-            ->setBlockType(PageBlockType::Hero)
-            ->setBlockId(1)
-            ->setPosition(0);
-
-        $migrator = new PageBlockMigrator(
-            $this->entityManagerMock(7),
-            $this->createPageLayoutEntryRepository([
-                'home'    => [$entry],
-                'contact' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-        );
-
-        self::assertTrue($migrator->migrate(true));
-    }
-
-    #[AllowMockObjectsWithoutExpectations] // shared helpers return mocks (same as the neighbouring tests)
-    public function testMigrateRecordsAMigratedEventAfterTheFlush(): void
-    {
-        $entityManager = $this->entityManagerMock();
-        self::assertInstanceOf(MockObject::class, $entityManager);
-        $connection = $this->createStub(Connection::class);
-        $connection->method('isTransactionActive')->willReturn(false);
-        $entityManager->method('isOpen')->willReturn(true);
-        $entityManager->method('getConnection')->willReturn($connection);
-        $dispatcher = new EventDispatcher();
-        $events     = [];
-        $dispatcher->addListener(PageBlocksMigratedEvent::class, static function (PageBlocksMigratedEvent $event) use (&$events): void {
-            $events[] = [$event->pageKeys, $event->forced];
-        });
-        $transaction = new PageLayoutTransaction($entityManager, $dispatcher);
-
-        $migrator = new PageBlockMigrator(
-            $entityManager,
-            $this->createPageLayoutEntryRepository(['home' => [], 'contact' => []]),
-            LocaleTestSupport::defaults(),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-            $transaction,
-        );
+        $manager  = SqliteEntityManagerFactory::create();
+        $events   = [];
+        $migrator = $this->migrator($manager, transaction: $this->transaction($manager, $events));
 
         self::assertTrue($migrator->migrate());
+
+        $entries = $this->entries($manager);
+        self::assertCount(14, $entries);
+        self::assertSame(['home', PageBlockType::Hero], [$entries[0]->getPageKey(), $entries[0]->getBlockType()]);
+        self::assertSame(['contact', PageBlockType::Cta], [$entries[13]->getPageKey(), $entries[13]->getBlockType()]);
+        self::assertGreaterThan(0, $entries[0]->getBlockId());
         self::assertSame([[['home', 'contact'], false]], $events);
+    }
+
+    public function testMigrateWithoutForceKeepsPagesThatHaveALayout(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $this->entry($manager, 'home', 1);
+        $this->entry($manager, 'contact', 1);
+        $events = [];
+
+        self::assertFalse($this->migrator($manager, transaction: $this->transaction($manager, $events))->migrate());
+        self::assertSame(2, $this->rowCount($manager, PageLayoutEntry::class));
+        self::assertSame([], $events);
+    }
+
+    public function testMigrateWithoutForceResumesARunStoppedBetweenTwoPages(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $this->entry($manager, 'home', 1);
+        $events = [];
+
+        self::assertTrue($this->migrator($manager, transaction: $this->transaction($manager, $events))->migrate());
+        self::assertSame(1, $this->countPage($manager, 'home'), 'home is kept');
+        self::assertSame(5, $this->countPage($manager, 'contact'));
+        self::assertSame([[['contact'], false]], $events);
+    }
+
+    public function testAPageWithOnlyDisabledEntriesIsKeptWithoutForce(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $this->entry($manager, 'home', 1, false);
+        $this->entry($manager, 'contact', 1);
+
+        self::assertFalse($this->migrator($manager)->migrate());
+        self::assertSame(1, $this->countPage($manager, 'home'));
+        self::assertSame(1, $this->countPage($manager, 'contact'));
+    }
+
+    public function testMigrateForceReplacesTheLayoutAndTheBlocksOfThePagesOnly(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        self::assertTrue($this->migrator($manager)->migrate());
+        $this->entry($manager, 'about', 77);
+        $events = [];
+
+        self::assertTrue($this->migrator($manager, transaction: $this->transaction($manager, $events))->migrate(true));
+
+        self::assertSame([9, 5, 1], [$this->countPage($manager, 'home'), $this->countPage($manager, 'contact'), $this->countPage($manager, 'about')]);
+        self::assertSame(1, $this->rowCount($manager, PageHeroBlock::class), 'the old hero went with the old layout');
+        self::assertSame(5, $this->rowCount($manager, PageTextBlock::class));
+        self::assertSame([[['home', 'contact'], true]], $events);
+    }
+
+    public function testAnotherRunningMigrationRefusesWithNothingChanged(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $lock    = $this->createMock(PageMigrationLock::class);
+        $lock->expects(self::once())->method('acquire')->with($manager->getConnection(), 'content_page_layout_entry')->willReturn(false);
+        $lock->expects(self::never())->method('release');
+
+        try {
+            $this->migrator($manager, lock: $lock)->migrate();
+            self::fail('A held migration lock must refuse the run.');
+        } catch (PageMigrationInProgressException $e) {
+            self::assertSame(PageMigrationInProgressException::MESSAGE, $e->getMessage());
+        }
+
+        self::assertSame(0, $this->rowCount($manager, PageLayoutEntry::class));
+    }
+
+    public function testAFailedPageKeepsTheCommittedOnesReleasesTheLockAndRethrows(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $calls   = 0;
+        $runner  = $this->createMock(TransactionRunnerInterface::class);
+        $runner->method('run')->willReturnCallback(static function (callable $operation) use (&$calls, $manager): mixed {
+            if (++$calls === 2) {
+                throw TransientStorageFailure::fromPrevious(new RuntimeException('deadlock'), 1);
+            }
+
+            $connection = $manager->getConnection();
+            $connection->beginTransaction();
+            $result = $operation();
+            $manager->flush();
+            $connection->commit();
+
+            return $result;
+        });
+        $lock = $this->createMock(PageMigrationLock::class);
+        $lock->method('acquire')->willReturn(true);
+        $lock->expects(self::once())->method('release');
+        $events = [];
+
+        try {
+            $this->migrator($manager, transaction: $this->transaction($manager, $events, $runner), lock: $lock)->migrate();
+            self::fail('The transient failure must be rethrown.');
+        } catch (TransientStorageFailure) {
+        }
+
+        self::assertSame([9, 0], [$this->countPage($manager, 'home'), $this->countPage($manager, 'contact')]);
+        self::assertSame([[['home'], false]], $events, 'the committed page is announced');
+    }
+
+    public function testAFailureOfTheFirstPageAnnouncesNothing(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $runner  = $this->createStub(TransactionRunnerInterface::class);
+        $runner->method('run')->willThrowException(new RuntimeException('down'));
+        $events = [];
+
+        try {
+            $this->migrator($manager, transaction: $this->transaction($manager, $events, $runner))->migrate();
+            self::fail('The failure must be rethrown.');
+        } catch (RuntimeException $e) {
+            self::assertSame('down', $e->getMessage());
+        }
+
+        self::assertSame([], $events);
+    }
+
+    public function testTheMigratorBuildsItsOwnTransactionWhenNoneIsGiven(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+
+        self::assertTrue(new PageBlockMigrator($manager, $this->repository($manager), LocaleTestSupport::defaults(), new FakeMigratorLegacyProvider($this->legacyContentMap()))->migrate());
+        self::assertSame(14, $this->rowCount($manager, PageLayoutEntry::class));
     }
 
     public function testContentForPageReturnsEmptyArrayWhenNoLegacyProviderIsAvailable(): void
     {
-        $migrator = new PageBlockMigrator(
-            $this->entityManagerMock(),
-            $this->createPageLayoutEntryRepository([
-                'home' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-        );
-
         $method = new ReflectionMethod(PageBlockMigrator::class, 'contentForPage');
 
-        self::assertSame([], $method->invoke($migrator, 'home'));
+        self::assertSame([], $method->invoke($this->migrator(SqliteEntityManagerFactory::create(), false), 'home'));
     }
 
-    public function testAddLayoutFlushesBlocksWithoutIdsBeforePersistingTheLayoutEntry(): void
+    public function testAddLayoutUsesTheIdOfABlockThatAlreadyHasOne(): void
     {
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::exactly(2))
-            ->method('persist')
-            ->willReturnCallback(function (object $entity): void {
-                $this->persisted[] = $entity;
-            });
-        $entityManager->expects(self::once())
-            ->method('flush')
-            ->willReturnCallback(function (): void {
-                foreach ($this->persisted as $entity) {
-                    if ($entity instanceof PageHeroBlock) {
-                        $this->assignEntityId($entity, 99);
-                    }
-                }
-            });
+        $manager = SqliteEntityManagerFactory::create();
+        $block   = new PageHeroBlock();
+        $manager->persist($block);
+        $manager->flush();
 
-        $migrator = new PageBlockMigrator(
-            $entityManager,
-            $this->createPageLayoutEntryRepository([
-                'home' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-        );
+        new ReflectionMethod(PageBlockMigrator::class, 'addLayout')->invoke($this->migrator($manager), 'home', PageBlockType::Hero, $block, 4);
+        $manager->flush();
 
-        $block = new PageHeroBlock();
-        $entityManager->persist($block);
-
-        $method = new ReflectionMethod(PageBlockMigrator::class, 'addLayout');
-        $method->invoke($migrator, 'home', PageBlockType::Hero, $block, 4);
-
-        $layoutEntries = array_values(array_filter(
-            $this->persisted,
-            static fn (object $entity): bool => $entity instanceof PageLayoutEntry,
-        ));
-        self::assertCount(1, $layoutEntries);
-        self::assertSame(99, $layoutEntries[0]->getBlockId());
-        self::assertSame(4, $layoutEntries[0]->getPosition());
+        $entries = $this->entries($manager);
+        self::assertCount(1, $entries);
+        self::assertSame([$block->getId(), 4], [$entries[0]->getBlockId(), $entries[0]->getPosition()]);
     }
 
-    public function testMigrateReturnsTrueAndPersistsTypedBlocksWithLegacyContent(): void
+    public function testBlockIdIsNullForAnObjectWithoutGetId(): void
     {
-        $entityManager = $this->entityManagerMock();
-        $migrator      = new PageBlockMigrator(
-            $entityManager,
-            $this->createPageLayoutEntryRepository([
-                'home'    => [],
-                'contact' => [],
-            ]),
-            LocaleTestSupport::defaults(),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-        );
-
-        self::assertTrue($migrator->migrate(false));
-
-        $layoutEntries = array_values(array_filter(
-            $this->persisted,
-            static fn (object $entity): bool => $entity instanceof PageLayoutEntry,
-        ));
-        self::assertCount(14, $layoutEntries);
-        self::assertSame('home', $layoutEntries[0]->getPageKey());
-        self::assertSame(PageBlockType::Hero, $layoutEntries[0]->getBlockType());
-        self::assertSame('contact', $layoutEntries[13]->getPageKey());
-        self::assertSame(PageBlockType::Cta, $layoutEntries[13]->getBlockType());
-        self::assertGreaterThan(0, $layoutEntries[0]->getBlockId());
+        self::assertNull(new ReflectionMethod(PageBlockMigrator::class, 'blockId')->invoke($this->migrator(SqliteEntityManagerFactory::create()), new stdClass()));
     }
 
     public function testMigrateUsesTheInjectedPageLocales(): void
     {
-        $migrator = new PageBlockMigrator(
-            $this->entityManagerMock(),
-            $this->createPageLayoutEntryRepository([
-                'home'    => [],
-                'contact' => [],
-            ]),
-            new PageLocales('es', ['es', 'fr']),
-            new FakeMigratorLegacyProvider($this->legacyContentMap()),
-        );
+        $manager = SqliteEntityManagerFactory::create();
 
-        self::assertTrue($migrator->migrate(false));
+        self::assertTrue($this->migrator($manager, locales: new PageLocales('es', ['es', 'fr']))->migrate(false));
+        $manager->clear();
 
-        $heroBlocks = array_values(array_filter(
-            $this->persisted,
-            static fn (object $entity): bool => $entity instanceof PageHeroBlock,
-        ));
+        /** @var list<PageHeroBlock> $heroBlocks */
+        $heroBlocks = $manager->createQuery('SELECT b FROM ' . PageHeroBlock::class . ' b')->getResult();
         self::assertCount(1, $heroBlocks);
-        self::assertSame(['es', 'fr'], array_map(
+        $locales = array_map(
             static fn (PageHeroBlockTranslation $translation): string => $translation->getLocale(),
             array_values($heroBlocks[0]->getTranslations()->toArray()),
-        ));
+        );
+        sort($locales);
+        self::assertSame(['es', 'fr'], $locales);
         self::assertSame('Hero', $heroBlocks[0]->getTranslation('fr')?->getTitle());
 
-        $cardsBlocks = array_values(array_filter(
-            $this->persisted,
-            static fn (object $entity): bool => $entity instanceof PageCardsBlock,
-        ));
-        $cardItem = $cardsBlocks[0]->getItems()->first();
+        $cardsBlock = $manager->createQuery('SELECT b FROM ' . PageCardsBlock::class . " b WHERE b.sectionKey = 'value'")->getOneOrNullResult();
+        self::assertInstanceOf(PageCardsBlock::class, $cardsBlock);
+        $cardItem = $cardsBlock->getItems()->first();
         self::assertInstanceOf(PageCardItem::class, $cardItem);
         self::assertSame('V1', $cardItem->getTranslation('fr')?->getTitle());
         self::assertNull($cardItem->getTranslation('en'));
@@ -346,99 +312,69 @@ final class PageBlockMigratorTest extends TestCase
         ];
     }
 
-    private function entityManagerMock(int $withDeleteQueries = 0): EntityManagerInterface
-    {
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->method('persist')->willReturnCallback(function (object $entity): void {
-            $this->persisted[] = $entity;
-
-            if (method_exists($entity, 'getId') && $entity->getId() === null) {
-                $this->assignEntityId($entity, $this->nextId++);
-            }
-        });
-        $entityManager->method('flush')->willReturnCallback(function (): void {
-            foreach ($this->persisted as $entity) {
-                if (method_exists($entity, 'getId') && $entity->getId() === null) {
-                    $this->assignEntityId($entity, $this->nextId++);
-                }
-            }
-        });
-
-        if ($withDeleteQueries > 0) {
-            $deleteQuery = $this->createMock(Query::class);
-            $deleteQuery->expects(self::exactly($withDeleteQueries))->method('execute');
-            $entityManager->expects(self::exactly($withDeleteQueries))
-                ->method('createQuery')
-                ->willReturn($deleteQuery);
-        }
-
-        return $entityManager;
+    private function migrator(
+        EntityManagerInterface $manager,
+        bool $withLegacy = true,
+        ?PageLayoutTransaction $transaction = null,
+        ?PageMigrationLock $lock = null,
+        ?PageLocales $locales = null,
+    ): PageBlockMigrator {
+        return new PageBlockMigrator(
+            $manager,
+            $this->repository($manager),
+            $locales ?? LocaleTestSupport::defaults(),
+            $withLegacy ? new FakeMigratorLegacyProvider($this->legacyContentMap()) : null,
+            $transaction ?? new PageLayoutTransaction($manager),
+            $lock ?? new PageMigrationLock(),
+        );
     }
 
     /**
-     * @param array<string, list<PageLayoutEntry>> $resultsByPageKey
+     * @param list<array{0: list<string>, 1: bool}> $events
      */
-    private function createPageLayoutEntryRepository(array $resultsByPageKey): PageLayoutEntryRepository
+    private function transaction(EntityManagerInterface $manager, array &$events, ?TransactionRunnerInterface $runner = null): PageLayoutTransaction
     {
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->method('getClassMetadata')
-            ->willReturnCallback(static function (string $className): ClassMetadata {
-                self::assertSame(PageLayoutEntry::class, $className);
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addListener(PageBlocksMigratedEvent::class, static function (PageBlocksMigratedEvent $event) use (&$events): void {
+            $events[] = [$event->pageKeys, $event->forced];
+        });
 
-                return new ClassMetadata(PageLayoutEntry::class);
-            });
-        $entityManager->method('createQueryBuilder')
-            ->willReturnCallback(function () use ($resultsByPageKey): QueryBuilder {
-                /** @var array<string, mixed> $params */
-                $params = [];
-                $query  = $this->createMock(Query::class);
-                $query->method('setHint')->willReturnSelf();
-                $query->method('getResult')
-                    ->willReturnCallback(static function () use (&$params, $resultsByPageKey): array {
-                        return $resultsByPageKey[$params['pageKey'] ?? ''] ?? [];
-                    });
+        return new PageLayoutTransaction($manager, $dispatcher, runner: $runner);
+    }
 
-                $queryBuilder = $this->createMock(QueryBuilder::class);
-                $queryBuilder->method('select')->willReturnSelf();
-                $queryBuilder->method('from')->willReturnSelf();
-                $queryBuilder->method('andWhere')->willReturnSelf();
-                $queryBuilder->method('orderBy')->willReturnSelf();
-                $queryBuilder->method('setParameter')
-                    ->willReturnCallback(static function (string $key, mixed $value) use (&$params, $queryBuilder): QueryBuilder {
-                        $params[$key] = $value;
-
-                        return $queryBuilder;
-                    });
-                $queryBuilder->method('getQuery')->willReturn($query);
-
-                return $queryBuilder;
-            });
-
-        $registry = $this->createMock(ManagerRegistry::class);
-        $registry->method('getManagerForClass')
-            ->willReturnCallback(static function (string $className) use ($entityManager): EntityManagerInterface {
-                self::assertSame(PageLayoutEntry::class, $className);
-
-                return $entityManager;
-            });
+    private function repository(EntityManagerInterface $manager): PageLayoutEntryRepository
+    {
+        $registry = $this->createStub(ManagerRegistry::class);
+        $registry->method('getManagerForClass')->willReturn($manager);
 
         return new PageLayoutEntryRepository($registry);
     }
 
-    private function assignEntityId(object $entity, int $id): void
+    private function entry(EntityManagerInterface $manager, string $pageKey, int $blockId, bool $enabled = true): void
     {
-        $reflection = new ReflectionObject($entity);
+        $manager->persist(new PageLayoutEntry()->setPageKey($pageKey)->setBlockType(PageBlockType::Hero)->setBlockId($blockId)->setPosition(0)->setEnabled($enabled));
+        $manager->flush();
+    }
 
-        do {
-            if ($reflection->hasProperty('id')) {
-                $property = $reflection->getProperty('id');
-                $property->setValue($entity, $id);
+    /**
+     * @return list<PageLayoutEntry>
+     */
+    private function entries(EntityManagerInterface $manager): array
+    {
+        return $this->repository($manager)->findBy([], ['id' => 'ASC']);
+    }
 
-                return;
-            }
+    /**
+     * @param class-string $class
+     */
+    private function rowCount(EntityManagerInterface $manager, string $class): int
+    {
+        return (int) $manager->getConnection()->fetchOne('SELECT COUNT(*) FROM ' . $manager->getClassMetadata($class)->getTableName());
+    }
 
-            $reflection = $reflection->getParentClass();
-        } while ($reflection !== false);
+    private function countPage(EntityManagerInterface $manager, string $pageKey): int
+    {
+        return $this->repository($manager)->count(['pageKey' => $pageKey]);
     }
 }
 

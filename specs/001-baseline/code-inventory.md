@@ -2,7 +2,7 @@
 
 **Baseline spec:** [`spec.md`](spec.md)  
 **Package:** `nowo-tech/page-layout-kit-bundle`  
-**Last audited:** 2026-11-16 (2.2 outbox, entity manager isolation, UI page contract, asset build outputs)
+**Last audited:** 2026-11-18 (2.2 outbox, entity manager isolation, UI page contract, asset build outputs, concurrency)
 
 Maps production files under `src/` (baseline inventory kept in sync for worker-mode and HTML-sanitize surfaces).
 
@@ -234,6 +234,15 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Persistence/PageLayoutEntityManagerFactory.php` | Resolves the manager that maps the bundle entities when none is configured | FR-ORM-003 |
 | `Persistence/ExcludedEntityNamespaceDriver.php` | Maps nothing for the bundle namespace on every other entity manager | FR-ORM-003 |
 
+## Concurrency
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `EventListener/PageLayoutConflictListener.php` | 409 / 503 + `CONFLICT_001` / `CONFLICT_002` for lock conflicts on the bundle's routes; domain 409 for a duplicate translation | FR-RUN-001 |
+| `Exception/PageMigrationInProgressException.php` | Another migration holds the migration lock (nothing changed) | FR-RUN-001, FR-LEG-002 |
+| `Persistence/PageMigrationLock.php` | Non-blocking named lock: one migration at a time | FR-RUN-001, FR-LEG-002 |
+| `Service/PageLayoutReorderer.php` | Reorder write unit (page entries locked and re-read) | FR-RUN-001, FR-ADM-001 |
+
 ## UI page contract
 
 | Source file | Spec section | Requirement IDs |
@@ -262,5 +271,6 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | Resources — translations | 7 | 7 |
 | Write events and transaction outbox | 10 | 10 |
 | Entity manager isolation | 2 | 2 |
+| Concurrency | 4 | 4 |
 | UI page contract | 1 | 1 |
-| **Total production sources** | **139** | **139** |
+| **Total production sources** | **143** | **143** |

@@ -33,6 +33,11 @@ final class AfterCommitMiddlewarePassTest extends TestCase
         new AfterCommitMiddlewarePass()->process($container);
         self::assertSame([['connection' => 'main']], $container->getDefinition(AfterCommitMiddleware::class)->getTag('doctrine.middleware'));
 
+        // 2.3: the commit-tracking middleware of the conflict answer follows the same connection.
+        $container->register(NowoPageLayoutKitExtension::COMMIT_TRACKING_MIDDLEWARE)->addTag('doctrine.middleware');
+        new AfterCommitMiddlewarePass()->process($container);
+        self::assertSame([['connection' => 'main']], $container->getDefinition(NowoPageLayoutKitExtension::COMMIT_TRACKING_MIDDLEWARE)->getTag('doctrine.middleware'));
+
         $bare = new ContainerBuilder();
         $bare->register(AfterCommitMiddleware::class)->addTag('doctrine.middleware');
         new AfterCommitMiddlewarePass()->process($bare);

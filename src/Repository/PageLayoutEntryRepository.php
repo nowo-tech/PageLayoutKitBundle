@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\PageLayoutKitBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
@@ -37,6 +38,26 @@ final class PageLayoutEntryRepository extends ServiceEntityRepository
             ->setParameter('enabled', true)
             ->orderBy('e.position', SortDirection::Ascending)
             ->getQuery()
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getResult();
+    }
+
+    /**
+     * Every entry of the page (enabled or not), locked `FOR UPDATE` in id order and refreshed from the database
+     * (2.3, REQ-RUNTIME-003 rule 4): a write unit that rewrites the page's positions, or replaces its layout, reads the
+     * committed rows under the lock, so two admins (or an admin and the migration) never interleave on one page.
+     * SQLite takes no row lock (its writers are serialised by the database lock). Must run inside a transaction.
+     *
+     * @return list<PageLayoutEntry>
+     */
+    public function lockByPageKey(string $pageKey): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.pageKey = :pageKey')
+            ->setParameter('pageKey', $pageKey)
+            ->orderBy('e.id', SortDirection::Ascending)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
             ->setHint(Query::HINT_REFRESH, true)
             ->getResult();
     }

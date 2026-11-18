@@ -24,25 +24,51 @@ use Nowo\PageLayoutKitBundle\Entity\PageTextBlock;
 use Nowo\PageLayoutKitBundle\Entity\PageTextBlockTranslation;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Event\PageBlocksMigratedEvent;
+use Nowo\PageLayoutKitBundle\Exception\PageMigrationInProgressException;
 use Nowo\PageLayoutKitBundle\Legacy\LegacyPageContentProviderInterface;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
+use Nowo\PageLayoutKitBundle\Persistence\PageMigrationLock;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\TransactionContract\TransientStorageFailure;
 
 use function sprintf;
 
 /**
  * Migrates legacy page JSON into typed page blocks and layout entries.
+ *
+ * 2.3 (REQ-RUNTIME-003): each page is one write unit ({@see PageLayoutTransaction::run()}): its old layout and blocks
+ * (with `force`), its new blocks and its layout entries commit together or not at all, so a failure never leaves a
+ * half-built page. The page's entries are locked `FOR UPDATE` first, so an admin reorder of the same page waits for
+ * the unit (or the unit for the reorder). A {@see PageMigrationLock} keeps a second migration from running at the same
+ * time. The legacy content is read before any lock is taken (no host I/O under a lock).
  */
 final readonly class PageBlockMigrator
 {
+    /** The pages the migration builds, in this order (one write unit each). */
+    public const array PAGES = ['home', 'contact'];
+
+    /** Block entity of each block type. */
+    private const array BLOCK_CLASSES = [
+        PageBlockType::Hero->value    => PageHeroBlock::class,
+        PageBlockType::Text->value    => PageTextBlock::class,
+        PageBlockType::Cards->value   => PageCardsBlock::class,
+        PageBlockType::List->value    => PageListBlock::class,
+        PageBlockType::Cta->value     => PageCtaBlock::class,
+        PageBlockType::Compare->value => PageCompareBlock::class,
+    ];
+
+    private PageLayoutTransaction $transaction;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PageLayoutEntryRepository $pageLayoutEntryRepository,
         private PageLocales $pageLocales,
         private ?LegacyPageContentProviderInterface $legacyContentProvider = null,
-        private ?PageLayoutTransaction $transaction = null,
+        ?PageLayoutTransaction $transaction = null,
+        private PageMigrationLock $lock = new PageMigrationLock(),
     ) {
+        $this->transaction = $transaction ?? new PageLayoutTransaction($entityManager);
     }
 
     public function isEmpty(): bool
@@ -50,25 +76,87 @@ final readonly class PageBlockMigrator
         return $this->pageLayoutEntryRepository->findEnabledByPageKey('home') === [];
     }
 
+    /**
+     * Builds the pages of {@see self::PAGES}, one write unit each. Without `force` a page that already has a layout is
+     * left as it is (so a run stopped between two pages is resumed by running it again); with `force` its layout and
+     * the blocks it references are replaced (pages outside {@see self::PAGES} are kept). When a unit fails, the pages
+     * committed before it stay migrated (their event is still dispatched) and the failure is rethrown; the failed page
+     * is unchanged.
+     *
+     * @throws PageMigrationInProgressException When another migration is running (nothing was changed)
+     * @throws TransientStorageFailure When a page unit met a lock conflict (that page is unchanged)
+     */
     public function migrate(bool $force = false): bool
     {
         if (!$this->legacyContentProvider instanceof LegacyPageContentProviderInterface) {
             return false;
         }
 
-        if (!$force && !$this->isEmpty()) {
+        if (!$force && $this->allPagesHaveALayout()) {
             return false;
         }
 
-        if ($force) {
-            $this->clearExisting();
+        // Rule 9: the host's content provider (files, HTTP, another database) is read before any lock is taken.
+        $content = [];
+        foreach (self::PAGES as $pageKey) {
+            $content[$pageKey] = $this->contentForPage($pageKey);
         }
 
-        $this->migrateHome($this->contentForPage('home'));
-        $this->migrateContact($this->contentForPage('contact'));
-        // Bundle-owned CLI write: always flushed, on the manager that maps the bundle entities (2.2).
-        $this->entityManager->flush();
-        $this->transaction?->record(new PageBlocksMigratedEvent(['home', 'contact'], $force));
+        $connection = $this->entityManager->getConnection();
+        $table      = $this->entityManager->getClassMetadata(PageLayoutEntry::class)->getTableName();
+        if (!$this->lock->acquire($connection, $table)) {
+            throw new PageMigrationInProgressException();
+        }
+
+        $migrated = [];
+        try {
+            foreach ($content as $pageKey => $locales) {
+                if ($this->transaction->run(fn (): bool => $this->migratePage($pageKey, $locales, $force))) {
+                    $migrated[] = $pageKey;
+                }
+            }
+        } finally {
+            $this->lock->release($connection, $table);
+            if ($migrated !== []) {
+                // ID-free event after the commit of the pages that were built (2.2, rules 4/7).
+                $this->transaction->record(new PageBlocksMigratedEvent($migrated, $force));
+            }
+        }
+
+        return $migrated !== [];
+    }
+
+    private function allPagesHaveALayout(): bool
+    {
+        foreach (self::PAGES as $pageKey) {
+            if ($this->pageLayoutEntryRepository->findEnabledByPageKey($pageKey) === []) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * One page: lock its entries, keep it when it has a layout and `force` is off (a concurrent migration built it),
+     * else replace it. Runs inside the page's write unit.
+     *
+     * @param array<string, array<string, mixed>> $locales
+     */
+    private function migratePage(string $pageKey, array $locales, bool $force): bool
+    {
+        $existing = $this->pageLayoutEntryRepository->lockByPageKey($pageKey);
+        if ($existing !== [] && !$force) {
+            return false;
+        }
+
+        $this->clearPage($existing);
+
+        if ($pageKey === 'home') {
+            $this->migrateHome($locales);
+        } else {
+            $this->migrateContact($locales);
+        }
 
         return true;
     }
@@ -405,6 +493,7 @@ final readonly class PageBlockMigrator
         $id = $this->blockId($block);
 
         if ($id === null) {
+            // Inside the page's write unit: the flush only assigns the id, the unit commits (2.3).
             $this->entityManager->flush();
             $id = $this->blockId($block);
         }
@@ -417,19 +506,23 @@ final readonly class PageBlockMigrator
         $this->entityManager->persist($pageLayoutEntry);
     }
 
-    private function clearExisting(): void
+    /**
+     * Removes the page's layout entries and the blocks they reference (child rows go with them: ON DELETE CASCADE).
+     *
+     * @param list<PageLayoutEntry> $entries The page's entries, locked by the unit
+     */
+    private function clearPage(array $entries): void
     {
-        $this->entityManager->createQuery('DELETE FROM Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry e')->execute();
+        $blockIds = [];
+        foreach ($entries as $entry) {
+            $blockIds[$entry->getBlockType()->value][] = $entry->getBlockId();
+            $this->entityManager->remove($entry);
+        }
 
-        foreach ([
-            PageHeroBlock::class,
-            PageTextBlock::class,
-            PageCardsBlock::class,
-            PageListBlock::class,
-            PageCtaBlock::class,
-            PageCompareBlock::class,
-        ] as $class) {
-            $this->entityManager->createQuery('DELETE FROM ' . $class . ' b')->execute();
+        foreach ($blockIds as $type => $ids) {
+            $this->entityManager->createQuery('DELETE FROM ' . self::BLOCK_CLASSES[$type] . ' b WHERE b.id IN (:ids)')
+                ->setParameter('ids', $ids)
+                ->execute();
         }
     }
 }

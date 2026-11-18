@@ -20,6 +20,22 @@ final class ConfigurationTest extends TestCase
         self::assertContains('custom', Configuration::CSS_FRAMEWORKS);
     }
 
+    public function testConflictResponseDefaultsToFollowingTransactionDoctrine(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[]]);
+
+        self::assertSame(['status' => null, 'retry_after' => null], $config['conflict_response']);
+        self::assertSame(['status' => 503, 'retry_after' => 0], (new Processor())->processConfiguration(new Configuration(), [['conflict_response' => ['status' => 503, 'retry_after' => 0]]])['conflict_response']);
+    }
+
+    public function testConflictResponseStatusIs409Or503Only(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('must be 409 or 503');
+
+        (new Processor())->processConfiguration(new Configuration(), [['conflict_response' => ['status' => 500]]]);
+    }
+
     public function testWebUiDefaultsToTheUiKitLayout(): void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[]]);

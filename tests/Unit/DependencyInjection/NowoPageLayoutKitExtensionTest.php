@@ -9,6 +9,7 @@ use LogicException;
 use Nowo\PageLayoutKitBundle\Controller\Admin\PageBlockEditController;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\DependencyInjection\TablePrefixListener;
+use Nowo\PageLayoutKitBundle\EventListener\PageLayoutConflictListener;
 use Nowo\PageLayoutKitBundle\Form\PageCardsBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Form\PageListBlockInlineModalType;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
@@ -20,11 +21,16 @@ use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
+use Nowo\TransactionDoctrine\WriteUnit\CommitLedger;
+use Nowo\TransactionDoctrine\WriteUnit\Dbal\CommitTrackingMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -367,6 +373,55 @@ final class NowoPageLayoutKitExtensionTest extends TestCase
                 ],
             ],
         ], new ContainerBuilder());
+    }
+
+    /**
+     * 2.3 (REQ-RUNTIME-003 rule 6): the conflict answer, its commit ledger and the ledger's middleware.
+     */
+    public function testLoadRegistersTheConflictAnswerFollowingTransactionDoctrineByDefault(): void
+    {
+        $container = $this->loadWithConflictResponse([]);
+
+        self::assertSame(CommitLedger::class, $container->getDefinition(NowoPageLayoutKitExtension::COMMIT_LEDGER_SERVICE)->getClass());
+        $middleware = $container->getDefinition(NowoPageLayoutKitExtension::COMMIT_TRACKING_MIDDLEWARE);
+        self::assertSame(CommitTrackingMiddleware::class, $middleware->getClass());
+        self::assertTrue($middleware->hasTag('doctrine.middleware'));
+
+        $listener = $container->getDefinition(PageLayoutConflictListener::class);
+        $policy   = $listener->getArgument(0);
+        self::assertInstanceOf(Reference::class, $policy);
+        self::assertSame(ConflictResponsePolicy::class, (string) $policy);
+        self::assertSame(ContainerInterface::NULL_ON_INVALID_REFERENCE, $policy->getInvalidBehavior());
+        self::assertSame(NowoPageLayoutKitExtension::COMMIT_LEDGER_SERVICE, (string) $listener->getArgument(1));
+        self::assertSame([
+            ['event' => 'kernel.request', 'method' => 'onRequest', 'priority' => PageLayoutConflictListener::REQUEST_PRIORITY],
+            ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => PageLayoutConflictListener::PRIORITY],
+        ], $listener->getTag('kernel.event_listener'));
+    }
+
+    public function testLoadUsesTheBundlePolicyWhenTheHostSetsTheConflictResponse(): void
+    {
+        $policy = $this->loadWithConflictResponse(['status' => 503])->getDefinition(PageLayoutConflictListener::class)->getArgument(0);
+        self::assertInstanceOf(Definition::class, $policy);
+        self::assertSame([503, 1], $policy->getArguments());
+
+        $policy = $this->loadWithConflictResponse(['retry_after' => 5])->getDefinition(PageLayoutConflictListener::class)->getArgument(0);
+        self::assertInstanceOf(Definition::class, $policy);
+        self::assertSame([409, 5], $policy->getArguments());
+    }
+
+    /**
+     * @param array<string, int> $conflictResponse
+     */
+    private function loadWithConflictResponse(array $conflictResponse): ContainerBuilder
+    {
+        $container = new ContainerBuilder();
+        new NowoPageLayoutKitExtension()->load([[
+            'security'          => ['allow_unauthenticated' => true],
+            'conflict_response' => $conflictResponse,
+        ]], $container);
+
+        return $container;
     }
 
     public function testAliasMatchesBundleConfigurationAlias(): void

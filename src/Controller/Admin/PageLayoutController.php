@@ -7,11 +7,11 @@ namespace Nowo\PageLayoutKitBundle\Controller\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\PageLayoutKitBundle\Controller\RequiresValidFormTrait;
 use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
-use Nowo\PageLayoutKitBundle\Event\PageLayoutChangedEvent;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
+use Nowo\PageLayoutKitBundle\Service\PageLayoutReorderer;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
 use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,12 +22,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-use function array_filter;
-use function array_map;
-use function array_values;
 use function in_array;
 use function sprintf;
-use function usort;
 
 /**
  * Admin UI for ordering enabled page layout entries (home/contact).
@@ -112,16 +108,15 @@ final class PageLayoutController extends AbstractController
         $reorderForm->handleRequest($request);
         $this->requireValidForm($reorderForm);
 
-        $reorderForm->getData()?->applyToEntries($entries);
+        $data = $reorderForm->getData();
 
-        // 2.2 (rules 6/7): the manager that maps the bundle entities, then an ID-only event after the commit.
         if ($this->transaction instanceof PageLayoutTransaction) {
-            usort($entries, static fn (PageLayoutEntry $a, PageLayoutEntry $b): int => $a->getPosition() <=> $b->getPosition());
-            $this->transaction->commit(new PageLayoutChangedEvent($pageKey, array_values(array_filter(
-                array_map(static fn (PageLayoutEntry $entry): ?int => $entry->getId(), $entries),
-                static fn (?int $id): bool => $id !== null,
-            ))));
+            // 2.3 (REQ-RUNTIME-003 rules 1 and 4): one write unit, the page's entries locked FOR UPDATE and read again,
+            // so the submitted order replaces the committed one whole. A lock conflict answers 409 + CONFLICT_001 /
+            // CONFLICT_002 (PageLayoutConflictListener). ID-only event after the commit (2.2, rules 6/7).
+            new PageLayoutReorderer($this->pageLayoutEntryRepository, $this->transaction)->reorder($pageKey, $data);
         } else {
+            $data?->applyToEntries($entries);
             $this->entityManager->flush();
         }
         $this->addFlash('success', $this->translator?->trans('admin.flash.reordered', [], 'NowoPageLayoutKitBundle') ?? 'Order updated.');
