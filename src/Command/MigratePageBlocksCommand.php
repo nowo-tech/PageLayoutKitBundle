@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\PageLayoutKitBundle\Command;
 
+use Nowo\PageLayoutKitBundle\Exception\PageMigrationInProgressException;
 use Nowo\PageLayoutKitBundle\Service\PageBlockMigrator;
+use Nowo\TransactionContract\TransientStorageFailure;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -57,6 +59,19 @@ final class MigratePageBlocksCommand extends Command
 
         try {
             $migrated = $this->pageBlockMigrator->migrate($force);
+        } catch (PageMigrationInProgressException $e) {
+            // 2.3 (REQ-RUNTIME-003): another migration holds the lock; this run changed nothing.
+            $symfonyStyle->error($e->getMessage());
+            $this->logger?->warning('Page block migration not run: another migration is running.', $context);
+
+            return Command::FAILURE;
+        } catch (TransientStorageFailure $e) {
+            // 2.3: a lock conflict (deadlock, lock wait timeout, serialization failure) rolled back the page being
+            // built; pages built before it stay migrated. Running the command again is safe.
+            $symfonyStyle->error('A concurrent write blocked the migration: the page being migrated is unchanged (pages migrated before it are kept). Run the command again.');
+            $this->logger?->error('Page block migration stopped by a lock conflict.', $context + ['exception' => $e::class]);
+
+            return Command::FAILURE;
         } catch (Throwable $e) {
             $this->logger?->error('Page block migration failed.', $context + ['exception' => $e::class]);
 

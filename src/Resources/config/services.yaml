@@ -19,6 +19,8 @@ services:
             - '../../Persistence/AfterCommitMiddleware.php'
             - '../../Persistence/PageLayoutEntityManagerFactory.php'
             - '../../Event/'
+            - '../../EventListener/'
+            - '../../Exception/'
             - '../../Resources/'
             - '../../Security/PageLayoutProtection.php'
             - '../../Security/PageLayoutProtectionConfig.php'
@@ -42,6 +44,13 @@ services:
     Nowo\PageLayoutKitBundle\Persistence\AfterCommitMiddleware:
         arguments: ['@Nowo\PageLayoutKitBundle\Persistence\PageLayoutOutbox']
         tags: ['doctrine.middleware']
+
+    # 2.3 (REQ-RUNTIME-003): the bundle's own runner, never a host alias of TransactionRunnerInterface (it may run on
+    # another manager). Null = forHostEntityManager(); PageLayoutEntityManagerPass sets forEntityManager() for the
+    # bundle's own manager (doctrine.entity_manager).
+    Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction:
+        arguments:
+            $runner: null
 
     Nowo\PageLayoutKitBundle\Persistence\PageLayoutPendingEventsInterface:
         alias: Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction

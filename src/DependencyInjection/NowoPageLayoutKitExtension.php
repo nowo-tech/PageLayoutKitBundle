@@ -9,6 +9,7 @@ use Doctrine\ORM\Events;
 use LogicException;
 use Nowo\PageLayoutKitBundle\DependencyInjection\Configuration as BundleConfiguration;
 use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
+use Nowo\PageLayoutKitBundle\EventListener\PageLayoutConflictListener;
 use Nowo\PageLayoutKitBundle\Locale\PageLocales;
 use Nowo\PageLayoutKitBundle\Persistence\PageLayoutEntityManagerFactory;
 use Nowo\PageLayoutKitBundle\Security\AllowAllPageLayoutKitAccessChecker;
@@ -16,13 +17,18 @@ use Nowo\PageLayoutKitBundle\Security\ConfigurablePageLayoutKitAccessChecker;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutKitAccessCheckerInterface;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtection;
 use Nowo\PageLayoutKitBundle\Security\PageLayoutProtectionConfig;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
+use Nowo\TransactionDoctrine\WriteUnit\CommitLedger;
+use Nowo\TransactionDoctrine\WriteUnit\Dbal\CommitTrackingMiddleware;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 use function array_key_exists;
 use function is_array;
@@ -40,6 +46,12 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
 
     /** Entity manager used by every bundle read and write (alias of the configured one, or resolved by entity class). */
     public const string ENTITY_MANAGER_SERVICE = 'nowo_page_layout_kit.entity_manager';
+
+    /** 2.3: real commits of the bundle's connection, counted by {@see self::COMMIT_TRACKING_MIDDLEWARE}, read by the conflict answer. */
+    public const string COMMIT_LEDGER_SERVICE = 'nowo_page_layout_kit.commit_ledger';
+
+    /** 2.3: transaction-doctrine's commit-tracking DBAL middleware on the bundle's connection (AfterCommitMiddlewarePass). */
+    public const string COMMIT_TRACKING_MIDDLEWARE = 'nowo_page_layout_kit.commit_tracking_middleware';
 
     public function prepend(ContainerBuilder $container): void
     {
@@ -109,6 +121,7 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
             throw new LogicException('NowoPageLayoutKitBundle admin UI requires symfony/security-bundle when security.allow_unauthenticated is false.');
         }
 
+        $this->registerConflictAnswer($container, $config['conflict_response']);
         $this->registerAccessChecker($container, $config['security']);
         $this->registerPageLayoutProtection($container, $config);
 
@@ -133,6 +146,34 @@ final class NowoPageLayoutKitExtension extends Extension implements PrependExten
             // The recovery subscriber gets the name in PageLayoutEntityManagerPass, only when it is not the host default.
             $container->setAlias(self::ENTITY_MANAGER_SERVICE, sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
         }
+    }
+
+    /**
+     * 2.3 (REQ-RUNTIME-003 rule 6): 409 (or 503) + CONFLICT_001 / CONFLICT_002 instead of a 500 for lock conflicts on
+     * the bundle's routes. Unset options follow transaction-doctrine's policy service when its bundle is registered.
+     *
+     * @param array{status: int|null, retry_after: int|null} $conflictResponse
+     */
+    private function registerConflictAnswer(ContainerBuilder $container, array $conflictResponse): void
+    {
+        $container->setDefinition(self::COMMIT_LEDGER_SERVICE, new Definition(CommitLedger::class));
+        $container->setDefinition(self::COMMIT_TRACKING_MIDDLEWARE, (new Definition(CommitTrackingMiddleware::class, [new Reference(self::COMMIT_LEDGER_SERVICE)]))
+            ->addTag('doctrine.middleware'));
+
+        $policy = $conflictResponse['status'] === null && $conflictResponse['retry_after'] === null
+            ? new Reference(ConflictResponsePolicy::class, ContainerInterface::NULL_ON_INVALID_REFERENCE)
+            : new Definition(ConflictResponsePolicy::class, [
+                $conflictResponse['status'] ?? ConflictResponsePolicy::STATUS_CONFLICT,
+                $conflictResponse['retry_after'] ?? ConflictResponsePolicy::DEFAULT_RETRY_AFTER,
+            ]);
+
+        $container->setDefinition(PageLayoutConflictListener::class, (new Definition(PageLayoutConflictListener::class, [
+            $policy,
+            new Reference(self::COMMIT_LEDGER_SERVICE),
+            new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+        ]))
+            ->addTag('kernel.event_listener', ['event' => KernelEvents::REQUEST, 'method' => 'onRequest', 'priority' => PageLayoutConflictListener::REQUEST_PRIORITY])
+            ->addTag('kernel.event_listener', ['event' => KernelEvents::EXCEPTION, 'method' => 'onException', 'priority' => PageLayoutConflictListener::PRIORITY]));
     }
 
     public function getAlias(): string

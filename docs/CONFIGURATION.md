@@ -10,6 +10,7 @@ All options live under the root key `nowo_page_layout_kit`.
 - [security](#security)
 - [web_ui](#web_ui)
 - [doctrine](#doctrine)
+- [conflict_response](#conflict_response)
 - [Twig globals](#twig-globals)
 - [Examples](#examples)
 
@@ -33,6 +34,9 @@ nowo_page_layout_kit:
         table_prefix: ''
         entity_manager: null   # 2.2: manager that maps the bundle entities (null: resolved by entity class)
         connection: default    # informational only, never wired to Doctrine
+    conflict_response:         # 2.3 (REQ-RUNTIME-003): answer of a lock conflict on the bundle's routes
+        status: null           # 409 (default) or 503; null follows nowo_transaction_doctrine.conflict_response
+        retry_after: null      # seconds of a CONFLICT_001 answer without a hint; null follows transaction-doctrine, else 1
     html:
         sanitize:
             strategy: allowlist # none | strip | allowlist | service
@@ -101,6 +105,18 @@ nowo_page_layout_kit:
     doctrine:
         table_prefix: 'tenant_a_'
 ```
+
+## conflict_response
+
+**2.3** (REQ-RUNTIME-003 rule 6). A deadlock, lock wait timeout or serialization failure on the bundle's admin routes
+answers a conflict instead of a 500: the status below with `X-Conflict-Code: CONFLICT_001` and `Retry-After` when
+nothing was committed, or `CONFLICT_002` without `Retry-After` when part of the request may already be committed. See
+[CONCURRENCY.md](CONCURRENCY.md).
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `status` | `null` | `409` (default) or `503`. `null`: `nowo_transaction_doctrine.conflict_response.status` when nowo-tech/transaction-doctrine's bundle is registered, else 409. Other values fail the configuration. |
+| `retry_after` | `null` | `Retry-After` seconds of a `CONFLICT_001` answer when the failure carries no hint (≥ 0). `null`: transaction-doctrine's value, else 1. |
 
 ## Twig globals
 

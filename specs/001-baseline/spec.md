@@ -103,6 +103,7 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | FR-I18N-002 | Admin / CMS UI strings ship in domain `NowoPageLayoutKitBundle` for `de`, `en`, `es`, `fr`, `it`, `nl`, `pt` |
 | FR-ORM-003 | An optional dedicated entity manager (`doctrine.entity_manager`) maps the bundle entities; every other manager maps nothing for the bundle namespace (2.2) |
 | FR-EVT-001 | Write events (`PageLayoutChangedEvent`, `PageBlockUpdatedEvent`, `PageBlocksMigratedEvent`, scalars only) are recorded in a per-transaction outbox and dispatched only after the real commit of the bundle connection (2.2) |
+| FR-RUN-001 | Concurrency (REQ-RUNTIME-003, 2.3): the reorder and each page of the migration are one transaction-doctrine runner unit (page entries `FOR UPDATE` in id order, re-read under the lock); one migration at a time (named lock, never waits); lock conflicts on the bundle's routes answer 409 (or 503) with `X-Conflict-Code` `CONFLICT_001` + `Retry-After` or `CONFLICT_002`; a duplicate block translation answers the domain 409 `PAGE_LAYOUT_CONCURRENT_EDIT`; real-database race tests on MySQL, MariaDB and PostgreSQL ([CONCURRENCY.md](../../docs/CONCURRENCY.md)) |
 
 ### Twig integration (`FR-TWIG-*`)
 

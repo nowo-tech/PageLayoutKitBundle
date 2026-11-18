@@ -14,8 +14,10 @@ use Nowo\PageLayoutKitBundle\Entity\PageLayoutEntry;
 use Nowo\PageLayoutKitBundle\Enum\PageBlockType;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderData;
 use Nowo\PageLayoutKitBundle\Form\PageLayoutReorderType;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
 use Nowo\PageLayoutKitBundle\Repository\PageLayoutEntryRepository;
 use Nowo\PageLayoutKitBundle\Service\PublicPageUrlResolver;
+use Nowo\PageLayoutKitBundle\Tests\Support\SqliteEntityManagerFactory;
 use Nowo\UiKitBundle\View\EmptyState;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\Table;
@@ -187,6 +189,39 @@ final class PageLayoutControllerTest extends TestCase
         self::assertSame(7, $first->getPosition());
         self::assertSame(2, $second->getPosition());
         self::assertSame(['Order updated.'], $session->getFlashBag()->get('success'));
+    }
+
+    /**
+     * 2.3 (REQ-RUNTIME-003 rules 1 and 4): with the bundle transaction the reorder is one locked write unit.
+     */
+    public function testLayoutReordersInOneWriteUnitWithTheBundleTransaction(): void
+    {
+        $manager = SqliteEntityManagerFactory::create();
+        $first   = (new PageLayoutEntry())->setPageKey('home')->setBlockType(PageBlockType::Hero)->setBlockId(1)->setPosition(0);
+        $second  = (new PageLayoutEntry())->setPageKey('home')->setBlockType(PageBlockType::Text)->setBlockId(2)->setPosition(1);
+        $manager->persist($first);
+        $manager->persist($second);
+        $manager->flush();
+
+        $registry = $this->createStub(ManagerRegistry::class);
+        $registry->method('getManagerForClass')->willReturn($manager);
+        $repository = new PageLayoutEntryRepository($registry);
+
+        $reorderData                    = PageLayoutReorderData::fromEntries([$first, $second]);
+        $reorderData->rows[0]->position = 5;
+        $form                           = $this->createStub(FormInterface::class);
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn($reorderData);
+
+        $request = Request::create('/admin/pages/home/layout', 'POST');
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $controller = new PageLayoutController($repository, $manager, $this->createFormFactory($form), transaction: new PageLayoutTransaction($manager));
+        $controller->setContainer($this->createControllerContainer(['home'], $request));
+
+        self::assertInstanceOf(RedirectResponse::class, $controller->layout('home', $request));
+        self::assertSame(5, (int) $manager->getConnection()->fetchOne('SELECT position FROM content_page_layout_entry WHERE id = ?', [$first->getId()]));
+        self::assertFalse($manager->getConnection()->isTransactionActive());
     }
 
     public function testLayoutRejectsInvalidSubmissions(): void

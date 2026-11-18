@@ -7,10 +7,14 @@ namespace Nowo\PageLayoutKitBundle\DependencyInjection\Compiler;
 use Nowo\PageLayoutKitBundle\DependencyInjection\NowoPageLayoutKitExtension;
 use Nowo\PageLayoutKitBundle\EventSubscriber\PageLayoutKitEntityManagerRecoverySubscriber;
 use Nowo\PageLayoutKitBundle\Persistence\ExcludedEntityNamespaceDriver;
+use Nowo\PageLayoutKitBundle\Persistence\PageLayoutTransaction;
+use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 use function array_keys;
 use function array_unshift;
@@ -101,6 +105,20 @@ final readonly class PageLayoutEntityManagerPass implements CompilerPassInterfac
         $isHostDefault = $container->hasParameter('doctrine.default_entity_manager') && $container->getParameter('doctrine.default_entity_manager') === $name;
         if (!$isHostDefault && $container->hasDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)) {
             $container->getDefinition(PageLayoutKitEntityManagerRecoverySubscriber::class)->setArgument('$managerName', $name);
+        }
+
+        // 2.3 (REQ-RUNTIME-003 rule 2): the bundle's own manager may be closed and reset after a failed write unit
+        // (forEntityManager()); the host's never is (forHostEntityManager(), the PageLayoutTransaction default).
+        if (!$isHostDefault && $container->hasDefinition(PageLayoutTransaction::class)) {
+            $container->getDefinition(PageLayoutTransaction::class)->setArgument('$runner', (new Definition(DoctrineTransactionRunner::class))
+                ->setFactory([DoctrineTransactionRunner::class, 'forEntityManager'])
+                ->setArguments([
+                    new Reference(sprintf('doctrine.orm.%s_entity_manager', $name)),
+                    new Reference('doctrine'),
+                    $name,
+                    1,
+                    new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                ]));
         }
     }
 }

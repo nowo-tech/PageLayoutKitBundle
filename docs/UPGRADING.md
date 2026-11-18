@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Concurrency (REQ-RUNTIME-003)](#concurrency-req-runtime-003)
 - [To 2.2.1](#to-221)
 - [To 2.2.0](#to-220)
 - [To 2.1.1](#to-211)
@@ -30,6 +31,43 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+### Concurrency (REQ-RUNTIME-003)
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
+
+This also installs `nowo-tech/transaction-doctrine` `^1.6` and `nowo-tech/transaction-contract` `^1.0`. Registering
+transaction-doctrine's Symfony bundle is optional; when it is registered, the bundle follows its
+`conflict_response` and its request commit mark. No schema change.
+
+- **Lock conflicts answer 409.** A deadlock, lock wait timeout or serialization failure on the admin routes answered a
+  500; it now answers 409 with `X-Conflict-Code: CONFLICT_001` and `Retry-After` (nothing committed, retry is safe), or
+  409 with `CONFLICT_002` and no `Retry-After` (part of the request may be committed: reload first). Keep 503 if your
+  proxy or monitor expects it:
+
+  ```yaml
+  nowo_page_layout_kit:
+      conflict_response:
+          status: 503
+  ```
+
+- **Duplicate block translation.** Two editors adding the same missing translation of one block at once answered a
+  500; the second one now gets 409 with `X-Error-Code: PAGE_LAYOUT_CONCURRENT_EDIT` (no `X-Conflict-Code`).
+- **Unflushed changes of yours (host entity manager).** Without `doctrine.entity_manager` the reorder and each page of
+  the migration run through `DoctrineTransactionRunner::forHostEntityManager()` on your manager. It now throws a
+  `LogicException` before opening the transaction when your manager holds unflushed changes (it would otherwise carry
+  them into the bundle's transaction). The admin routes start clean; if you call `PageBlockMigrator::migrate()` from
+  your own code, flush or clear your manager first.
+- **`--force` scope.** `nowo:page-layout:migrate --force` replaces `home` and `contact` (their layout entries and the
+  blocks they reference) and keeps every other page. Before it deleted every layout entry and every block. If you
+  relied on that to empty other pages, delete them yourself.
+- **Resume without `--force`.** The migration builds each page that has no layout yet, so running it again completes a
+  run that stopped between two pages. `PageBlocksMigratedEvent::$pageKeys` now lists the pages actually built.
+- **Command exit code.** A lock conflict, or another migration running, ends the command with exit code 1 and an
+  error message (nothing of the failed page is stored) instead of an uncaught exception.
+- See [CONCURRENCY.md](CONCURRENCY.md).
 
 ## To 2.2.1
 

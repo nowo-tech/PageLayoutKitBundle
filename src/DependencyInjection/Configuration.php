@@ -6,6 +6,7 @@ namespace Nowo\PageLayoutKitBundle\DependencyInjection;
 
 use Nowo\PageLayoutKitBundle\Enum\HtmlSanitizeStrategy;
 use Nowo\PageLayoutKitBundle\Ui\PageLayoutKitPages;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -14,6 +15,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use function array_diff_key;
 use function array_keys;
 use function implode;
+use function in_array;
 use function is_string;
 use function sprintf;
 use function trim;
@@ -126,7 +128,25 @@ final class Configuration implements ConfigurationInterface
                                 ->thenInvalid('doctrine.entity_manager must be a non-empty entity manager name or null.')
                             ->end()
                         ->end()
-
+                    ->end()
+                ->end()
+                ->arrayNode('conflict_response')
+                    ->info('2.3 (REQ-RUNTIME-003): answer of a lock conflict (deadlock, lock wait timeout, serialization failure) on the bundle\'s routes. Unset: nowo-tech/transaction-doctrine\'s conflict_response when that bundle is registered, else 409 with Retry-After 1.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->integerNode('status')
+                            ->info('409 (default, CONFLICT_001 / CONFLICT_002) or 503. Null: follow transaction-doctrine, else 409.')
+                            ->defaultNull()
+                            ->validate()
+                                ->ifTrue(static fn (mixed $v): bool => $v !== null && !in_array($v, ConflictResponsePolicy::STATUSES, true))
+                                ->thenInvalid('nowo_page_layout_kit.conflict_response.status must be 409 or 503, got %s.')
+                            ->end()
+                        ->end()
+                        ->integerNode('retry_after')
+                            ->info('Retry-After seconds of a CONFLICT_001 answer when the failure carries no hint. Null: follow transaction-doctrine, else 1.')
+                            ->defaultNull()
+                            ->min(0)
+                        ->end()
                     ->end()
                 ->end()
                 ->arrayNode('html')

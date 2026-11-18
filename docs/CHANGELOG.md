@@ -36,10 +36,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Concurrency (REQ-RUNTIME-003): `conflict_response.status` (409 default, or 503) and `conflict_response.retry_after`. A deadlock, lock wait timeout or serialization failure on the bundle's admin routes answers 409 with `X-Conflict-Code: CONFLICT_001` and `Retry-After` when nothing was committed, or `CONFLICT_002` without `Retry-After` when part of the request may be (transaction-doctrine's request mark, and a commit ledger of the bundle's connection). Unset, the options follow nowo-tech/transaction-doctrine's `conflict_response`.
+- Two editors adding the same missing block translation at once answer 409 with `X-Error-Code: PAGE_LAYOUT_CONCURRENT_EDIT` (a domain code, never a `CONFLICT_*` code) instead of a 500.
+- `docs/CONCURRENCY.md`: write paths, codes, host options, residual risks.
+- CI job "Real databases (MySQL 8.4, MariaDB 11.4, PostgreSQL 16)" with two-connection race tests (admin reorder against the migrator both ways, two reorders, two migrations, `CONFLICT_002` after a committed unit, duplicate translation); `make test-with-db` runs them locally.
+
 ### Changed
+
+- The layout reorder is one write unit of nowo-tech/transaction-doctrine's runner: the page's entries are locked `FOR UPDATE` in id order and read again, so the submitted order replaces the committed one whole (two admins never mix their orders).
+- `nowo:page-layout:migrate --force` replaces the layout and the blocks of `home` and `contact` only; layouts of other pages are kept (it deleted every layout entry and every block before).
+- Without `--force` the migration builds each page that has no layout yet, so a run stopped between two pages is completed by running it again (it did nothing as soon as `home` had a layout). `PageBlocksMigratedEvent::$pageKeys` lists the pages actually built.
+- The migration command answers a lock conflict, or another migration running at the same time, with an error and exit code 1 instead of an exception.
+- Requires `nowo-tech/transaction-doctrine` `^1.6` and `nowo-tech/transaction-contract` `^1.0`.
 
 - Demo: the shell is UiKit's admin layout with the UiKit masthead and flashes (no Bootstrap or icon CDN, no global token overrides), the pages use UiKit classes, `demo/symfony8/composer.json` requires `nowo-tech/ui-kit-bundle` ^2.53 (REQ-DEMO-014).
 - Demo: the login form is a FormKit form (profile `demo`) (REQ-DEMO-015).
+
+### Fixed
+
+- The page block migration flushed several times with no enclosing transaction: a failure left a half-built page (blocks without layout entries, or a layout wiped by `--force` with nothing in its place). Each page is now one write unit that commits whole or not at all.
+- Two migrations started at once on empty pages both built them (duplicate layouts). A named lock of the bundle's connection (MySQL / MariaDB `GET_LOCK`, PostgreSQL advisory lock, never waiting) now refuses the second one with nothing changed.
+- A lock conflict on the admin routes answered a 500.
 
 ### Documentation
 
