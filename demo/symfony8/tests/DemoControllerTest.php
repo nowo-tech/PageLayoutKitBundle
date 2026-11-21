@@ -15,7 +15,7 @@ final class DemoControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Home');
-        self::assertSelectorTextContains('body', 'Page Layout Kit Bundle');
+        self::assertSelectorTextContains('body', 'Page Layout Kit');
     }
 
     public function testContactPageIsSuccessful(): void

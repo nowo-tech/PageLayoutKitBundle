@@ -1,12 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loginAsAdmin, waitForWebProfiler } from './helpers';
+import { loginAsAdmin } from './helpers';
 
 /** REQ-DEMO-013 — README screenshots (captured as PNG, converted to WebP by scripts/to-webp.mjs). */
 const outDir = process.env.SCREENSHOT_DIR
   ? resolve(process.env.SCREENSHOT_DIR)
   : resolve(__dirname, '../../../../docs/images/demo');
+
+/** The Symfony toolbar is dev chrome: it is never part of a README screenshot. */
+async function hideProfiler(page: Page): Promise<void> {
+  await page.addStyleTag({ content: '.sf-toolbar,.sf-minitoolbar,[id^="sfwdt"]{display:none!important}' });
+}
 
 test.beforeAll(() => {
   mkdirSync(outDir, { recursive: true });
@@ -18,9 +23,9 @@ test.describe('PageLayoutKit screenshots', () => {
   test('page-blocks — public page composed from ordered blocks', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/');
-    await expect(page.locator('main article.nowo-ui-card').first()).toBeVisible();
+    await expect(page.locator('[data-testid="page-block"]').first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Edit block' }).first()).toBeVisible();
-    await waitForWebProfiler(page);
+    await hideProfiler(page);
     await page.screenshot({ path: resolve(outDir, 'page-blocks.png') });
   });
 
@@ -28,7 +33,7 @@ test.describe('PageLayoutKit screenshots', () => {
     await loginAsAdmin(page);
     await page.goto('/admin/pages/home/layout');
     await expect(page.locator('table tbody tr').first()).toBeVisible();
-    await waitForWebProfiler(page);
+    await hideProfiler(page);
     await page.screenshot({ path: resolve(outDir, 'admin-layout.png') });
   });
 });
