@@ -2,25 +2,30 @@
 
 {% block title %}Sign in{% endblock %}
 
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {
+        title: 'Admin login',
+        intro: 'Use the in-memory demo account to access the PageLayoutKit admin screens.',
+    }) }}
+{% endblock %}
+
+{% block nowo_ui_flashes %}
+    {{ include('@NowoUiKit/demo_platform/_flashes.html.twig', {flash_messages: error ? {error: [error.messageKey|trans(error.messageData, 'security')]} : null}) }}
+{% endblock %}
+
 {% block body %}
-    <section class="nowo-ui-card" data-testid="login-card">
-        <div class="nowo-ui-card__header"><h1 class="nowo-ui-card__title">Admin login</h1></div>
-        <div class="nowo-ui-card__body">
-            <p class="nowo-ui-muted">Use the in-memory demo account to access PageLayoutKit admin screens.</p>
-
-            {% if error %}
-                <div class="nowo-ui-flash nowo-ui-flash--error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-            {% endif %}
-
-            <div class="nowo-ui-flash nowo-ui-flash--info">Credentials: <code class="nowo-ui-code">admin</code> / <code class="nowo-ui-code">admin</code></div>
-
-            {{ form_start(loginForm) }}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Sign in', intro: 'Credentials: admin / admin', kind: 'form', testid: 'login-card'} %}
+        {% block section_body %}
+            {{ form_start(loginForm, {attr: {id: 'login-form', class: 'nowo-ui-form'}}) }}
                 {% for child in loginForm %}
-                    {% if not child.rendered %}
+                    {% if not child.rendered and child.vars.name != 'submit' %}
                         {{ form_row(child) }}
                     {% endif %}
                 {% endfor %}
-            {{ form_end(loginForm) }}
-        </div>
-    </section>
+            {{ form_end(loginForm, {render_rest: false}) }}
+        {% endblock %}
+        {% block section_footer %}
+            <button type="submit" form="login-form" class="nowo-ui-btn nowo-ui-btn--primary">{{ loginForm.submit.vars.label }}</button>
+        {% endblock %}
+    {% endembed %}
 {% endblock %}

@@ -1,37 +1,19 @@
-{#- REQ-DEMO-014: the demo shell is UiKit's admin layout with UiKit's default theme (nowo-ui.css from the bundle's own
-    asset package, no CSS framework, no CDN). Bundle admin pages reach it through layouts/admin.html.twig. -#}
-{% extends '@NowoUiKit/layout/admin.html.twig' %}
-
+{#- REQ-DEMO-014: the demo runs inside UiKit's shared demo platform shell. This file only declares the demo; the bundle's
+    admin screens reach it through nowo_ui_kit.layouts.admin. -#}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'Page Layout Kit',
+    home_route: 'home',
+    repository: 'https://github.com/nowo-tech/PageLayoutKitBundle',
+    translation_domain: false,
+    auth: {login_route: 'app_login', logout_route: 'app_logout'},
+    nav: [
+        {label: 'Home', route: 'home', section: 'Public pages'},
+        {label: 'Contact', route: 'contact', section: 'Public pages'},
+        {label: 'Admin home', route: 'admin_page_layout', params: {pageKey: 'home'}, section: 'Admin', testid: 'demo-nav-admin_page_layout-home'},
+        {label: 'Admin contact', route: 'admin_page_layout', params: {pageKey: 'contact'}, section: 'Admin', testid: 'demo-nav-admin_page_layout-contact'},
+    ],
+} %}
 {% block nowo_ui_document_title %}{% block title %}Page Layout Kit Demo{% endblock %}{% endblock %}
-
-{% block nowo_ui_navigation %}
-    {% set _route = app.request.attributes.get('_route') %}
-    {% set _page = app.request.attributes.get('pageKey') %}
-    <header class="nowo-ui-header" data-testid="demo-masthead">
-        <a class="nowo-ui-brand" href="{{ path('home') }}">Page Layout Kit Bundle · Symfony 8</a>
-        <nav class="nowo-ui-menu" aria-label="Demo">
-            <a class="nowo-ui-link" href="{{ path('home') }}"{% if _route == 'home' %} aria-current="page"{% endif %}>Home</a>
-            <a class="nowo-ui-link" href="{{ path('contact') }}"{% if _route == 'contact' %} aria-current="page"{% endif %}>Contact</a>
-            <a class="nowo-ui-link" href="{{ path('admin_page_layout', {pageKey: 'home'}) }}"{% if _route == 'admin_page_layout' and _page == 'home' %} aria-current="page"{% endif %}>Admin home</a>
-            <a class="nowo-ui-link" href="{{ path('admin_page_layout', {pageKey: 'contact'}) }}"{% if _route == 'admin_page_layout' and _page == 'contact' %} aria-current="page"{% endif %}>Admin contact</a>
-        </nav>
-        <div class="nowo-ui-header__end">
-            {% if app.user %}
-                <span class="nowo-ui-badge nowo-ui-badge--primary">{{ app.user.userIdentifier }}</span>
-                <a class="nowo-ui-link" href="{{ path('app_logout') }}">Logout</a>
-            {% elseif _route != 'app_login' %}
-                <a class="nowo-ui-link" href="{{ path('app_login') }}">Login</a>
-            {% endif %}
-        </div>
-    </header>
-{% endblock %}
-
-{% block nowo_ui_flashes %}
-    {% for type, css in {success: 'success', error: 'error', warning: 'warning', info: 'info'} %}
-        {% for message in app.flashes(type) %}
-            <div class="nowo-ui-flash nowo-ui-flash--{{ css }}" role="{{ type == 'error' ? 'alert' : 'status' }}">{{ message }}</div>
-        {% endfor %}
-    {% endfor %}
-{% endblock %}
 
 {% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
