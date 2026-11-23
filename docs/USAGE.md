@@ -13,6 +13,7 @@ How to manage ordered page blocks, render them publicly, and enable inline CMS e
 - [Legacy migration command](#legacy-migration-command)
 - [Twig overrides](#twig-overrides)
 - [Rich text and host integration notes](#rich-text-and-host-integration-notes)
+- [Browser console](#browser-console)
 
 ## Admin layout management
 
@@ -339,3 +340,7 @@ Override those templates in real applications to match your own routes and desig
 Also note that several content fields are rendered with `|raw` in the default templates. They are sanitized first (default `html.sanitize.strategy: allowlist`, see [SECURITY.md](SECURITY.md#rich-text-rendering)); keep a sanitizing strategy unless every editor is fully trusted.
 
 See also [INSTALLATION.md](INSTALLATION.md) and [CONFIGURATION.md](CONFIGURATION.md).
+
+## Browser console
+
+The bundle's script logs one line when it loads (`📦 [page-layout-kit] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.

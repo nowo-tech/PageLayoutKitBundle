@@ -1,5 +1,119 @@
 var NowoPageLayoutKitCmsModalController = (function(_hotwired_stimulus) {
+	// src/Resources/assets/src/logger.ts
+	/**
+	* =============================================================================
+	* BUNDLE LOGGER - Reusable across bundles
+	* =============================================================================
+	*
+	* USAGE (English):
+	*
+	* 1. Create a logger for your bundle (typically at the top of your entry file):
+	*
+	*    import { createBundleLogger } from './logger';
+	*    declare const __MY_BUNDLE_BUILD_TIME__: string;  // optional, injected by Vite define
+	*
+	*    const log = createBundleLogger('my-bundle', {
+	*      buildTime: typeof __MY_BUNDLE_BUILD_TIME__ !== 'undefined' ? __MY_BUNDLE_BUILD_TIME__ : undefined,
+	*    });
+	*
+	* 2. Log that the script loaded (call once at startup; includes build id if provided):
+	*
+	*    log.scriptLoaded();
+	*
+	* 3. Call setDebug(true) when your bundle's debug mode is on (e.g. from config or data attribute).
+	*    When debug is false, only scriptLoaded() output is shown; info/debug/warn/error are no-ops.
+	*
+	* 4. Use level methods for the rest of the bundle:
+	*
+	*    log.debug('detailed info', { foo: 1 });
+	*    log.info('something happened');
+	*    log.warn('unexpected but handled', error);
+	*    log.error('failure', error);
+	*
+	* 5. To inject the build time with Vite, add to vite.config.ts (see buildTimeLabel() in this bundle's config: it
+	*    reads/writes the committed build-info.json, so unchanged sources keep the same build time):
+	*
+	*    define: {
+	*      __MY_BUNDLE_BUILD_TIME__: JSON.stringify(buildTimeLabel('src/Resources/assets/src')), // "2026-11-23 14:05 UTC"
+	*    },
+	*
+	* 6. Quiet switch: scriptLoaded() prints nothing when <html data-nowo-console="quiet"> or
+	*    globalThis.NOWO_CONSOLE === 'quiet'. The default (print) is unchanged.
+	*
+	* All methods support multiple arguments (like console.log). Objects are stringified
+	* for readability in debug/info/warn/error. The prefix is [name] and each level
+	* has a distinct style and emoji when the console supports it.
+	* =============================================================================
+	*/
+	/** True when the page asked for a silent console (`<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'`). */
+	function isQuiet() {
+		try {
+			if (globalThis.NOWO_CONSOLE === "quiet") return true;
+			return typeof document !== "undefined" && document.documentElement.dataset.nowoConsole === "quiet";
+		} catch {
+			return false;
+		}
+	}
+	var STYLES = {
+		script: "color:#0ea5e9;font-weight:bold",
+		debug: "color:#6b7280",
+		info: "color:#2563eb",
+		warn: "color:#d97706",
+		error: "color:#dc2626;font-weight:bold"
+	};
+	var EMOJI = {
+		script: "📦",
+		debug: "🔍",
+		info: "ℹ️",
+		warn: "⚠️",
+		error: "❌"
+	};
+	function formatArgs(args) {
+		return args.map((a) => typeof a === "object" && a !== null && !(a instanceof Error) ? JSON.stringify(a) : a);
+	}
+	/**
+	* Creates a logger for a bundle. Use the same logger instance across the bundle.
+	*
+	* @param name - Short name for log prefix (e.g. 'icon-selector').
+	* @param options - Optional buildTime for scriptLoaded().
+	*/
+	function createBundleLogger(name, options = {}) {
+		const prefix = `[${name}]`;
+		const { buildTime } = options;
+		let debugEnabled = false;
+		return {
+			scriptLoaded() {
+				if (isQuiet()) return;
+				if (buildTime !== void 0 && buildTime !== "") console.log(`%c${EMOJI.script} ${prefix} script loaded, build: %c${buildTime}`, STYLES.script, "color:#059669");
+				else console.log(`%c${EMOJI.script} ${prefix} script loaded`, STYLES.script);
+			},
+			setDebug(enabled) {
+				debugEnabled = enabled;
+			},
+			debug(...args) {
+				if (!debugEnabled) return;
+				if (args.length > 0) console.debug(`%c${EMOJI.debug} ${prefix}`, STYLES.debug, ...formatArgs(args));
+				else console.debug(`%c${EMOJI.debug} ${prefix}`, STYLES.debug);
+			},
+			info(...args) {
+				if (!debugEnabled) return;
+				if (args.length > 0) console.info(`%c${EMOJI.info} ${prefix}`, STYLES.info, ...formatArgs(args));
+				else console.info(`%c${EMOJI.info} ${prefix}`, STYLES.info);
+			},
+			warn(...args) {
+				if (!debugEnabled) return;
+				if (args.length > 0) console.warn(`%c${EMOJI.warn} ${prefix}`, STYLES.warn, ...formatArgs(args));
+				else console.warn(`%c${EMOJI.warn} ${prefix}`, STYLES.warn);
+			},
+			error(...args) {
+				if (!debugEnabled) return;
+				if (args.length > 0) console.error(`%c${EMOJI.error} ${prefix}`, STYLES.error, ...formatArgs(args));
+				else console.error(`%c${EMOJI.error} ${prefix}`, STYLES.error);
+			}
+		};
+	}
 	// src/Resources/assets/src/cms_modal_controller.ts
+	createBundleLogger("page-layout-kit", { buildTime: "2026-11-23 13:58 UTC" }).scriptLoaded();
 	/**
 	* Unified modal for inline CMS editing (page blocks, services, cases, service FAQs).
 	*

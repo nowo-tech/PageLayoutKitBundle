@@ -1,4 +1,11 @@
 import { Controller } from '@hotwired/stimulus';
+import { createBundleLogger } from './logger';
+
+declare const __PAGE_LAYOUT_KIT_BUILD_TIME__: string;
+
+createBundleLogger('page-layout-kit', {
+    buildTime: typeof __PAGE_LAYOUT_KIT_BUILD_TIME__ !== 'undefined' ? __PAGE_LAYOUT_KIT_BUILD_TIME__ : undefined,
+}).scriptLoaded();
 
 type CmsResource = 'page-block' | 'service' | 'case' | 'service-faq' | 'page-seo' | 'blog';
 
