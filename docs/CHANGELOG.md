@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `cms_modal_controller.js` and `cms_modal_controller.iife.js` are now minified like the other bundle scripts: the logger doc block (about 4.5 KB per file) no longer ships (audit ZAI-4). Behaviour is unchanged.
+- The 2.4.0 console line example below uses a generic build label.
+
 ## [2.4.0] - 2026-11-23
 
 ### Changed
@@ -47,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Console**: `cms_modal_controller.js` and `cms_modal_controller.iife.js` logs one line on load, `📦 [page-layout-kit] script loaded, build: 2026-11-23 14:05 UTC`, with the house `createBundleLogger`. The build time is read from the committed `build-info.json` (`{sourceHash, builtAt}`): it is reused while the sources are unchanged and renewed only when they change, so rebuilding unchanged sources never rewrites the committed assets (no wall-clock stamp, no user data). Quiet switch: `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` prints nothing; the default is unchanged.
+- **Console**: `cms_modal_controller.js` and `cms_modal_controller.iife.js` logs one line on load, `📦 [page-layout-kit] script loaded, build: <build date> <build time> UTC`, with the house `createBundleLogger`. The build time is read from the committed `build-info.json` (`{sourceHash, builtAt}`): it is reused while the sources are unchanged and renewed only when they change, so rebuilding unchanged sources never rewrites the committed assets (no wall-clock stamp, no user data). Quiet switch: `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` prints nothing; the default is unchanged.
 
 ## [2.3.0] - 2026-11-18
 

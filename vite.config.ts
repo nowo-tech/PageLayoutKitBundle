@@ -62,7 +62,7 @@ export default defineConfig({
   build: {
     outDir: 'src/Resources/public',
     emptyOutDir: false,
-    minify: false,
+    minify: true,
     sourcemap: false,
     lib: {
       entry: 'src/Resources/assets/src/cms_modal_controller.ts',
