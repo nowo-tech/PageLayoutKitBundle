@@ -1,131 +1,54 @@
-import { Controller } from "@hotwired/stimulus";
+import { Controller as e } from "@hotwired/stimulus";
 // src/Resources/assets/src/logger.ts
-/**
-* =============================================================================
-* BUNDLE LOGGER - Reusable across bundles
-* =============================================================================
-*
-* USAGE (English):
-*
-* 1. Create a logger for your bundle (typically at the top of your entry file):
-*
-*    import { createBundleLogger } from './logger';
-*    declare const __MY_BUNDLE_BUILD_TIME__: string;  // optional, injected by Vite define
-*
-*    const log = createBundleLogger('my-bundle', {
-*      buildTime: typeof __MY_BUNDLE_BUILD_TIME__ !== 'undefined' ? __MY_BUNDLE_BUILD_TIME__ : undefined,
-*    });
-*
-* 2. Log that the script loaded (call once at startup; includes build id if provided):
-*
-*    log.scriptLoaded();
-*
-* 3. Call setDebug(true) when your bundle's debug mode is on (e.g. from config or data attribute).
-*    When debug is false, only scriptLoaded() output is shown; info/debug/warn/error are no-ops.
-*
-* 4. Use level methods for the rest of the bundle:
-*
-*    log.debug('detailed info', { foo: 1 });
-*    log.info('something happened');
-*    log.warn('unexpected but handled', error);
-*    log.error('failure', error);
-*
-* 5. To inject the build time with Vite, add to vite.config.ts (see buildTimeLabel() in this bundle's config: it
-*    reads/writes the committed build-info.json, so unchanged sources keep the same build time):
-*
-*    define: {
-*      __MY_BUNDLE_BUILD_TIME__: JSON.stringify(buildTimeLabel('src/Resources/assets/src')), // "2026-11-23 14:05 UTC"
-*    },
-*
-* 6. Quiet switch: scriptLoaded() prints nothing when <html data-nowo-console="quiet"> or
-*    globalThis.NOWO_CONSOLE === 'quiet'. The default (print) is unchanged.
-*
-* All methods support multiple arguments (like console.log). Objects are stringified
-* for readability in debug/info/warn/error. The prefix is [name] and each level
-* has a distinct style and emoji when the console supports it.
-* =============================================================================
-*/
-/** True when the page asked for a silent console (`<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'`). */
-function isQuiet() {
+function t() {
 	try {
-		if (globalThis.NOWO_CONSOLE === "quiet") return true;
-		return typeof document !== "undefined" && document.documentElement.dataset.nowoConsole === "quiet";
+		return globalThis.NOWO_CONSOLE === "quiet" || typeof document < "u" && document.documentElement.dataset.nowoConsole === "quiet";
 	} catch {
-		return false;
+		return !1;
 	}
 }
-var STYLES = {
+var n = {
 	script: "color:#0ea5e9;font-weight:bold",
 	debug: "color:#6b7280",
 	info: "color:#2563eb",
 	warn: "color:#d97706",
 	error: "color:#dc2626;font-weight:bold"
-};
-var EMOJI = {
+}, r = {
 	script: "📦",
 	debug: "🔍",
 	info: "ℹ️",
 	warn: "⚠️",
 	error: "❌"
 };
-function formatArgs(args) {
-	return args.map((a) => typeof a === "object" && a !== null && !(a instanceof Error) ? JSON.stringify(a) : a);
+function i(e) {
+	return e.map((e) => typeof e == "object" && e && !(e instanceof Error) ? JSON.stringify(e) : e);
 }
-/**
-* Creates a logger for a bundle. Use the same logger instance across the bundle.
-*
-* @param name - Short name for log prefix (e.g. 'icon-selector').
-* @param options - Optional buildTime for scriptLoaded().
-*/
-function createBundleLogger(name, options = {}) {
-	const prefix = `[${name}]`;
-	const { buildTime } = options;
-	let debugEnabled = false;
+function a(e, a = {}) {
+	let o = `[${e}]`, { buildTime: s } = a, c = !1;
 	return {
 		scriptLoaded() {
-			if (isQuiet()) return;
-			if (buildTime !== void 0 && buildTime !== "") console.log(`%c${EMOJI.script} ${prefix} script loaded, build: %c${buildTime}`, STYLES.script, "color:#059669");
-			else console.log(`%c${EMOJI.script} ${prefix} script loaded`, STYLES.script);
+			t() || (s !== void 0 && s !== "" ? console.log(`%c${r.script} ${o} script loaded, build: %c${s}`, n.script, "color:#059669") : console.log(`%c${r.script} ${o} script loaded`, n.script));
 		},
-		setDebug(enabled) {
-			debugEnabled = enabled;
+		setDebug(e) {
+			c = e;
 		},
-		debug(...args) {
-			if (!debugEnabled) return;
-			if (args.length > 0) console.debug(`%c${EMOJI.debug} ${prefix}`, STYLES.debug, ...formatArgs(args));
-			else console.debug(`%c${EMOJI.debug} ${prefix}`, STYLES.debug);
+		debug(...e) {
+			c && (e.length > 0 ? console.debug(`%c${r.debug} ${o}`, n.debug, ...i(e)) : console.debug(`%c${r.debug} ${o}`, n.debug));
 		},
-		info(...args) {
-			if (!debugEnabled) return;
-			if (args.length > 0) console.info(`%c${EMOJI.info} ${prefix}`, STYLES.info, ...formatArgs(args));
-			else console.info(`%c${EMOJI.info} ${prefix}`, STYLES.info);
+		info(...e) {
+			c && (e.length > 0 ? console.info(`%c${r.info} ${o}`, n.info, ...i(e)) : console.info(`%c${r.info} ${o}`, n.info));
 		},
-		warn(...args) {
-			if (!debugEnabled) return;
-			if (args.length > 0) console.warn(`%c${EMOJI.warn} ${prefix}`, STYLES.warn, ...formatArgs(args));
-			else console.warn(`%c${EMOJI.warn} ${prefix}`, STYLES.warn);
+		warn(...e) {
+			c && (e.length > 0 ? console.warn(`%c${r.warn} ${o}`, n.warn, ...i(e)) : console.warn(`%c${r.warn} ${o}`, n.warn));
 		},
-		error(...args) {
-			if (!debugEnabled) return;
-			if (args.length > 0) console.error(`%c${EMOJI.error} ${prefix}`, STYLES.error, ...formatArgs(args));
-			else console.error(`%c${EMOJI.error} ${prefix}`, STYLES.error);
+		error(...e) {
+			c && (e.length > 0 ? console.error(`%c${r.error} ${o}`, n.error, ...i(e)) : console.error(`%c${r.error} ${o}`, n.error));
 		}
 	};
 }
 // src/Resources/assets/src/cms_modal_controller.ts
-createBundleLogger("page-layout-kit", { buildTime: "2026-11-23 13:58 UTC" }).scriptLoaded();
-/**
-* Unified modal for inline CMS editing (page blocks, services, cases, service FAQs).
-*
-* Register it under the `cms-modal` identifier used by the bundle templates:
-* `application.register('cms-modal', CmsModalController)`.
-*/
-/**
-* Encodes a value interpolated into a URL template path segment: a data-attribute value such as `../x` or `a?b#c`
-* cannot change the path, query or fragment of the request.
-*/
-var segment = (value) => encodeURIComponent(value);
-var CmsModalController = class CmsModalController extends Controller {
+a("page-layout-kit", { buildTime: "2026-11-23 13:58 UTC" }).scriptLoaded();
+var o = (e) => encodeURIComponent(e), s = class t extends e {
 	static targets = [
 		"modal",
 		"body",
@@ -144,244 +67,149 @@ var CmsModalController = class CmsModalController extends Controller {
 		blogEditUrl: String
 	};
 	previousActiveElement = null;
-	/** The modal element whose `close` event is observed (kept so disconnect() works once the target is gone). */
 	observedModal = null;
-	static ckeditorAutoInitPatched = false;
+	static ckeditorAutoInitPatched = !1;
 	static ckeditorInitRoot = null;
 	static ckeditorMountLocks = /* @__PURE__ */ new WeakSet();
 	connect() {
-		this.patchCkeditorAutoInit();
-		document.addEventListener("keydown", this.onKeydown);
-		this.observedModal = this.modalTarget;
-		this.observedModal.addEventListener("close", this.onDialogClose);
+		this.patchCkeditorAutoInit(), document.addEventListener("keydown", this.onKeydown), this.observedModal = this.modalTarget, this.observedModal.addEventListener("close", this.onDialogClose);
 	}
 	disconnect() {
-		document.removeEventListener("keydown", this.onKeydown);
-		this.observedModal?.removeEventListener("close", this.onDialogClose);
-		this.observedModal = null;
+		document.removeEventListener("keydown", this.onKeydown), this.observedModal?.removeEventListener("close", this.onDialogClose), this.observedModal = null;
 	}
-	/**
-	* Closes the open modal on Escape (bound once per instance so disconnect() can remove it). A native `<dialog>`
-	* closes itself on Escape and fires `close`, handled by onDialogClose.
-	*/
-	onKeydown = (event) => {
-		if (event.key === "Escape" && !this.isDialog() && !this.modalTarget.hidden) this.close();
+	onKeydown = (e) => {
+		e.key === "Escape" && !this.isDialog() && !this.modalTarget.hidden && this.close();
 	};
-	/**
-	* Resets the modal when the native `<dialog>` closes (Escape, the UiKit close buttons, `dialog.close()`).
-	*/
 	onDialogClose = () => {
 		this.reset();
 	};
-	open(event) {
-		event.preventDefault();
-		event.stopPropagation();
-		const button = event.currentTarget;
-		const resource = button.dataset.cmsModalResourceParam;
-		const id = button.dataset.cmsModalIdParam;
-		const blockType = button.dataset.cmsModalBlockTypeParam;
-		const faqId = button.dataset.cmsModalFaqIdParam;
-		const pageKey = button.dataset.cmsModalPageKeyParam;
-		const mode = button.dataset.cmsModalModeParam ?? (id ? "edit" : "create");
-		const url = this.resolveUrl(resource, mode, id, blockType, faqId, pageKey);
-		if (!url) return;
-		this.setTitle(button.dataset.cmsModalTitleParam ?? "");
-		this.previousActiveElement = button;
-		this.loadUrl(url, resource, id, blockType);
+	open(e) {
+		e.preventDefault(), e.stopPropagation();
+		let t = e.currentTarget, n = t.dataset.cmsModalResourceParam, r = t.dataset.cmsModalIdParam, i = t.dataset.cmsModalBlockTypeParam, a = t.dataset.cmsModalFaqIdParam, o = t.dataset.cmsModalPageKeyParam, s = t.dataset.cmsModalModeParam ?? (r ? "edit" : "create"), c = this.resolveUrl(n, s, r, i, a, o);
+		c && (this.setTitle(t.dataset.cmsModalTitleParam ?? ""), this.previousActiveElement = t, this.loadUrl(c, n, r, i));
 	}
 	close() {
-		const modal = this.modalTarget;
-		if (modal instanceof HTMLDialogElement) {
-			if (modal.open && typeof modal.close === "function") {
-				modal.close();
+		let e = this.modalTarget;
+		if (e instanceof HTMLDialogElement) {
+			if (e.open && typeof e.close == "function") {
+				e.close();
 				return;
 			}
-			modal.removeAttribute("open");
-			this.reset();
-			return;
-		}
-		modal.hidden = true;
-		this.reset();
+			e.removeAttribute("open"), this.reset();
+		} else e.hidden = !0, this.reset();
 	}
-	/**
-	* The modal target is the UiKit `<dialog>` of `cms/modal_shell.html.twig` (2.1); a host override of the 2.0 shell
-	* (a `<div hidden>`) is still shown and hidden through the `hidden` attribute.
-	*/
 	isDialog() {
 		return this.modalTarget instanceof HTMLDialogElement;
 	}
 	show() {
-		const modal = this.modalTarget;
-		if (modal instanceof HTMLDialogElement) {
-			if (!modal.open) {
-				if (typeof modal.showModal === "function") modal.showModal();
-				else modal.setAttribute("open", "");
-			}
-			return;
-		}
-		modal.hidden = false;
+		let e = this.modalTarget;
+		e instanceof HTMLDialogElement ? e.open || (typeof e.showModal == "function" ? e.showModal() : e.setAttribute("open", "")) : e.hidden = !1;
 	}
 	reset() {
-		document.body.classList.remove("cms-modal-open");
-		this.bodyTarget.innerHTML = "";
-		this.setSubmitEnabled(false);
-		const previous = this.previousActiveElement;
-		this.previousActiveElement = null;
-		previous?.focus();
+		document.body.classList.remove("cms-modal-open"), this.bodyTarget.innerHTML = "", this.setSubmitEnabled(!1);
+		let e = this.previousActiveElement;
+		this.previousActiveElement = null, e?.focus();
 	}
-	resolveUrl(resource, mode, id, blockType, faqId, pageKey) {
-		if ("page-block" === resource && blockType && id) return this.pageBlockUrlValue.replace("__TYPE__", segment(blockType)).replace("__ID__", segment(id));
-		if ("service" === resource) return "create" === mode ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace("__ID__", segment(id ?? "0"));
-		if ("service-faq" === resource && id) {
-			if ("create" === mode) return this.serviceFaqCreateUrlValue.replace("__ID__", segment(id));
-			return this.serviceFaqEditUrlValue.replace("__ID__", segment(id)).replace("__FAQ_ID__", segment(faqId ?? "0"));
-		}
-		if ("case" === resource) return "create" === mode ? this.caseCreateUrlValue : this.caseEditUrlValue.replace("__ID__", segment(id ?? "0"));
-		if ("page-seo" === resource && pageKey) return this.pageSeoEditUrlValue.replace("__PAGE_KEY__", segment(pageKey));
-		if ("blog" === resource) return this.blogEditUrlValue.replace("__ID__", segment(id ?? "0"));
-		return null;
+	resolveUrl(e, t, n, r, i, a) {
+		return e === "page-block" && r && n ? this.pageBlockUrlValue.replace("__TYPE__", o(r)).replace("__ID__", o(n)) : e === "service" ? t === "create" ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace("__ID__", o(n ?? "0")) : e === "service-faq" && n ? t === "create" ? this.serviceFaqCreateUrlValue.replace("__ID__", o(n)) : this.serviceFaqEditUrlValue.replace("__ID__", o(n)).replace("__FAQ_ID__", o(i ?? "0")) : e === "case" ? t === "create" ? this.caseCreateUrlValue : this.caseEditUrlValue.replace("__ID__", o(n ?? "0")) : e === "page-seo" && a ? this.pageSeoEditUrlValue.replace("__PAGE_KEY__", o(a)) : e === "blog" ? this.blogEditUrlValue.replace("__ID__", o(n ?? "0")) : null;
 	}
-	setTitle(title) {
-		if (this.hasTitleTarget && "" !== title) this.titleTarget.textContent = title;
+	setTitle(e) {
+		this.hasTitleTarget && e !== "" && (this.titleTarget.textContent = e);
 	}
-	async loadUrl(url, resource, id, blockType) {
-		this.show();
-		document.body.classList.add("cms-modal-open");
-		this.setSubmitEnabled(false);
-		this.bodyTarget.innerHTML = "<p class=\"cms-modal__loading\">Loading…</p>";
+	async loadUrl(e, t, n, r) {
+		this.show(), document.body.classList.add("cms-modal-open"), this.setSubmitEnabled(!1), this.bodyTarget.innerHTML = "<p class=\"cms-modal__loading\">Loading…</p>";
 		try {
-			const response = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
-			await this.applyModalFormHtml(await response.text(), resource, id, blockType);
+			let i = await fetch(e, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+			await this.applyModalFormHtml(await i.text(), t, n, r);
 		} catch {
 			this.bodyTarget.innerHTML = "<p class=\"cms-modal__loading cms-modal__loading--error\">Could not load the form.</p>";
 		}
 	}
-	async applyModalFormHtml(html, resource, id, blockType) {
-		await this.ensureCkeditorReady();
-		this.bodyTarget.innerHTML = html;
-		this.excludeModalCkeditorRootsFromGlobalObserver(this.bodyTarget);
-		this.bindLocaleTabCkeditorRefresh(this.bodyTarget);
-		this.bindFormSubmit(resource, id, blockType);
-		this.setSubmitEnabled(Boolean(this.bodyTarget.querySelector("#cms-modal-active-form")));
-		await this.mountRichTextEditorsForActivePanels();
+	async applyModalFormHtml(e, t, n, r) {
+		await this.ensureCkeditorReady(), this.bodyTarget.innerHTML = e, this.excludeModalCkeditorRootsFromGlobalObserver(this.bodyTarget), this.bindLocaleTabCkeditorRefresh(this.bodyTarget), this.bindFormSubmit(t, n, r), this.setSubmitEnabled(!!this.bodyTarget.querySelector("#cms-modal-active-form")), await this.mountRichTextEditorsForActivePanels();
 	}
-	/**
-	* Mount CKEditor in the panel a locale tab opens (UiKit `nowo-ui:tabs:change`, `detail.panel`).
-	*/
-	bindLocaleTabCkeditorRefresh(container) {
-		container.addEventListener("nowo-ui:tabs:change", (event) => {
-			const panel = event.detail?.panel ?? null;
-			this.mountRichTextEditorsForActivePanels(panel);
+	bindLocaleTabCkeditorRefresh(e) {
+		e.addEventListener("nowo-ui:tabs:change", (e) => {
+			let t = e.detail?.panel ?? null;
+			this.mountRichTextEditorsForActivePanels(t);
 		});
 	}
-	/**
-	* Mount CKEditor only on visible (active) locale panels to avoid tripling cost.
-	*/
-	async mountRichTextEditorsForActivePanels(scope = null) {
-		const initRoot = CmsModalController.ckeditorInitRoot;
-		if (!initRoot) return;
-		const roots = (scope ?? this.bodyTarget).querySelectorAll(".ckeditor5-editor-widget");
-		for (const root of roots) {
-			const panel = root.closest("[data-nowo-ui-tabs-panel]");
-			if (scope === null && panel && (panel.hidden || !panel.hasAttribute("data-active"))) continue;
-			if (CmsModalController.ckeditorMountLocks.has(root)) continue;
-			const existingEditors = root.querySelectorAll(".ckeditor5-editor-chrome > .ck-editor").length;
-			if ("1" === root.dataset.ckeditor5Initialized && existingEditors <= 1) continue;
-			CmsModalController.ckeditorMountLocks.add(root);
-			root.removeAttribute("data-ckeditor5-root");
-			this.teardownCkeditorRoot(root);
-			try {
-				await initRoot(root);
-			} finally {
-				CmsModalController.ckeditorMountLocks.delete(root);
+	async mountRichTextEditorsForActivePanels(e = null) {
+		let n = t.ckeditorInitRoot;
+		if (!n) return;
+		let r = (e ?? this.bodyTarget).querySelectorAll(".ckeditor5-editor-widget");
+		for (let i of r) {
+			let r = i.closest("[data-nowo-ui-tabs-panel]");
+			if (e === null && r && (r.hidden || !r.hasAttribute("data-active")) || t.ckeditorMountLocks.has(i)) continue;
+			let a = i.querySelectorAll(".ckeditor5-editor-chrome > .ck-editor").length;
+			if (!(i.dataset.ckeditor5Initialized === "1" && a <= 1)) {
+				t.ckeditorMountLocks.add(i), i.removeAttribute("data-ckeditor5-root"), this.teardownCkeditorRoot(i);
+				try {
+					await n(i);
+				} finally {
+					t.ckeditorMountLocks.delete(i);
+				}
 			}
 		}
 	}
-	/**
-	* The bundle MutationObserver calls `up()` directly (not only the public API).
-	* Modal fields are excluded from auto-discovery and mounted once manually.
-	*/
 	patchCkeditorAutoInit() {
-		if (CmsModalController.ckeditorAutoInitPatched) return;
-		const api = window.NowoCkeditor5Editor;
-		if (!api) return;
-		const originalInit = api.initCkeditor5Root.bind(api);
-		CmsModalController.ckeditorInitRoot = originalInit;
-		const isModalRoot = (root) => {
-			return null !== root.closest("[data-cms-modal-target=\"body\"]");
-		};
-		const guardedInit = async (root) => {
-			if (CmsModalController.ckeditorMountLocks.has(root)) return;
-			if ("1" === root.dataset.ckeditor5Initialized) return;
-			if (isModalRoot(root)) return;
-			CmsModalController.ckeditorMountLocks.add(root);
-			try {
-				await originalInit(root);
-			} finally {
-				CmsModalController.ckeditorMountLocks.delete(root);
+		if (t.ckeditorAutoInitPatched) return;
+		let e = window.NowoCkeditor5Editor;
+		if (!e) return;
+		let n = e.initCkeditor5Root.bind(e);
+		t.ckeditorInitRoot = n;
+		let r = (e) => e.closest("[data-cms-modal-target=\"body\"]") !== null, i = async (e) => {
+			if (!t.ckeditorMountLocks.has(e) && e.dataset.ckeditor5Initialized !== "1" && !r(e)) {
+				t.ckeditorMountLocks.add(e);
+				try {
+					await n(e);
+				} finally {
+					t.ckeditorMountLocks.delete(e);
+				}
 			}
 		};
-		api.initCkeditor5Root = guardedInit;
-		if (api.runInit) api.runInit = async () => {
-			const roots = document.querySelectorAll("[data-ckeditor5-root=\"1\"]");
-			for (const root of roots) await guardedInit(root);
-		};
-		CmsModalController.ckeditorAutoInitPatched = true;
+		e.initCkeditor5Root = i, e.runInit &&= async () => {
+			let e = document.querySelectorAll("[data-ckeditor5-root=\"1\"]");
+			for (let t of e) await i(t);
+		}, t.ckeditorAutoInitPatched = !0;
 	}
-	/**
-	* Removes the auto-discovery marker before the global observer can init modal fields.
-	*/
-	excludeModalCkeditorRootsFromGlobalObserver(container) {
-		container.querySelectorAll("[data-ckeditor5-root]").forEach((root) => {
-			root.removeAttribute("data-ckeditor5-root");
+	excludeModalCkeditorRootsFromGlobalObserver(e) {
+		e.querySelectorAll("[data-ckeditor5-root]").forEach((e) => {
+			e.removeAttribute("data-ckeditor5-root");
 		});
 	}
-	teardownCkeditorRoot(root) {
-		root.querySelectorAll(".ckeditor5-editor-chrome > .ck-editor").forEach((editor) => {
-			editor.remove();
+	teardownCkeditorRoot(e) {
+		e.querySelectorAll(".ckeditor5-editor-chrome > .ck-editor").forEach((e) => {
+			e.remove();
 		});
-		const mount = root.querySelector("[data-ckeditor5-mount]");
-		if (mount) {
-			mount.innerHTML = "";
-			mount.style.removeProperty("display");
-		}
-		delete root.dataset.ckeditor5Initialized;
+		let t = e.querySelector("[data-ckeditor5-mount]");
+		t && (t.innerHTML = "", t.style.removeProperty("display")), delete e.dataset.ckeditor5Initialized;
 	}
 	async ensureCkeditorReady() {
-		for (let attempt = 0; attempt < 40; attempt += 1) {
-			this.patchCkeditorAutoInit();
-			if (CmsModalController.ckeditorInitRoot) return;
-			await new Promise((resolve) => {
-				window.setTimeout(resolve, 50);
+		for (let e = 0; e < 40; e += 1) {
+			if (this.patchCkeditorAutoInit(), t.ckeditorInitRoot) return;
+			await new Promise((e) => {
+				window.setTimeout(e, 50);
 			});
 		}
 	}
-	setSubmitEnabled(enabled) {
-		if (!this.hasSubmitTarget) return;
-		this.submitTarget.disabled = !enabled;
+	setSubmitEnabled(e) {
+		this.hasSubmitTarget && (this.submitTarget.disabled = !e);
 	}
-	bindFormSubmit(resource, id, blockType) {
-		const form = this.bodyTarget.querySelector("form");
-		if (!form) return;
-		form.addEventListener("submit", async (event) => {
-			event.preventDefault();
-			const response = await fetch(form.action, {
+	bindFormSubmit(e, t, n) {
+		let r = this.bodyTarget.querySelector("form");
+		r && r.addEventListener("submit", async (i) => {
+			i.preventDefault();
+			let a = await fetch(r.action, {
 				method: "POST",
-				body: new FormData(form),
+				body: new FormData(r),
 				headers: { "X-Requested-With": "XMLHttpRequest" }
 			});
-			if (response.redirected || response.ok) {
-				this.reloadPage();
-				return;
-			}
-			await this.applyModalFormHtml(await response.text(), resource, id, blockType);
+			a.redirected || a.ok ? this.reloadPage() : await this.applyModalFormHtml(await a.text(), e, t, n);
 		});
 	}
-	/**
-	* Reloads the host page after a successful save so the edited block re-renders server-side.
-	*/
 	reloadPage() {
 		window.location.reload();
 	}
 };
-export { CmsModalController as default };
+export { s as default };
