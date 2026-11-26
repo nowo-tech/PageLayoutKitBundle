@@ -112,6 +112,12 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | FR-TWIG-001 | The Twig namespace is `NowoPageLayoutKitBundle` |
 | FR-TWIG-002 | Host overrides under `templates/bundles/NowoPageLayoutKitBundle/` take precedence |
 
+### Browser assets (`FR-ASSET-*`)
+
+| ID | Requirement |
+| --- | --- |
+| FR-ASSET-001 | Every shipped browser script prints one `📦 [page-layout-kit] script loaded` console line per page (once-guard, even if the script is loaded twice), unless `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE === 'quiet'`; all other console output stays behind the debug flag (REQ-ASSETS-005, `logger.ts`) |
+
 ### Demo and quality (`FR-DEMO-*`, `FR-QA-*`)
 
 | ID | Requirement |
@@ -133,7 +139,7 @@ As a maintainer, I boot the Symfony 8 FrankenPHP demo and run the QA workflow to
 | SC-01 | Editors can open `/admin/pages/home/layout` and reorder persisted blocks |
 | SC-02 | A host page can inject `PageBlockProvider` and render the returned blocks through Twig |
 | SC-03 | Legacy content can be migrated with `nowo:page-layout:migrate` |
-| SC-04 | `code-inventory.md` maps **139/139** tracked files under `src/` (including worker-mode and HTML-sanitize surfaces) |
+| SC-04 | `code-inventory.md` maps **146/146** tracked files under `src/` (including worker-mode and HTML-sanitize surfaces) |
 | SC-05 | The Symfony 8 demo boots and answers on `http://localhost:8127` |
 | SC-06 | Bundle-owned public and admin flows remain correct under FrankenPHP worker mode without kernel reset (FR-WRK-001) |
 

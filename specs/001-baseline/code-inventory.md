@@ -2,7 +2,7 @@
 
 **Baseline spec:** [`spec.md`](spec.md)  
 **Package:** `nowo-tech/page-layout-kit-bundle`  
-**Last audited:** 2026-11-18 (2.2 outbox, entity manager isolation, UI page contract, asset build outputs, concurrency)
+**Last audited:** 2026-11-26 (2.4 script-loaded logger; audit: `git ls-files src | wc -l` → 146)
 
 Maps production files under `src/` (baseline inventory kept in sync for worker-mode and HTML-sanitize surfaces).
 
@@ -160,6 +160,9 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | `Resources/config/services.yaml` | Service and form wiring | FR-DI-001 |
 | `Resources/assets/src/cms_modal_controller.ts` | Stimulus controller for inline CMS modal flow | FR-ADM-002 |
 | `Resources/assets/src/cms_modal_controller.test.ts` | Co-located Vitest suite of the modal controller (FR-TEST, not shipped to hosts at runtime) | FR-ADM-002, FR-QA-001 |
+| `Resources/assets/src/logger.ts` | House bundle logger: the once-per-page `📦 [page-layout-kit] script loaded` console line with the quiet switch; every other console level stays behind the debug flag (REQ-ASSETS-005) | FR-ASSET-001 |
+| `Resources/assets/src/logger.test.ts` | Co-located Vitest suite of the logger: banner with and without build id, both quiet switches, debug gate (not shipped) | FR-ASSET-001, FR-QA-001 |
+| `Resources/assets/src/script-loaded.test.ts` | Co-located Vitest suite: the shipped modal entry logs the banner exactly once when evaluated (not shipped) | FR-ASSET-001, FR-QA-001 |
 | `Resources/public/js/cms_modal_controller.js` | Build output (ESM) of `cms_modal_controller.ts` | FR-ADM-002 |
 | `Resources/public/js/cms_modal_controller.iife.js` | Build output (IIFE) of `cms_modal_controller.ts` | FR-ADM-002 |
 
@@ -264,7 +267,7 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | Services | 6 | 6 |
 | Repositories | 19 | 19 |
 | Twig extension | 1 | 1 |
-| Resources — config and assets | 6 | 6 |
+| Resources — config and assets | 9 | 9 |
 | Resources — admin Twig views | 6 | 6 |
 | Resources — public block Twig views | 7 | 7 |
 | Resources — CMS Twig views | 9 | 9 |
@@ -273,4 +276,4 @@ Maps production files under `src/` (baseline inventory kept in sync for worker-m
 | Entity manager isolation | 2 | 2 |
 | Concurrency | 4 | 4 |
 | UI page contract | 1 | 1 |
-| **Total production sources** | **143** | **143** |
+| **Total production sources** | **146** | **146** |
