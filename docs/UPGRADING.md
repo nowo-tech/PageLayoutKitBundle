@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.4.1](#to-241)
 - [To 2.4.0](#to-240)
 - [To 2.3.0](#to-230)
   - [Concurrency (REQ-RUNTIME-003)](#concurrency-req-runtime-003)
@@ -33,6 +34,14 @@
 - [1.0.0](#100)
 
 ## Unreleased
+
+## To 2.4.1
+
+From **2.4.0**:
+
+```bash
+composer update nowo-tech/page-layout-kit-bundle
+```
 
 ## To 2.4.0
 
