@@ -24,31 +24,37 @@ function i(e) {
 	return e.map((e) => typeof e == "object" && e && !(e instanceof Error) ? JSON.stringify(e) : e);
 }
 function a(e, a = {}) {
-	let o = `[${e}]`, { buildTime: s } = a, c = !1;
+	let s = `[${e}]`, { buildTime: c } = a, l = !1;
 	return {
 		scriptLoaded() {
-			t() || (s !== void 0 && s !== "" ? console.log(`%c${r.script} ${o} script loaded, build: %c${s}`, n.script, "color:#059669") : console.log(`%c${r.script} ${o} script loaded`, n.script));
+			t() || o(e) || (c !== void 0 && c !== "" ? console.log(`%c${r.script} ${s} script loaded, build: %c${c}`, n.script, "color:#059669") : console.log(`%c${r.script} ${s} script loaded`, n.script));
 		},
 		setDebug(e) {
-			c = e;
+			l = e;
 		},
 		debug(...e) {
-			c && (e.length > 0 ? console.debug(`%c${r.debug} ${o}`, n.debug, ...i(e)) : console.debug(`%c${r.debug} ${o}`, n.debug));
+			l && (e.length > 0 ? console.debug(`%c${r.debug} ${s}`, n.debug, ...i(e)) : console.debug(`%c${r.debug} ${s}`, n.debug));
 		},
 		info(...e) {
-			c && (e.length > 0 ? console.info(`%c${r.info} ${o}`, n.info, ...i(e)) : console.info(`%c${r.info} ${o}`, n.info));
+			l && (e.length > 0 ? console.info(`%c${r.info} ${s}`, n.info, ...i(e)) : console.info(`%c${r.info} ${s}`, n.info));
 		},
 		warn(...e) {
-			c && (e.length > 0 ? console.warn(`%c${r.warn} ${o}`, n.warn, ...i(e)) : console.warn(`%c${r.warn} ${o}`, n.warn));
+			l && (e.length > 0 ? console.warn(`%c${r.warn} ${s}`, n.warn, ...i(e)) : console.warn(`%c${r.warn} ${s}`, n.warn));
 		},
 		error(...e) {
-			c && (e.length > 0 ? console.error(`%c${r.error} ${o}`, n.error, ...i(e)) : console.error(`%c${r.error} ${o}`, n.error));
+			l && (e.length > 0 ? console.error(`%c${r.error} ${s}`, n.error, ...i(e)) : console.error(`%c${r.error} ${s}`, n.error));
 		}
 	};
 }
+function o(e) {
+	let t = globalThis;
+	t.__nowoScriptBannerNames instanceof Set || (t.__nowoScriptBannerNames = /* @__PURE__ */ new Set());
+	let n = t.__nowoScriptBannerNames;
+	return n.has(e) ? !0 : (n.add(e), !1);
+}
 // src/Resources/assets/src/cms_modal_controller.ts
-a("page-layout-kit", { buildTime: "2026-11-23 13:58 UTC" }).scriptLoaded();
-var o = (e) => encodeURIComponent(e), s = class t extends e {
+a("page-layout-kit", { buildTime: "2026-11-26 12:24 UTC" }).scriptLoaded();
+var s = (e) => encodeURIComponent(e), c = class t extends e {
 	static targets = [
 		"modal",
 		"body",
@@ -111,7 +117,7 @@ var o = (e) => encodeURIComponent(e), s = class t extends e {
 		this.previousActiveElement = null, e?.focus();
 	}
 	resolveUrl(e, t, n, r, i, a) {
-		return e === "page-block" && r && n ? this.pageBlockUrlValue.replace("__TYPE__", o(r)).replace("__ID__", o(n)) : e === "service" ? t === "create" ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace("__ID__", o(n ?? "0")) : e === "service-faq" && n ? t === "create" ? this.serviceFaqCreateUrlValue.replace("__ID__", o(n)) : this.serviceFaqEditUrlValue.replace("__ID__", o(n)).replace("__FAQ_ID__", o(i ?? "0")) : e === "case" ? t === "create" ? this.caseCreateUrlValue : this.caseEditUrlValue.replace("__ID__", o(n ?? "0")) : e === "page-seo" && a ? this.pageSeoEditUrlValue.replace("__PAGE_KEY__", o(a)) : e === "blog" ? this.blogEditUrlValue.replace("__ID__", o(n ?? "0")) : null;
+		return e === "page-block" && r && n ? this.pageBlockUrlValue.replace("__TYPE__", s(r)).replace("__ID__", s(n)) : e === "service" ? t === "create" ? this.serviceCreateUrlValue : this.serviceEditUrlValue.replace("__ID__", s(n ?? "0")) : e === "service-faq" && n ? t === "create" ? this.serviceFaqCreateUrlValue.replace("__ID__", s(n)) : this.serviceFaqEditUrlValue.replace("__ID__", s(n)).replace("__FAQ_ID__", s(i ?? "0")) : e === "case" ? t === "create" ? this.caseCreateUrlValue : this.caseEditUrlValue.replace("__ID__", s(n ?? "0")) : e === "page-seo" && a ? this.pageSeoEditUrlValue.replace("__PAGE_KEY__", s(a)) : e === "blog" ? this.blogEditUrlValue.replace("__ID__", s(n ?? "0")) : null;
 	}
 	setTitle(e) {
 		this.hasTitleTarget && e !== "" && (this.titleTarget.textContent = e);
@@ -212,4 +218,4 @@ var o = (e) => encodeURIComponent(e), s = class t extends e {
 		window.location.reload();
 	}
 };
-export { s as default };
+export { c as default };

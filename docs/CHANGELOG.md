@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The `📦 [name] script loaded` console banner now prints once per page, even when the script is loaded twice: per-name once-guard (a `Set` on `globalThis`) in `logger.ts`, with a Vitest test and rebuilt assets (REQ-ASSETS-005).
+
 ### Changed
 
 - `cms_modal_controller.js` and `cms_modal_controller.iife.js` are now minified like the other bundle scripts: the logger doc block (about 4.5 KB per file) no longer ships (audit ZAI-4). Behaviour is unchanged.
